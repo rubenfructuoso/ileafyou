@@ -34,7 +34,7 @@ Die App bleibt grundsätzlich **kostenlos**. Eine KI-Erkennung als Abo ist eine 
 ## Sprachen und Texte
 
 - **Vier Sprachen:** Deutsch, Englisch, Spanisch, Französisch. Alle Texte stehen in `js/i18n.js`, im Code nur über `tr('schlüssel', { variablen })`. Nie Text hart codieren. Neue Schlüssel immer in allen vier Sprachen ergänzen.
-- Sprache: beim ersten Start aus der Browsersprache (Fallback Englisch), danach `state.lang`, umschaltbar unten in der App. Statische Texte im HTML über `data-i18n`, `data-i18n-ph`, `data-i18n-aria`.
+- Sprache: beim ersten Start aus der Browsersprache (Fallback Englisch), danach `state.lang`, umschaltbar in den Einstellungen (und auf der Anmeldeseite). Statische Texte im HTML über `data-i18n`, `data-i18n-ph`, `data-i18n-aria`.
 - Datumsformate über `locale` je Sprache (de-CH, en-GB, es-ES, fr-CH).
 - Deutsch in Schweizer Schreibweise: **ss statt ß**.
 - Typografie je Sprache: ’ als Apostroph; Anführungszeichen „ “ (DE), “ ” (EN), « » (ES), « » mit geschütztem Leerzeichen (FR); im Französischen geschütztes Leerzeichen vor : ? !. Im Code bleiben ' und ".
@@ -109,12 +109,10 @@ Fertig: vier Sprachen, Pflanzen erfassen und bearbeiten, Fälligkeiten, „Heute
 
 Ungetestet: Push-Versand an echte Push-Dienste (Google, Apple, Mozilla); Verschlüsselung und VAPID-Signatur sind gegen eine unabhängige Node-Implementierung geprüft.
 
-Ungetestet: `api/identify.php` gegen die echte Pl@ntNet-API. Antwortformat vor dem ersten Einsatz mit einem echten Schlüssel prüfen.
-
 ## Nächste Schritte (Vorschläge, nicht beschlossen)
 
 1. **Familie:** Pflanzen oder Orte mit anderen Konten teilen.
-2. **Eigene Illustrationen** für Abzeichen und Pflanzen-Platzhalter statt Emojis.
+2. **Mehr Pflanzen** in `CARE` (`js/care.js`), je nachdem, was Nutzer erfassen.
 
 ## Build-Varianten
 
