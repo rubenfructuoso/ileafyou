@@ -125,7 +125,56 @@ async function attach(email){
   if (fresh){ sync = { rev: 0, dirty: state.plants.length > 0, force: false, email }; saveSync(); }
   account.email = email;
   await syncNow();
+  pushRefresh();
 }
+
+/* ---------- Erinnerungen (Web Push, Versand durch api/cron.php) ---------- */
+let pushSub = null, pushBusy = false;
+const pushOK = () => BUILD === 'pwa' && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+function pushHour(){ try { const h = localStorage.getItem('ileafyou.pushHour'); return h === null ? 18 : +h; } catch(e) { return 18; } }
+function setPushHour(h){ try { localStorage.setItem('ileafyou.pushHour', String(h)); } catch(e) {} }
+const hourText = h => new Date(2000, 0, 1, h).toLocaleTimeString(loc(), { hour: '2-digit', minute: '2-digit' });
+const keyBytes = k => Uint8Array.from(atob(k.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - k.length % 4) % 4)), c => c.charCodeAt(0));
+async function pushCurrent(){
+  if (!pushOK()) return null;
+  const reg = await navigator.serviceWorker.getRegistration();
+  return pushSub = reg ? await reg.pushManager.getSubscription() : null;
+}
+const pushSave = sub => api('push.php?a=subscribe', { sub: sub.toJSON(), tz: Intl.DateTimeFormat().resolvedOptions().timeZone, hour: pushHour() });
+// Beim Start: bestehendes Abo dem Server erneut melden (Zeitzone, Konto nach Neuanmeldung)
+async function pushRefresh(){ try { if (Notification.permission === 'granted' && await pushCurrent()) await pushSave(pushSub); } catch(e) {} }
+async function pushOn(){
+  const perm = await Notification.requestPermission();
+  if (perm !== 'granted') throw new Error('push_denied');
+  const reg = await navigator.serviceWorker.ready, { key } = await api('push.php?a=key'), opts = { userVisibleOnly: true, applicationServerKey: keyBytes(key) };
+  let sub = await reg.pushManager.getSubscription();
+  try { sub = sub || await reg.pushManager.subscribe(opts); }
+  catch(e){ if (sub) await sub.unsubscribe(); sub = await reg.pushManager.subscribe(opts); }   // anderer Server-Schlüssel: neu abonnieren
+  try { await pushSave(sub); } catch(e){
+    if (e.status !== 400) throw e;
+    await sub.unsubscribe(); sub = await reg.pushManager.subscribe(opts); await pushSave(sub);
+  }
+  pushSub = sub;
+}
+async function pushOff(){
+  const sub = pushSub || await pushCurrent(); if (!sub) return;
+  await api('push.php?a=unsubscribe', { endpoint: sub.endpoint }).catch(() => {});
+  await sub.unsubscribe().catch(() => {}); pushSub = null;
+}
+function pushHtml(){
+  let h = `<h3 class="seth">${tr('set_push')}</h3><p class="setp">${tr('push_p')}</p>`;
+  if (!pushOK()) return h + `<p class="hint">${tr(isIOS() && !isStandalone() ? 'push_ios' : 'push_unsupported')}</p>`;
+  if (Notification.permission === 'denied') return h + `<p class="hint">${tr('push_denied')}</p>`;
+  const sel = `<label class="langsel"><span>${tr('push_time')}</span><select id="pushHour">${Array.from({ length: 17 }, (_, i) => i + 6).map(x => `<option value="${x}" ${x === pushHour() ? 'selected' : ''}>${hourText(x)}</option>`).join('')}</select></label>`;
+  return h + (pushSub
+    ? `<p class="setp"><span class="pill ok">${tr('push_is_on')}</span></p>${sel}<div class="setrow"><button type="button" class="setbtn" data-action="pushtest">${tr('push_test')}</button><button type="button" class="setbtn" data-action="pushoff">${tr('push_off_btn')}</button></div>`
+    : `${sel}<div class="setrow"><button type="button" class="setbtn" data-action="pushon">${tr('push_on_btn')}</button></div>`);
+}
+document.addEventListener('change', async e => {
+  if (e.target.id !== 'pushHour') return;
+  setPushHour(+e.target.value);
+  if (pushSub) try { await pushSave(pushSub); toast(tr('push_enabled', { time: hourText(pushHour()) })); } catch(err) { toast(errText(err)); }
+});
 
 /* ---------- Anmeldung ---------- */
 let authMode = 'login', resetToken = new URLSearchParams(location.search).get('reset');
@@ -171,6 +220,7 @@ async function logout(force){
     try { await syncNow(); } catch(e) {}
     if (sync.dirty) return ask(tr('logout_unsynced'), tr('logout_anyway'), () => logout(true));
   }
+  await pushOff().catch(() => {});   // nächste Person auf diesem Gerät bekommt keine fremden Erinnerungen
   await api('auth.php?a=logout', {}).catch(() => {});
   state = { lang: state.lang, plants: [] }; normalize(); saveLocal();
   sync = { rev: 0, dirty: false, force: false, email: null }; saveSync();
@@ -182,7 +232,7 @@ function getTheme(){ try { return localStorage.getItem('ileafyou.theme') || ''; 
 function setTheme(t){ try { t ? localStorage.setItem('ileafyou.theme', t) : localStorage.removeItem('ileafyou.theme'); } catch(e) {} ilyTheme(t); }
 
 /* ---------- Einstellungen ---------- */
-function openSettings(){ renderSettings(); $('#setDlg').showModal(); }
+async function openSettings(){ renderSettings(); $('#setDlg').showModal(); if (account.email && pushOK()){ await pushCurrent().catch(() => {}); renderSettings(); } }
 function renderSettings(){
   const th = getTheme(), btn = (act, key, cls) => `<button type="button" class="setbtn ${cls || ''}" data-action="${act}">${tr(key)}</button>`;
   let h = `<div class="sheethead"><h2>${tr('set_h')}</h2><button class="x" data-action="close" aria-label="${tr('close')}">×</button></div>`;
@@ -190,6 +240,7 @@ function renderSettings(){
     h += `<h3 class="seth">${tr('set_account')}</h3><p class="setp">${tr('set_as', { email: `<b>${esc(account.email)}</b>` })}<br><span class="hint">${tr(account.offline || sync.dirty ? 'sync_wait' : 'sync_ok')}</span></p>
       <div class="setrow">${btn('pwform', 'pw_change')}${btn('logout', 'logout')}</div><div id="pwBox"></div>`;
   }
+  if (account.email) h += pushHtml();
   h += `<h3 class="seth">${tr('set_theme')}</h3><div class="seg">${[['', 'th_auto'], ['light', 'th_light'], ['dark', 'th_dark']].map(([v, k]) => `<button type="button" data-theme-set="${v}" class="${th === v ? 'on' : ''}" aria-pressed="${th === v}">${tr(k)}</button>`).join('')}</div><p class="hint">${tr('th_hint')}</p>`;
   h += `<h3 class="seth">${tr('lang')}</h3>${langSelect()}`;
   h += `<h3 class="seth">${tr('set_garden')}</h3><div class="setrow">${btn('sites', 'set_sites')}${btn('vac', 'foot_vac')}${btn('demo', 'foot_demo')}</div>`;
@@ -217,6 +268,15 @@ document.addEventListener('click', async e => {
   const b = e.target.closest('#settings [data-action]'); if (!b) return;
   const a = b.dataset.action;
   if (a === 'logout') logout();
+  else if (a === 'pushon' || a === 'pushoff' || a === 'pushtest'){
+    if (pushBusy) return; pushBusy = true; b.disabled = true;
+    try {
+      if (a === 'pushon'){ await pushOn(); toast(tr('push_enabled', { time: hourText(pushHour()) })); }
+      else if (a === 'pushoff'){ await pushOff(); toast(tr('push_disabled')); }
+      else { await api('push.php?a=test', { endpoint: pushSub.endpoint }); toast(tr('push_sent')); }
+    } catch(err){ toast(errText(err)); }
+    finally { pushBusy = false; renderSettings(); }
+  }
   else if (a === 'server'){ srvInfo = await api('server.php').catch(err => ({ error: errText(err) })); renderSettings(); }
   else if (a === 'pwform'){
     $('#pwBox').innerHTML = `<form id="pwForm" class="setform"><label for="pwOld">${tr('pw_old')}</label><input id="pwOld" type="password" autocomplete="current-password" required><label for="pwNew">${tr('pw_new')}</label><input id="pwNew" type="password" autocomplete="new-password" required><div class="hint">${tr('auth_pw_hint')}</div><div class="authmsg" role="alert"></div><button class="primary" type="submit">${tr('pw_change')}</button></form>`;

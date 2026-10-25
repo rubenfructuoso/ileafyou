@@ -27,6 +27,7 @@ Die App bleibt grundsätzlich **kostenlos**. Eine KI-Erkennung als Abo ist eine 
 - Sync (`api/sync.php`, `js/account.js`): ganzer Zustand als JSON mit Revision. Fotos stehen im Server-Zustand nur als Verweis `ily-photo:<sha256>` und liegen einzeln in `photos`. Speichern markiert „dirty“ und lädt nach 1,5 s hoch; beim Öffnen und bei Rückkehr in die App wird zuerst geholt. Bei Konflikt (409) führt `merge()` zusammen: Pflanzen und Log-Einträge nach `id` vereint, gelöschte Pflanzen über `state.deleted`. Import, Zurücksetzen und Beispielgarten ersetzen den Server-Stand (`replaced()`).
 - Offline arbeitet ein angemeldetes Gerät mit dem letzten Stand weiter und synchronisiert später. Abmelden löscht die Daten auf dem Gerät (sie liegen auf dem Server).
 - Passwort vergessen: `auth.php?a=forgot` schickt per `mail()` einen Link `?reset=<token>` (1 Stunde gültig). Die Mailtexte stehen in `auth.php` (`RESET_MAIL`), nicht in `i18n.js`.
+- Push-Erinnerungen (`api/push.php`, `api/webpush.php`, `api/reminders.php`, `api/cron.php`): Web Push ohne Bibliotheken, VAPID-Schlüssel erzeugt der Server selbst (Tabelle `meta`), Inhalt verschlüsselt (aes128gcm). Abos pro Gerät in `push_subs` mit Zeitzone und Uhrzeit (Standard 18 Uhr, wählbar in den Einstellungen). Ein Cron-Job ruft stündlich `api/cron.php?key=<cron_key>` auf; pro Gerät höchstens eine Nachricht am Tag und nur, wenn etwas fällig ist (`due_in()` rechnet wie `dueOn()` in `app.js`, bei Änderungen beide anpassen). Texte der Benachrichtigungen in `PUSH_TEXT` in `reminders.php`. Abmelden meldet das Gerät von den Erinnerungen ab. Auf dem iPhone nur in der installierten App (ab iOS 16.4).
 - Theme-Farbe im hellen Design ist Moos (`#2F5A35`), damit Android die grüne Navigationsleiste mit weissen Buttons zeigt.
 - Einstellungen (Zahnrad oben rechts): Konto, Darstellung (pro Gerät in localStorage `ileafyou.theme`), Sprache, Garten, Daten, Server-Infos (`api/server.php`, Sicherheitsstand in `PHP_SICHER` nachführen).
 
@@ -104,15 +105,16 @@ Log-Typen: `water`, `feed`, `repot`, `note`, `photo` (mit `img`), `check` (Spät
 
 ## Stand
 
-Fertig: vier Sprachen, Pflanzen erfassen und bearbeiten, Fälligkeiten, „Heute dran“, Wochenvorschau, Protokoll, Foto-Tagebuch, Später-Funktion, mehrere Orte mit Räume-Filter, Ferienmodus, Levels, Serie, Abzeichen, Beispielgarten, Pflegevorschläge (`js/care.js`), Datensicherung (Export/Import), Speicher in IndexedDB, Schriften selbst gehostet (`fonts/`), PWA (installierbar, offline, Button „App installieren“ mit Anleitung fürs iPhone), Erkennungs-Proxy, Konten mit Login, Sync zwischen Geräten, Einstellungen.
+Fertig: vier Sprachen, Pflanzen erfassen und bearbeiten, Fälligkeiten, „Heute dran“, Wochenvorschau, Protokoll, Foto-Tagebuch, Später-Funktion, mehrere Orte mit Räume-Filter, Ferienmodus, Levels, Serie, Abzeichen, Beispielgarten, Pflegevorschläge (`js/care.js`), Datensicherung (Export/Import), Speicher in IndexedDB, Schriften selbst gehostet (`fonts/`), PWA (installierbar, offline, Button „App installieren“ mit Anleitung fürs iPhone), Erkennungs-Proxy, Konten mit Login, Sync zwischen Geräten, Einstellungen, Pflegetipps, Push-Erinnerungen.
+
+Ungetestet: Push-Versand an echte Push-Dienste (Google, Apple, Mozilla); Verschlüsselung und VAPID-Signatur sind gegen eine unabhängige Node-Implementierung geprüft.
 
 Ungetestet: `api/identify.php` gegen die echte Pl@ntNet-API. Antwortformat vor dem ersten Einsatz mit einem echten Schlüssel prüfen.
 
 ## Nächste Schritte (Vorschläge, nicht beschlossen)
 
-1. **Erinnerungen:** Web Push mit VAPID-Schlüsseln, Abos in der Datenbank, Cron-Job prüft täglich die Fälligkeiten aus dem synchronisierten Zustand. Auf dem iPhone nur, wenn die App installiert ist (ab iOS 16.4).
-2. **Familie:** Pflanzen oder Orte mit anderen Konten teilen.
-3. **Eigene Illustrationen** für Abzeichen und Pflanzen-Platzhalter statt Emojis.
+1. **Familie:** Pflanzen oder Orte mit anderen Konten teilen.
+2. **Eigene Illustrationen** für Abzeichen und Pflanzen-Platzhalter statt Emojis.
 
 ## Build-Varianten
 

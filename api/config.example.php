@@ -20,6 +20,11 @@ return [
 
     // Absender der E-Mail «Passwort zurücksetzen» (Adresse auf einer eigenen Domain)
     'mail_from'    => 'i leaf you <noreply@rekreativ.ch>',
+    // Push-Erinnerungen: Schlüssel für den Cron-Aufruf api/cron.php?key=… (lange Zufallszeichenfolge)
+    'cron_key'     => 'BITTE-ZUFAELLIG-SETZEN',
+    // Optional: Kontakt für die Push-Dienste (sonst die Adresse aus mail_from)
+    // 'push_contact' => 'mailto:ruben@example.ch',
+
     // Optional: feste Adresse, falls die automatische Erkennung nicht passt
     // 'base_url'  => 'https://ileafyou.rekreativ.ch/',
 ];

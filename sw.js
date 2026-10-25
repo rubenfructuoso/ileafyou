@@ -47,3 +47,28 @@ self.addEventListener('fetch', e => {
     );
   }
 });
+
+// Push-Erinnerungen (Inhalt verschlüsselt vom Server, siehe api/reminders.php)
+self.addEventListener('push', e => {
+  let m = {};
+  try { m = e.data ? e.data.json() : {}; } catch (err) {}
+  e.waitUntil(self.registration.showNotification(m.title || 'i leaf you', {
+    body: m.body || '',
+    tag: m.tag || 'ileafyou',
+    renotify: true,
+    icon: 'img/icon-192.png',
+    badge: 'img/icon-192.png',
+    data: { url: m.url || './' }
+  }));
+});
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  const url = new URL((e.notification.data && e.notification.data.url) || './', self.registration.scope).href;
+  e.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+      const open = list.find(c => c.url.startsWith(self.registration.scope));
+      return open ? open.focus() : self.clients.openWindow(url);
+    })
+  );
+});

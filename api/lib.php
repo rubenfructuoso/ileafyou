@@ -58,6 +58,8 @@ function db(): PDO {
         "photos (user_id INT NOT NULL, hash CHAR(64) NOT NULL, data $long NOT NULL, PRIMARY KEY (user_id, hash))",
         "resets (token CHAR(64) PRIMARY KEY, user_id INT NOT NULL, expires BIGINT NOT NULL)",
         "attempts (k CHAR(64) NOT NULL, at BIGINT NOT NULL)",
+        "push_subs (id CHAR(64) PRIMARY KEY, user_id INT NOT NULL, endpoint TEXT NOT NULL, p256dh VARCHAR(255) NOT NULL, auth VARCHAR(64) NOT NULL, tz VARCHAR(64) NOT NULL, hour INT NOT NULL, last_day VARCHAR(10) NOT NULL DEFAULT '', created BIGINT NOT NULL)",
+        "meta (k VARCHAR(64) PRIMARY KEY, v TEXT NOT NULL)",
     ] as $sql) $pdo->exec('CREATE TABLE IF NOT EXISTS ' . t('') . $sql . $cs);
     return $pdo;
 }

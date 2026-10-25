@@ -24,6 +24,12 @@ Dann http://localhost:8000 öffnen. PHP braucht es nur für die Pflanzenerkennun
 
 Ohne diese Einträge läuft die App wie bisher nur auf dem Gerät.
 
+## Push-Erinnerungen einrichten
+
+1. In `ileafyou-config.php` einen langen Zufallswert als `cron_key` eintragen.
+2. Im Hosttech-Kundencenter einen Cron-Job anlegen, der **jede Stunde** diese Adresse aufruft: `https://ileafyou.rekreativ.ch/api/cron.php?key=<cron_key>`
+3. In der App: Einstellungen → Erinnerungen → „Erinnerungen einschalten“, dann „Probe schicken“.
+
 ## Auf dem Handy installieren
 
 Die App muss über **HTTPS** laufen.
@@ -59,6 +65,10 @@ api/identify.php        Proxy zu Pl@ntNet
 api/auth.php            Konten (Registrieren, Login, Passwort)
 api/sync.php            Daten und Fotos synchronisieren
 api/server.php          Server-Infos für die Einstellungen
+api/push.php            Erinnerungen an- und abmelden, Probe
+api/cron.php            stündlicher Versand der Erinnerungen
+api/reminders.php       Fälligkeiten und Texte der Erinnerungen
+api/webpush.php         Web Push (VAPID, Verschlüsselung)
 api/lib.php             Datenbank, Sitzung, Hilfsfunktionen
 api/config.example.php  Vorlage für die Konfiguration
 CLAUDE.md               Projektkontext für Claude Code

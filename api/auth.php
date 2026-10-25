@@ -106,7 +106,7 @@ try {
             throttle('delete');
             $row = q('SELECT pass FROM {p}users WHERE id = ?', [$u['id']])->fetch();
             if (!password_verify($pw, $row['pass'])) { attempt_failed('delete'); fail(401, 'pw_wrong'); }
-            foreach (['sessions', 'states', 'photos', 'resets'] as $tb) q("DELETE FROM {p}$tb WHERE user_id = ?", [$u['id']]);
+            foreach (['sessions', 'states', 'photos', 'resets', 'push_subs'] as $tb) q("DELETE FROM {p}$tb WHERE user_id = ?", [$u['id']]);
             q('DELETE FROM {p}users WHERE id = ?', [$u['id']]);
             set_session_cookie('', time() - 3600);
             out(['ok' => true]);
