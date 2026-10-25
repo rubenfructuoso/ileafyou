@@ -331,9 +331,7 @@ function renderDetail(){
     <button class="linkbtn" data-action="edit" data-id="${p.id}">${tr('edit')}</button>
     ${careHtml(p)}
     <div class="actions">
-      <button class="act water" data-action="log" data-type="water" data-id="${p.id}">${typeLabel('water')}<small>${tr('logNow')}</small></button>
-      <button class="act feed" data-action="log" data-type="feed" data-id="${p.id}">${typeLabel('feed')}<small>${tr('logNow')}</small></button>
-      <button class="act" data-action="log" data-type="repot" data-id="${p.id}">${typeLabel('repot')}<small>${tr('logNow')}</small></button>
+      ${['water', 'feed', 'repot'].map(t => { const on = !!loggedToday(p, t); return `<button class="act ${t === 'repot' ? '' : t} ${on ? 'on' : ''}" data-action="${on ? 'unlog' : 'log'}" data-type="${t}" data-id="${p.id}" aria-pressed="${on}">${typeLabel(t)}<small>${tr(on ? 'doneToday' : 'logNow')}</small></button>`; }).join('')}
       <label class="act" for="diaryIn">${typeLabel('photo')}<small>${tr('photoSub')}</small></label>
     </div>
     <div class="noteadd"><input id="noteIn" placeholder="${esc(tr('notePh'))}"><button data-action="note" data-id="${p.id}">${tr('noteBtn')}</button></div>
@@ -478,6 +476,20 @@ function logAction(id, type, note, extra){
     checkLevel(true); save(); refresh();
   });
   if (!checkLevel() && !checkBadges() && bonus) celebrate('day');
+}
+// Heute schon eingetragen? Gibt den letzten Eintrag des Typs von heute zurück.
+function loggedToday(p, type){
+  const today = dkey(new Date());
+  return p.log.filter(l => l.type === type && dkey(l.date) === today).sort((a, b) => b.date.localeCompare(a.date))[0] || null;
+}
+// Versehentlich eingetragen: Eintrag von heute samt Punkten (und Tagesbonus) zurücknehmen
+function unlogToday(id, type){
+  const p = getP(id), entry = p && loggedToday(p, type); if (!entry) return;
+  const g = game();
+  p.log = p.log.filter(l => l.id !== entry.id);
+  g.xp = Math.max(0, g.xp - (entry.xp || 0)); if (entry.bonus) g.dayDone = null;
+  checkLevel(true); save(); refresh();
+  toast(tr('unlogged', { name: p.name, what: typeLabel(type) }));
 }
 function refresh(){ render(); if ($('#detailDlg').open) renderDetail(); }
 
@@ -631,6 +643,7 @@ document.addEventListener('click', e => {
   else if (action === 'edit') openForm(id);
   else if (action === 'open'){ detailId = id; renderDetail(); $('#detailDlg').showModal(); }
   else if (action === 'log') logAction(id, type);
+  else if (action === 'unlog') unlogToday(id, type);
   else if (action === 'note'){ const v = $('#noteIn').value.trim(); if (!v){ $('#noteIn').focus(); return; } logAction(id, 'note', v); }
   else if (action === 'rules') celebrate('rules');
   else if (action === 'day'){ const i = +b.dataset.i; selDay = selDay === i ? null : i; render(); }

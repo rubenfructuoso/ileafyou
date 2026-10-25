@@ -245,3 +245,9 @@ header.top .date{grid-column:1 / -1}
 .sites,.chips{scrollbar-width:none}
 .sites::-webkit-scrollbar,.chips::-webkit-scrollbar{display:none}
 .toast{width:max-content}   /* nicht auf halbe Bildschirmbreite schrumpfen (left:50%) */
+
+/* Aktionsknöpfe in der Detailansicht: heute erledigt = farbig, nochmals tippen nimmt zurück */
+.act.on{background:var(--moss);border-color:var(--moss);color:var(--onmoss)}
+.act.water.on{background:var(--water);border-color:var(--water);color:#fff}
+.act.feed.on{background:var(--feed);border-color:var(--feed);color:var(--onfeed)}
+.act.on small{color:inherit;opacity:.9}
