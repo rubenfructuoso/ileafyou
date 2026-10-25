@@ -41,7 +41,8 @@ css/app.css             Styles und Design-Tokens
 js/i18n.js              alle Texte in vier Sprachen
 js/app.js               gesamte App-Logik (Vanilla JS)
 sw.js                   Service Worker (offline)
-manifest.webmanifest    PWA-Manifest
+manifest.json           PWA-Manifest
+.htaccess               Dateitypen und Caching (Apache)
 icons/                  App-Icons
 api/identify.php        Proxy zu Pl@ntNet
 api/config.example.php  Vorlage für die Konfiguration

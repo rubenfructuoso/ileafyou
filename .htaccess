@@ -1,0 +1,11 @@
+# i leaf you auf Hosttech (Apache): Dateitypen für die PWA richtig ausliefern
+AddType application/manifest+json .webmanifest
+AddType text/javascript .js
+AddType image/svg+xml .svg
+
+# Service Worker und Manifest nie aus dem Browser-Cache, sonst bleiben Updates hängen
+<FilesMatch "^(sw\.js|manifest\.json)$">
+  <IfModule mod_headers.c>
+    Header set Cache-Control "no-cache"
+  </IfModule>
+</FilesMatch>
