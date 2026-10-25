@@ -370,9 +370,16 @@ function badgesHtml(){
 }
 
 /* ---------- Woche & Tag ---------- */
+// Aufgaben für Tag i (0 = heute, mit Überfälligem). Wiederholungen werden vorausgerechnet:
+// Annahme, die Aufgabe wird am Fälligkeitstag erledigt, dann kommt sie alle n Tage wieder.
 function dayItems(i){
-  return state.plants.filter(inView).flatMap(p => ['water','feed'].map(t => ({ p, t, d: due(p, t) })))
-    .filter(x => x.d !== null && (i === 0 ? x.d <= 0 : x.d === i));
+  return state.plants.filter(inView).flatMap(p => ['water','feed'].map(t => ({ p, t, d: due(p, t), every: +(t === 'water' ? p.waterEvery : p.feedEvery) })))
+    .filter(x => {
+      if (x.d === null) return false;
+      if (i === 0) return x.d <= 0;
+      const first = Math.max(x.d, 0);
+      return i >= first && (i - first) % x.every === 0;
+    });
 }
 const dayDate = i => { const d = new Date(); d.setDate(d.getDate() + i); return d; };
 // Wochenvorschau: Tipp auf einen Tag zeigt die Aufgaben direkt darunter, nochmals tippen schliesst
@@ -385,7 +392,7 @@ function weekHtml(){
 function dayHtml(i){
   const items = dayItems(i), dt = dayDate(i);
   const h = i === 0 ? tr('today') : i === 1 ? tr('tomorrow') : fmtDay(dt, { weekday:'long', day:'numeric', month:'long' });
-  const list = items.length ? items.map(({p,t,d}) => `<button class="task daytask" data-action="open" data-id="${p.id}">${thumb(p,'thumb')}<div class="t"><div class="n">${esc(p.name)}</div><div class="s ${d < 0 ? 'late' : ''}">${verb(t)}${d < 0 ? ', ' + dueText(d) : ''}${siteTag(p)}</div></div></button>`).join('') : `<div class="calm">${tr('nothing')}</div>`;
+  const list = items.length ? items.map(({p,t,d}) => { const late = i === 0 && d < 0; return `<button class="task daytask" data-action="open" data-id="${p.id}">${thumb(p,'thumb')}<div class="t"><div class="n">${esc(p.name)}</div><div class="s ${late ? 'late' : ''}">${verb(t)}${late ? ', ' + dueText(d) : ''}${siteTag(p)}</div></div></button>`; }).join('') : `<div class="calm">${tr('nothing')}</div>`;
   return `<div class="dayinfo"><h3>${h}</h3>${list}</div>`;
 }
 
