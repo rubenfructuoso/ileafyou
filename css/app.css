@@ -226,3 +226,12 @@ header.top .date{grid-column:1 / -1}
 .care .facts{margin-top:6px;grid-template-columns:1fr;gap:2px}
 .care .facts dt{font-weight:700;color:var(--moss);margin-top:8px}
 .caretip{margin-top:10px}
+
+/* Wochenvorschau: Tagesdetails direkt unter dem Kalender */
+.wd.sel{background:var(--moss);border-color:var(--moss);color:var(--onmoss)}
+.wd.sel b{color:var(--onmoss)}
+.dayinfo{margin-top:10px;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:12px 16px 4px}
+.dayinfo h3{font-size:1.1rem;margin:2px 0 4px}
+.daytask{width:100%;background:none;text-align:left;color:inherit}
+.dayinfo .daytask:last-child{border-bottom:0}
+.wd.sel .dots i{box-shadow:0 0 0 2px var(--onmoss)}

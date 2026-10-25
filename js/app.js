@@ -356,15 +356,18 @@ function dayItems(i){
     .filter(x => x.d !== null && (i === 0 ? x.d <= 0 : x.d === i));
 }
 const dayDate = i => { const d = new Date(); d.setDate(d.getDate() + i); return d; };
+// Wochenvorschau: Tipp auf einen Tag zeigt die Aufgaben direkt darunter, nochmals tippen schliesst
+let selDay = null;
 function weekHtml(){
-  return `<div class="week">${[0,1,2,3,4,5,6].map(i => { const dt = dayDate(i), items = dayItems(i);
-    return `<button class="wd ${i === 0 ? 'now' : ''}" data-action="day" data-i="${i}"><b>${i === 0 ? tr('today') : fmtDay(dt, { weekday:'short' })}</b><span class="num">${dt.getDate()}</span><span class="dots">${items.map(x => `<i class="${x.t === 'feed' ? 'f' : ''}"></i>`).join('')}</span></button>`; }).join('')}</div><div class="hint">${tr('weekHint')}</div>`;
+  const week = `<div class="week">${[0,1,2,3,4,5,6].map(i => { const dt = dayDate(i), items = dayItems(i);
+    return `<button class="wd ${i === 0 ? 'now' : ''} ${i === selDay ? 'sel' : ''}" data-action="day" data-i="${i}" aria-expanded="${i === selDay}"><b>${i === 0 ? tr('today') : fmtDay(dt, { weekday:'short' })}</b><span class="num">${dt.getDate()}</span><span class="dots">${items.map(x => `<i class="${x.t === 'feed' ? 'f' : ''}"></i>`).join('')}</span></button>`; }).join('')}</div>`;
+  return week + (selDay === null ? `<div class="hint">${tr('weekHint')}</div>` : dayHtml(selDay));
 }
-function showDay(i){
+function dayHtml(i){
   const items = dayItems(i), dt = dayDate(i);
   const h = i === 0 ? tr('today') : i === 1 ? tr('tomorrow') : fmtDay(dt, { weekday:'long', day:'numeric', month:'long' });
-  const list = items.length ? `<div class="today" style="text-align:left;margin-top:16px">${items.map(({p,t,d}) => `<div class="task">${thumb(p,'thumb')}<div class="t"><div class="n">${esc(p.name)}</div><div class="s ${d < 0 ? 'late' : ''}">${verb(t)}${d < 0 ? ', ' + dueText(d) : ''}${siteTag(p)}</div></div></div>`).join('')}</div>` : `<p>${tr('nothing')}</p>`;
-  openCel(`<h2>${h}</h2>${list}<button class="primary" data-action="close">${tr('close')}</button>`);
+  const list = items.length ? items.map(({p,t,d}) => `<button class="task daytask" data-action="open" data-id="${p.id}">${thumb(p,'thumb')}<div class="t"><div class="n">${esc(p.name)}</div><div class="s ${d < 0 ? 'late' : ''}">${verb(t)}${d < 0 ? ', ' + dueText(d) : ''}${siteTag(p)}</div></div></button>`).join('') : `<div class="calm">${tr('nothing')}</div>`;
+  return `<div class="dayinfo"><h3>${h}</h3>${list}</div>`;
 }
 
 /* ---------- Später, Ferien, Orte ---------- */
@@ -600,7 +603,7 @@ document.addEventListener('click', e => {
   else if (action === 'log') logAction(id, type);
   else if (action === 'note'){ const v = $('#noteIn').value.trim(); if (!v){ $('#noteIn').focus(); return; } logAction(id, 'note', v); }
   else if (action === 'rules') celebrate('rules');
-  else if (action === 'day') showDay(+b.dataset.i);
+  else if (action === 'day'){ const i = +b.dataset.i; selDay = selDay === i ? null : i; render(); }
   else if (action === 'later') snoozeSheet(id, type);
   else if (action === 'snz'){ $('#celDlg').close(); logAction(id, 'check', '', { for: type, days: +b.dataset.n }); }
   else if (action === 'site'){ state.site = b.dataset.sid || null; roomFilter = null; save(); render(); }
