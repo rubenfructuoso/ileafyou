@@ -77,6 +77,7 @@ foreach (($data['results'] ?? []) as $r) {
     $results[] = [
         'scientific' => $r['species']['scientificNameWithoutAuthor'] ?? '',
         'common'     => $r['species']['commonNames'][0] ?? '',
+        'family'     => $r['species']['family']['scientificNameWithoutAuthor'] ?? '',
         'score'      => round((float)($r['score'] ?? 0), 3),
     ];
 }

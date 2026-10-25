@@ -3,6 +3,7 @@ const KEY = 'ileafyou.v1', OLD_KEYS = ['blattwerk.v1'];
 const BUILD = document.body.dataset.build || 'pwa';
 let installEvt = null; // gemerktes beforeinstallprompt-Ereignis
 let state = { plants: [] };
+let pendingFamily = null; // Pflanzenfamilie aus der Foto-Erkennung, für Pflegetipps
 let pendingIcon = 'generic', roomFilter = null, editingId = null, pendingPhoto = null, detailId = null, undoFn = null, toastTimer = null;
 
 const $ = s => document.querySelector(s);
@@ -283,9 +284,12 @@ function footHtml(){
 /* ---------- Detailansicht ---------- */
 // Pflegetipps aus CARE: über die Art, sonst über einen genau passenden Namen
 function careHtml(p){
-  const c = careFor(p.species || '') || CARE.find(x => Object.values(x.names).some(n => norm(n) === norm(p.name)));
-  if (!c) return `<p class="hint caretip">${tr('care_none')}</p>`;
-  return `<section class="care"><h2>${tr('h_care')}</h2><dl class="facts">
+  let c = (p.species && careFor(p.species)) || CARE.find(x => Object.values(x.names).some(n => norm(n) === norm(p.name))), note = '';
+  if (!c && p.family && CARE_FAMILY[p.family]){   // Rückfall: allgemeine Tipps nach Familie
+    const [light, wat, fert] = CARE_FAMILY[p.family]; c = { light, wat, fert }; note = `<p class="hint">${tr('care_family', { family: esc(p.family) })}</p>`;
+  }
+  if (!c) return `<p class="hint caretip">${p.species ? tr('care_unknown', { species: esc(p.species) }) : tr('care_none')}</p>`;
+  return `<section class="care"><h2>${tr('h_care')}</h2>${note}<dl class="facts">
     <dt>${tr('d_light')}</dt><dd>${tr('light_' + c.light)}</dd>
     <dt>${tr('d_waterhow')}</dt><dd>${tr('wat_' + c.wat)}</dd>
     <dt>${tr('d_fert')}</dt><dd>${tr('fert_' + c.fert)}</dd></dl><p class="hint">${tr('care_season')}</p></section>`;
@@ -473,7 +477,7 @@ function openForm(id){
   $('#fSite').innerHTML = state.sites.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
   $('#fSite').value = p?.siteId || state.site || state.sites[0].id;
   $('#fWater').value = p ? p.waterEvery : 7; $('#fFeed').value = p ? p.feedEvery : 30; $('#fNotes').value = p?.notes || '';
-  pendingIcon = p?.icon || 'generic'; renderIconPick();
+  pendingIcon = p?.icon || 'generic'; pendingFamily = p?.family || null; renderIconPick();
   setPhoto(p?.photo || null); $('#formDelete').hidden = !p;
   $('#careSug').innerHTML = ''; $('#careHint').hidden = true;
   if ($('#detailDlg').open) $('#detailDlg').close();
@@ -509,7 +513,7 @@ $('#form').addEventListener('submit', e => {
   const name = $('#fName').value.trim(); if (!name){ $('#fName').focus(); return; }
   const data = { name, species: $('#fSpecies').value.trim(), location: $('#fLoc').value.trim(), siteId: $('#fSite').value,
     waterEvery: Math.max(0, parseInt($('#fWater').value) || 0), feedEvery: Math.max(0, parseInt($('#fFeed').value) || 0),
-    notes: $('#fNotes').value.trim(), photo: pendingPhoto, icon: pendingIcon };
+    notes: $('#fNotes').value.trim(), photo: pendingPhoto, icon: pendingIcon, family: pendingFamily || undefined };
   if (editingId) Object.assign(getP(editingId), data);
   else state.plants.push({ id: uid(), created: new Date().toISOString(), log: [], ...data });
   save(); $('#formDlg').close(); render(); toast(editingId ? tr('saved') : tr('added', { name })); checkBadges();
@@ -539,7 +543,7 @@ async function identify(){
     if (!r.ok) throw new Error(j.error || tr('id_status', { n: r.status }));
     const res = (j.results || []).slice(0, 3);
     out.innerHTML = res.length
-      ? res.map(x => `<button type="button" class="chip" data-sci="${esc(x.scientific)}" data-common="${esc(x.common || '')}">${esc(x.common || x.scientific)} <small>${Math.round(x.score * 100)} %</small></button>`).join('')
+      ? res.map(x => `<button type="button" class="chip" data-sci="${esc(x.scientific)}" data-common="${esc(x.common || '')}" data-family="${esc(x.family || '')}">${esc(x.common || x.scientific)} <small>${Math.round(x.score * 100)} %</small></button>`).join('')
       : `<span class="hint">${tr('id_none')}</span>`;
   } catch (e) {
     out.innerHTML = `<span class="hint">${esc(tr('id_fail', { msg: e.message }))}</span>`;
@@ -550,7 +554,7 @@ async function identify(){
 $('#identifyBtn').addEventListener('click', identify);
 $('#idResults').addEventListener('click', e => {
   const c = e.target.closest('[data-sci]'); if (!c) return;
-  $('#fSpecies').value = c.dataset.sci;
+  $('#fSpecies').value = c.dataset.sci; pendingFamily = c.dataset.family || null;
   if (!$('#fName').value.trim()) $('#fName').value = c.dataset.common || c.dataset.sci;
   $('#idResults').innerHTML = '';
   const care = careFor(c.dataset.sci); if (care) applyCare(care, false);
@@ -562,7 +566,8 @@ const norm = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '
 function careFor(sci){
   const w = norm(sci).replace(/\s+x\s+|\s*×\s*/g, ' ').split(/\s+/), sp = w.slice(0, 2).join(' '), genus = w[0];
   const all = c => [c.sci, ...c.syn].map(x => norm(x).replace(/\s*×\s*/g, ' '));
-  return CARE.find(c => all(c).includes(sp)) || CARE.find(c => all(c).includes(genus)) || null;
+  return CARE.find(c => all(c).includes(sp)) || CARE.find(c => all(c).includes(genus))
+    || CARE.find(c => all(c).some(x => x.split(' ')[0] === genus)) || null;   // andere Art derselben Gattung
 }
 // Freitext (Name oder Art): Treffer in allen Sprachen, Anfang vor Mitte, aktuelle Sprache zuerst
 function careSearch(q){
@@ -590,7 +595,7 @@ function applyCare(c, setName){
   h.textContent = tr('care_hint', { name: c.names[lang()], w: c.water, feed: c.feed ? tr('care_feedN', { n: c.feed }) : tr('care_feed0') });
 }
 $('#fName').addEventListener('input', showCareSug);
-$('#fSpecies').addEventListener('input', showCareSug);
+$('#fSpecies').addEventListener('input', e => { pendingFamily = null; showCareSug(e); });   // Art von Hand geändert: Familie passt evtl. nicht mehr
 $('#careSug').addEventListener('click', e => { const c = e.target.closest('[data-care]'); if (c) applyCare(CARE.find(x => x.sci === c.dataset.care), true); });
 
 /* ---------- Ereignisse ---------- */

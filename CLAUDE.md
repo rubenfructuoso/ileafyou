@@ -71,6 +71,7 @@ state = {
   plants: [{
     id, name, species, siteId,           // siteId verweist auf state.sites
     location,                            // Raum oder Platz, "Raum, Detail"; Raum = Teil vor dem Komma
+    family?,                             // Pflanzenfamilie aus der Foto-Erkennung (z. B. 'Araceae'), für Pflegetipps
     icon,                                // Pixel-Symbol, falls kein Foto: generic, monstera, herb, lemon, orchid, pothos, aloe, cactus
     waterEvery, feedEvery,               // Tage, 0 = keine Erinnerung
     notes, photo,                        // photo: JPEG als data-URL, max. 640 px
@@ -91,7 +92,7 @@ Log-Typen: `water`, `feed`, `repot`, `note`, `photo` (mit `img`), `check` (Spät
 
 ## Pflegevorschläge
 
-`js/care.js` enthält `CARE`: rund 60 gängige Zimmer-, Balkonpflanzen und Kräuter mit wissenschaftlichem Namen, Namen in vier Sprachen, Giess- und Düngeintervall, Pixel-Symbol und Synonymen. Gratis, offline, ohne API. Beim Tippen in Name oder Art schlägt das Formular passende Pflanzen vor; ein Tipp füllt Art, Intervalle und Symbol. Nach der Foto-Erkennung sucht `careFor()` zuerst die Art, dann die Gattung, und übernimmt die Werte automatisch. Jede Zeile hat ausserdem Standort (`sun`, `bright`, `partial`, `shade`), Giessart (`dry`, `moderate`, `moist`, `orchid`) und Düngerart (`green`, `bloom`, `cactus`, `citrus`, `orchid`, `herb`, `veg`); die Texte dazu (`light_*`, `wat_*`, `fert_*`) stehen in `i18n.js` und erscheinen als „Pflegetipps“ in der Detailansicht (`careHtml()`). Neue Pflanzen einfach als Zeile in `CARE` ergänzen.
+`js/care.js` enthält `CARE`: rund 100 gängige Zimmer-, Balkonpflanzen und Kräuter mit wissenschaftlichem Namen, Namen in vier Sprachen, Giess- und Düngeintervall, Pixel-Symbol und Synonymen. Gratis, offline, ohne API. Beim Tippen in Name oder Art schlägt das Formular passende Pflanzen vor; ein Tipp füllt Art, Intervalle und Symbol. Nach der Foto-Erkennung sucht `careFor()` zuerst die Art, dann die Gattung, dann eine andere Art derselben Gattung, und übernimmt die Werte automatisch. Ohne Treffer zeigt die Detailansicht allgemeine Tipps nach Pflanzenfamilie (`CARE_FAMILY`, Familie kommt aus der Erkennung und steht in `plant.family`). Jede Zeile hat ausserdem Standort (`sun`, `bright`, `partial`, `shade`), Giessart (`dry`, `moderate`, `moist`, `orchid`) und Düngerart (`green`, `bloom`, `cactus`, `citrus`, `orchid`, `herb`, `veg`); die Texte dazu (`light_*`, `wat_*`, `fert_*`) stehen in `i18n.js` und erscheinen als „Pflegetipps“ in der Detailansicht (`careHtml()`). Neue Pflanzen einfach als Zeile in `CARE` ergänzen.
 
 ## Spielregeln
 

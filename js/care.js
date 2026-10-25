@@ -70,5 +70,63 @@ const CARE = [
   ['Thymus vulgaris', 'Thymian', 'Thyme', 'Tomillo', 'Thym', 7, 30, 'herb', 'sun', 'dry', 'herb'],
   ['Salvia officinalis', 'Salbei', 'Sage', 'Salvia', 'Sauge', 5, 30, 'herb', 'sun', 'dry', 'herb'],
   ['Allium schoenoprasum', 'Schnittlauch', 'Chives', 'Cebollino', 'Ciboulette', 3, 21, 'herb', 'partial', 'moist', 'herb'],
-  ['Coriandrum sativum', 'Koriander', 'Coriander', 'Cilantro', 'Coriandre', 3, 21, 'herb', 'sun', 'moderate', 'herb']
+  ['Coriandrum sativum', 'Koriander', 'Coriander', 'Cilantro', 'Coriandre', 3, 21, 'herb', 'sun', 'moderate', 'herb'],
+  ['Origanum vulgare', 'Oregano', 'Oregano', 'Orégano', 'Origan', 5, 30, 'herb', 'sun', 'dry', 'herb'],
+  ['Melissa officinalis', 'Zitronenmelisse', 'Lemon balm', 'Melisa', 'Mélisse', 3, 21, 'herb', 'partial', 'moist', 'herb'],
+  ['Anethum graveolens', 'Dill', 'Dill', 'Eneldo', 'Aneth', 2, 21, 'herb', 'sun', 'moist', 'herb'],
+  ['Cymbopogon citratus', 'Zitronengras', 'Lemongrass', 'Hierba limón', 'Citronnelle', 3, 14, 'herb', 'sun', 'moist', 'herb'],
+  ['Laurus nobilis', 'Lorbeer', 'Bay laurel', 'Laurel', 'Laurier-sauce', 5, 30, 'herb', 'sun', 'moderate', 'herb'],
+  // Weitere Grünpflanzen
+  ['Schefflera', 'Strahlenaralie', 'Umbrella tree', 'Cheflera', 'Schefflera', 7, 30, 'generic', 'bright', 'moderate', 'green', ['Heptapleurum']],
+  ['Aspidistra elatior', 'Schusterpalme', 'Cast-iron plant', 'Aspidistra', 'Aspidistra', 10, 30, 'generic', 'shade', 'moderate', 'green'],
+  ['Asplenium nidus', 'Nestfarn', 'Bird’s nest fern', 'Nido de ave', 'Fougère nid d’oiseau', 5, 30, 'generic', 'partial', 'moist', 'green'],
+  ['Asparagus setaceus', 'Zierspargel', 'Asparagus fern', 'Esparraguera', 'Asperge plumeuse', 5, 30, 'generic', 'partial', 'moist', 'green', ['Asparagus plumosus']],
+  ['Beaucarnea recurvata', 'Elefantenfuss', 'Ponytail palm', 'Pata de elefante', 'Pied d’éléphant', 21, 60, 'generic', 'sun', 'dry', 'cactus'],
+  ['Pachira aquatica', 'Glückskastanie', 'Money tree', 'Pachira', 'Châtaignier de Guyane', 10, 30, 'generic', 'bright', 'moderate', 'green', ['Pachira glabra']],
+  ['Dracaena sanderiana', 'Glücksbambus', 'Lucky bamboo', 'Bambú de la suerte', 'Bambou de la chance', 7, 60, 'herb', 'partial', 'moist', 'green'],
+  ['Rhapis excelsa', 'Steckenpalme', 'Lady palm', 'Palmera bambú', 'Palmier bambou', 7, 30, 'generic', 'partial', 'moderate', 'green'],
+  ['Cycas revoluta', 'Palmfarn', 'Sago palm', 'Cica', 'Cycas', 14, 60, 'generic', 'bright', 'dry', 'green'],
+  ['Syngonium podophyllum', 'Purpurtute', 'Arrowhead plant', 'Singonio', 'Syngonium', 7, 30, 'pothos', 'partial', 'moderate', 'green'],
+  ['Scindapsus pictus', 'Satin-Efeutute', 'Satin pothos', 'Potos plateado', 'Scindapsus argenté', 10, 30, 'pothos', 'partial', 'moderate', 'green'],
+  ['Ficus pumila', 'Kletterfeige', 'Creeping fig', 'Ficus trepador', 'Figuier rampant', 5, 30, 'pothos', 'partial', 'moist', 'green'],
+  ['Fittonia', 'Silbernetzblatt', 'Nerve plant', 'Fitonia', 'Fittonia', 3, 30, 'generic', 'partial', 'moist', 'green'],
+  ['Codiaeum variegatum', 'Wunderstrauch', 'Croton', 'Crotón', 'Croton', 5, 21, 'generic', 'bright', 'moist', 'green'],
+  ['Hoya', 'Wachsblume', 'Wax plant', 'Flor de cera', 'Fleur de porcelaine', 10, 30, 'pothos', 'bright', 'dry', 'bloom'],
+  // Weitere Blühpflanzen
+  ['Cyclamen persicum', 'Alpenveilchen', 'Cyclamen', 'Ciclamen', 'Cyclamen', 5, 14, 'orchid', 'bright', 'moderate', 'bloom', ['Cyclamen']],
+  ['Clivia miniata', 'Klivie', 'Bush lily', 'Clivia', 'Clivia', 10, 21, 'orchid', 'bright', 'moderate', 'bloom'],
+  ['Zantedeschia', 'Zimmercalla', 'Calla lily', 'Cala', 'Calla', 4, 14, 'orchid', 'bright', 'moist', 'bloom'],
+  ['Hippeastrum', 'Amaryllis', 'Amaryllis', 'Amarilis', 'Amaryllis', 7, 14, 'orchid', 'bright', 'moderate', 'bloom'],
+  ['Guzmania', 'Guzmanie', 'Guzmania', 'Guzmania', 'Guzmania', 7, 30, 'orchid', 'bright', 'moderate', 'bloom'],
+  ['Dendrobium', 'Traubenorchidee', 'Dendrobium orchid', 'Dendrobium', 'Dendrobium', 7, 21, 'orchid', 'bright', 'orchid', 'orchid'],
+  ['Euphorbia milii', 'Christusdorn', 'Crown of thorns', 'Corona de Cristo', 'Épine du Christ', 10, 30, 'cactus', 'sun', 'dry', 'cactus'],
+  // Weitere Sukkulenten
+  ['Agave', 'Agave', 'Agave', 'Agave', 'Agave', 21, 60, 'aloe', 'sun', 'dry', 'cactus'],
+  ['Gasteria', 'Gasterie', 'Gasteria', 'Gasteria', 'Gastéria', 14, 60, 'aloe', 'bright', 'dry', 'cactus'],
+  ['Sedum', 'Fetthenne', 'Stonecrop', 'Uña de gato', 'Orpin', 14, 60, 'aloe', 'sun', 'dry', 'cactus'],
+  ['Lithops', 'Lebende Steine', 'Living stones', 'Piedras vivas', 'Plante caillou', 30, 0, 'cactus', 'sun', 'dry', 'cactus'],
+  // Weitere Kübel- und Balkonpflanzen, Gemüse
+  ['Bougainvillea', 'Bougainvillea', 'Bougainvillea', 'Buganvilla', 'Bougainvillier', 4, 14, 'orchid', 'sun', 'moderate', 'bloom'],
+  ['Nerium oleander', 'Oleander', 'Oleander', 'Adelfa', 'Laurier-rose', 2, 14, 'orchid', 'sun', 'moist', 'bloom'],
+  ['Fuchsia', 'Fuchsie', 'Fuchsia', 'Fucsia', 'Fuchsia', 2, 14, 'orchid', 'partial', 'moist', 'bloom'],
+  ['Petunia', 'Petunie', 'Petunia', 'Petunia', 'Pétunia', 1, 7, 'orchid', 'sun', 'moist', 'bloom', ['Calibrachoa']],
+  ['Lactuca sativa', 'Salat', 'Lettuce', 'Lechuga', 'Laitue', 1, 14, 'herb', 'partial', 'moist', 'veg'],
+  ['Cucumis sativus', 'Gurke', 'Cucumber', 'Pepino', 'Concombre', 1, 7, 'herb', 'sun', 'moist', 'veg'],
+  ['Cucurbita pepo', 'Zucchini', 'Courgette', 'Calabacín', 'Courgette', 1, 7, 'herb', 'sun', 'moist', 'veg']
 ].map(([sci, de, en, es, fr, water, feed, icon, light, wat, fert, syn]) => ({ sci, names: { de, en, es, fr }, water, feed, icon, light, wat, fert, syn: syn || [] }));
+
+// Rückfall für Arten, die nicht in CARE stehen: allgemeine Tipps nach Pflanzenfamilie (aus der Foto-Erkennung)
+// [Standort, Giessart, Dünger]
+const CARE_FAMILY = {
+  Araceae: ['bright', 'moderate', 'green'], Moraceae: ['bright', 'moderate', 'green'], Arecaceae: ['partial', 'moderate', 'green'],
+  Asparagaceae: ['partial', 'moderate', 'green'], Marantaceae: ['partial', 'moist', 'green'], Piperaceae: ['partial', 'dry', 'green'],
+  Urticaceae: ['bright', 'moderate', 'green'], Commelinaceae: ['bright', 'moderate', 'green'], Araliaceae: ['bright', 'moderate', 'green'],
+  Acanthaceae: ['partial', 'moist', 'green'], Polypodiaceae: ['partial', 'moist', 'green'], Nephrolepidaceae: ['partial', 'moist', 'green'],
+  Aspleniaceae: ['partial', 'moist', 'green'], Pteridaceae: ['partial', 'moist', 'green'], Dryopteridaceae: ['partial', 'moist', 'green'],
+  Cactaceae: ['sun', 'dry', 'cactus'], Crassulaceae: ['sun', 'dry', 'cactus'], Asphodelaceae: ['sun', 'dry', 'cactus'], Aizoaceae: ['sun', 'dry', 'cactus'],
+  Orchidaceae: ['bright', 'orchid', 'orchid'], Bromeliaceae: ['bright', 'moderate', 'bloom'], Gesneriaceae: ['bright', 'moderate', 'bloom'],
+  Begoniaceae: ['bright', 'moderate', 'bloom'], Geraniaceae: ['sun', 'moderate', 'bloom'], Rosaceae: ['sun', 'moderate', 'bloom'],
+  Malvaceae: ['sun', 'moist', 'bloom'], Strelitziaceae: ['sun', 'moderate', 'bloom'], Apocynaceae: ['bright', 'dry', 'bloom'],
+  Rutaceae: ['sun', 'moderate', 'citrus'], Lamiaceae: ['sun', 'moderate', 'herb'], Apiaceae: ['partial', 'moist', 'herb'],
+  Solanaceae: ['sun', 'moist', 'veg'], Cucurbitaceae: ['sun', 'moist', 'veg']
+};
