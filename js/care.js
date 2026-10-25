@@ -49,6 +49,9 @@ const CARE = [
   ['Kalanchoe blossfeldiana', 'Flammendes Käthchen', 'Flaming Katy', 'Kalanchoe', 'Kalanchoé', 14, 30, 'aloe', 'sun', 'dry', 'cactus'],
   ['Echinocactus grusonii', 'Schwiegermutterstuhl', 'Golden barrel cactus', 'Asiento de suegra', 'Coussin de belle-mère', 21, 60, 'cactus', 'sun', 'dry', 'cactus', ['Kroenleinia grusonii']],
   ['Opuntia', 'Feigenkaktus', 'Prickly pear', 'Nopal', 'Figuier de Barbarie', 21, 60, 'cactus', 'sun', 'dry', 'cactus'],
+  ['Rhipsalis', 'Korallenkaktus', 'Mistletoe cactus', 'Rhipsalis', 'Rhipsalis', 7, 30, 'cactus', 'bright', 'moderate', 'cactus', ['Binsenkaktus', 'Rutenkaktus']],
+  ['Epiphyllum', 'Blattkaktus', 'Orchid cactus', 'Epiphyllum', 'Épiphyllum', 7, 30, 'cactus', 'bright', 'moderate', 'bloom', ['Disocactus']],
+  ['Hatiora gaertneri', 'Osterkaktus', 'Easter cactus', 'Cactus de Pascua', 'Cactus de Pâques', 7, 30, 'cactus', 'bright', 'moderate', 'bloom', ['Rhipsalidopsis gaertneri', 'Schlumbergera gaertneri']],
   ['Cactaceae', 'Kaktus', 'Cactus', 'Cactus', 'Cactus', 21, 60, 'cactus', 'sun', 'dry', 'cactus'],
   // Kübel- und Balkonpflanzen
   ['Citrus limon', 'Zitronenbaum', 'Lemon tree', 'Limonero', 'Citronnier', 4, 14, 'lemon', 'sun', 'moderate', 'citrus'],
@@ -128,5 +131,16 @@ const CARE_FAMILY = {
   Begoniaceae: ['bright', 'moderate', 'bloom'], Geraniaceae: ['sun', 'moderate', 'bloom'], Rosaceae: ['sun', 'moderate', 'bloom'],
   Malvaceae: ['sun', 'moist', 'bloom'], Strelitziaceae: ['sun', 'moderate', 'bloom'], Apocynaceae: ['bright', 'dry', 'bloom'],
   Rutaceae: ['sun', 'moderate', 'citrus'], Lamiaceae: ['sun', 'moderate', 'herb'], Apiaceae: ['partial', 'moist', 'herb'],
-  Solanaceae: ['sun', 'moist', 'veg'], Cucurbitaceae: ['sun', 'moist', 'veg']
+  Solanaceae: ['sun', 'moist', 'veg'], Cucurbitaceae: ['sun', 'moist', 'veg'],
+  Euphorbiaceae: ['sun', 'dry', 'cactus'], Amaryllidaceae: ['bright', 'moderate', 'bloom'], Liliaceae: ['bright', 'moderate', 'bloom'],
+  Iridaceae: ['sun', 'moderate', 'bloom'], Asteraceae: ['sun', 'moderate', 'bloom'], Ericaceae: ['partial', 'moist', 'bloom'],
+  Primulaceae: ['bright', 'moderate', 'bloom'], Onagraceae: ['partial', 'moist', 'bloom'], Nyctaginaceae: ['sun', 'moderate', 'bloom'],
+  Hydrangeaceae: ['partial', 'moist', 'bloom'], Ranunculaceae: ['partial', 'moderate', 'bloom'], Plantaginaceae: ['sun', 'moderate', 'bloom'],
+  Oleaceae: ['sun', 'moderate', 'green'], Myrtaceae: ['sun', 'moderate', 'green'], Fabaceae: ['sun', 'moderate', 'green'], Lauraceae: ['sun', 'moderate', 'green'],
+  Oxalidaceae: ['bright', 'moderate', 'green'], Zingiberaceae: ['partial', 'moist', 'green'], Musaceae: ['bright', 'moist', 'green'],
+  Poaceae: ['sun', 'moist', 'green'], Cyperaceae: ['partial', 'moist', 'green'], Selaginellaceae: ['partial', 'moist', 'green'],
+  Zamiaceae: ['bright', 'dry', 'green'], Cycadaceae: ['bright', 'dry', 'green'], Polygonaceae: ['sun', 'moist', 'veg'],
+  Brassicaceae: ['partial', 'moist', 'veg'], Amaranthaceae: ['sun', 'moist', 'veg']
 };
+// Grundregeln, wenn weder Art noch Familie bekannt sind
+const CARE_GENERAL = ['bright', 'moderate', 'green'];

@@ -284,15 +284,30 @@ function footHtml(){
 /* ---------- Detailansicht ---------- */
 // Pflegetipps aus CARE: über die Art, sonst über einen genau passenden Namen
 function careHtml(p){
-  let c = (p.species && careFor(p.species)) || CARE.find(x => Object.values(x.names).some(n => norm(n) === norm(p.name))), note = '';
-  if (!c && p.family && CARE_FAMILY[p.family]){   // Rückfall: allgemeine Tipps nach Familie
-    const [light, wat, fert] = CARE_FAMILY[p.family]; c = { light, wat, fert }; note = `<p class="hint">${tr('care_family', { family: esc(p.family) })}</p>`;
+  let c = (p.species && careFor(p.species)) || CARE.find(x => [...Object.values(x.names), ...x.syn].some(n => norm(n) === norm(p.name))), note = '';
+  const rule = ([light, wat, fert]) => ({ light, wat, fert });
+  if (!c && p.family && CARE_FAMILY[p.family]){   // Rückfall 1: allgemeine Tipps nach Familie
+    c = rule(CARE_FAMILY[p.family]); note = tr('care_family', { family: esc(p.family) });
   }
-  if (!c) return `<p class="hint caretip">${p.species ? tr('care_unknown', { species: esc(p.species) }) : tr('care_none')}</p>`;
+  if (!c){ c = rule(CARE_GENERAL); note = tr(p.species ? 'care_general' : 'care_none'); lookupFamily(p); }   // Rückfall 2: Grundregeln
+  if (note) note = `<p class="hint">${note}</p>`;
   return `<section class="care"><h2>${tr('h_care')}</h2>${note}<dl class="facts">
     <dt>${tr('d_light')}</dt><dd>${tr('light_' + c.light)}</dd>
     <dt>${tr('d_waterhow')}</dt><dd>${tr('wat_' + c.wat)}</dd>
     <dt>${tr('d_fert')}</dt><dd>${tr('fert_' + c.fert)}</dd></dl><p class="hint">${tr('care_season')}</p></section>`;
+}
+// Familie einer Art bei GBIF nachschlagen (frei, ohne Schlüssel), damit es Tipps nach Familie gibt. Einmal pro Art und Sitzung.
+const familyAsked = new Set();
+async function lookupFamily(p){
+  const sp = (p.species || '').trim();
+  if (!sp || p.family || familyAsked.has(sp) || !navigator.onLine) return;
+  familyAsked.add(sp);
+  try {
+    const r = await fetch('https://api.gbif.org/v1/species/match?kingdom=Plantae&name=' + encodeURIComponent(sp));
+    const fam = r.ok ? (await r.json()).family : null;
+    const cur = getP(p.id);
+    if (fam && cur && !cur.family && (cur.species || '').trim() === sp){ cur.family = fam; save(); if ($('#detailDlg').open && detailId === cur.id) renderDetail(); }
+  } catch(e) {}
 }
 function renderDetail(){
   const p = getP(detailId); if (!p){ $('#detailDlg').close(); return; }
