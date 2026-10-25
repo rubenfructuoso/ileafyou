@@ -9,7 +9,7 @@
   "display": "standalone",
   "orientation": "portrait",
   "categories": ["lifestyle", "productivity"],
-  "background_color": "#F2F4EC",
+  "background_color": "#2F5A35",
   "theme_color": "#2F5A35",
   "icons": [
     { "src": "img/icon-192.png", "sizes": "192x192", "type": "image/png" },
