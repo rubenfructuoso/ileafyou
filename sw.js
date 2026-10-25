@@ -8,6 +8,7 @@ const SHELL = [
   'js/i18n.js',
   'js/care.js',
   'js/app.js',
+  'js/account.js',
   'manifest.json',
   'img/icon.svg',
   'img/icon-192.png',

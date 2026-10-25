@@ -183,3 +183,39 @@ select{font:inherit;width:100%;padding:11px 12px;border-radius:12px;border:1px s
 .ik{flex:none;width:52px;height:52px;border-radius:12px;background:var(--leafbg);border:2px solid transparent;display:grid;place-items:center;padding:0}
 .ik .pix{width:36px;height:36px}
 .ik.on{border-color:var(--moss);background:var(--surface)}
+
+/* Kopf mit Zahnrad */
+header.top{display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:12px}
+header.top .date{grid-column:1 / -1}
+.gear{width:46px;height:46px;border-radius:14px;background:var(--leafbg);display:grid;place-items:center;padding:0}
+.gear svg{width:28px;height:28px}
+.authing .fab,.authing .gear,.authing .date{display:none}
+
+/* Anmeldung */
+.auth{max-width:420px;margin:28px auto 0;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px 20px}
+.auth h2{margin-bottom:6px}
+.auth > p{color:var(--muted);margin:0 0 6px}
+.authmsg{color:var(--danger);min-height:1.2em;margin-top:10px;font-size:.95rem}
+.authmsg:empty{display:none}
+.auth .primary{margin-top:16px}
+.authlinks{display:flex;flex-direction:column;align-items:center;gap:2px;margin-top:10px}
+.authlang{justify-content:center;margin-top:18px;font-weight:400}
+
+/* Einstellungen */
+.seth{font-size:1.15rem;margin:22px 0 8px}
+.setp{margin:0 0 10px}
+.setrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.setbtn{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-weight:700;color:var(--ink)}
+.setbtn.danger,.primary.danger{color:var(--danger)}
+.primary.danger{background:none;border:1px solid var(--danger)}
+.setform{margin-top:6px}
+#settings select{font:inherit;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.seg button{background:var(--bg);padding:10px 14px;font-weight:700;color:var(--muted)}
+.seg button.on{background:var(--moss);color:var(--onmoss)}
+.srv .kv{border-collapse:collapse;width:100%;margin:8px 0;font-size:.92rem}
+.srv .kv th{text-align:left;font-weight:400;color:var(--muted);padding:4px 10px 4px 0;width:45%}
+.srv .kv td{padding:4px 0;word-break:break-word}
+.pill{display:inline-block;border-radius:999px;padding:2px 10px;font-size:.85rem;font-weight:700;margin:2px 0}
+.pill.ok{background:var(--leafbg);color:var(--moss)}
+.pill.bad{background:var(--danger);color:#fff}

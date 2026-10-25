@@ -23,6 +23,7 @@ const loc = () => L().locale;
 const lvName = k => L().lv[k];
 function applyStatic(){
   document.documentElement.lang = lang();
+  $('#logoMark').innerHTML = plantSvg(7, 'mark'); $('#gearBtn').innerHTML = pix('gear');
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = tr(el.dataset.i18n); });
   document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = tr(el.dataset.i18nPh); });
   document.querySelectorAll('[data-i18n-aria]').forEach(el => { el.setAttribute('aria-label', tr(el.dataset.i18nAria)); });
@@ -60,6 +61,7 @@ const plantSvg = (i, cls) => pixGrid(PLANTS[Math.max(0, Math.min(7, i))], cls);
 /* ---------- Pixel-Icons für das Spiel (16×16, eigene Entwürfe im 16-Bit-Stil) ---------- */
 const PIXPAL = {"P": "#E58FB6", "p": "#B5547F", "E": "#3B2A20", "M": "#2F5A35", "T": "#9BD25B", "L": "#CFE3B8", "K": "#F2F4EC", "H": "#FFFFFF", "W": "#2F7CB0", "w": "#7FC0E8", "D": "#E0A43A", "d": "#A8741C", "b": "#8B5E3C", "n": "#5A3A24", "R": "#D2462E", "O": "#F08A2E", "Y": "#FFD84A", "G": "#9AA096", "g": "#5E645A"};
 const PIX = {
+  gear: ["................", ".......EE.......", "...EE.EGGE.EE...", "..EGGEGGGGEGGE..", "..EGGGGGGGGGGE..", "...EGGGEEGGGE...", ".EEGGGE..EGGGEE.", "EGGGGE....EGGGGE", "EGGGGE....EGGGGE", ".EEGGGE..EGGGEE.", "...EGGGEEGGGE...", "..EGGGGGGGGGGE..", "..EGGEGGGGEGGE..", "...EE.EGGE.EE...", ".......EE.......", "................"],
   p1: ["................", "...TTT....TTT...", "..TLLTT..TTLLT..", "..TTTTTTTTTTTT..", "...TTTTMMTTTT...", ".....TTMMTT.....", ".......MM.......", ".......MM.......", "nnnnnnnnnnnnnnnn", "bbbbbbbKKbbbbbbb", "bbbbbbKbbKbbbbbb", "bbbbbKbbbbKbbbbb", "bbbbKbbKKbbKbbbb", "bbbbbbKbbKbbbbbb", "bbbbbbbbbbbbbbbb", "................"],
   p5: ["................", ".......EE.......", "......ERRE......", ".....ERRRRE.....", "....ERRRRRRE....", "...ERRRRRRRRE...", "..ERRRRRRRRRRE..", ".EEEEEEEEEEEEEE.", "..EKKKKKKKKKKE..", "..EKwwwKKnnnKE..", "..EKwTwKKnnnKE..", "..EKTTTKKnnnKE..", "..EKbbbKKnnDKE..", "..EKKKKKKnnnKE..", "..EEEEEEEEEEEE..", "................"],
   p15: ["................", ".....MMMMMM.....", "...MMTTTTTTMM...", "..MTTLLTTTTTTM..", ".MTTLTTTTTMTTTM.", ".MTTTTTTMMTTTTM.", ".MMTTTMTTTTTTMM.", "..MMTTTTTTLTMM..", "...MMMTTTTMMM...", ".....MMnnMM.....", ".......nn.......", ".......nn.......", "......nnnn......", ".....nn..nn.....", "MMTTMMTTMMTTMMTT", "................"],
@@ -147,8 +149,8 @@ function idb(){
     r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
   });
 }
-const idbGet = () => idb().then(db => new Promise((res, rej) => { const q = db.transaction('kv').objectStore('kv').get(KEY); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); }));
-const idbPut = v => idb().then(db => new Promise((res, rej) => { const t = db.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, KEY); t.oncomplete = res; t.onerror = t.onabort = () => rej(t.error); }));
+const idbGet = (k = KEY) => idb().then(db => new Promise((res, rej) => { const q = db.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); }));
+const idbPut = (v, k = KEY) => idb().then(db => new Promise((res, rej) => { const t = db.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, k); t.oncomplete = res; t.onerror = t.onabort = () => rej(t.error); }));
 function lsGet(){
   try { let r = localStorage.getItem(KEY); if (!r) for (const k of OLD_KEYS){ r = localStorage.getItem(k); if (r) break; } return r; } catch(e) { return null; }
 }
@@ -173,7 +175,9 @@ function migrateSites(){
   state.plants.forEach(p => { if (!state.sites.some(s => s.id === p.siteId)) p.siteId = state.sites[0].id; });
   if (state.site && !state.sites.some(s => s.id === state.site)) state.site = null;
 }
-function save(){
+// Speichert auf dem Gerät und meldet die Änderung an den Sync (js/account.js)
+function save(){ saveLocal(); if (typeof onSave === 'function') onSave(); }
+function saveLocal(){
   const s = JSON.stringify(state);
   if (!useLS) return void idbPut(s).catch(() => toast(tr('saveFail')));
   try { localStorage.setItem(KEY, s); } catch(e) { toast(tr('saveFail')); }
@@ -194,7 +198,7 @@ $('#importIn').addEventListener('change', async e => {
   let next;
   try { const d = JSON.parse(await f.text()); next = d && d.app === 'ileafyou' ? d.state : d; } catch(err) {}
   if (!next || !Array.isArray(next.plants)) return toast(tr('imp_bad'));
-  const apply = () => { const keepLang = state.lang; state = next; if (!state.lang) state.lang = keepLang; normalize(); save(); applyStatic(); render(); toast(tr('imp_done')); };
+  const apply = () => { const keepLang = state.lang; state = next; if (!state.lang) state.lang = keepLang; normalize(); save(); replaced(); applyStatic(); render(); toast(tr('imp_done')); };
   if (!state.plants.length) apply(); else ask(tr('imp_ask'), tr('imp_btn'), apply);
 });
 const siteName = id => (state.sites.find(s => s.id === id) || {}).name || '';
@@ -227,11 +231,10 @@ function celebrate(kind, extra){
 
 /* ---------- Hauptansicht ---------- */
 function render(){
-  $('#logoMark').innerHTML = plantSvg(7, 'mark');
   $('#date').textContent = fmtDay(new Date(), { weekday:'long', day:'numeric', month:'long' });
   const plants = state.plants;
   if (!plants.length){
-    $('#app').innerHTML = `<section class="empty"><h2>${tr('empty_h')}</h2><p>${tr('empty_p')}</p><button class="btn" data-action="new">${tr('empty_btn')}</button><div style="margin-top:10px"><button class="linkbtn" data-action="demo">${tr('empty_demo')}</button></div></section>${footHtml(false)}`;
+    $('#app').innerHTML = `<section class="empty"><h2>${tr('empty_h')}</h2><p>${tr('empty_p')}</p><button class="btn" data-action="new">${tr('empty_btn')}</button><div style="margin-top:10px"><button class="linkbtn" data-action="demo">${tr('empty_demo')}</button></div></section>${footHtml()}`;
     return;
   }
   const vis = plants.filter(inView);
@@ -270,13 +273,11 @@ function render(){
   const cards = !vis.length ? `<div class="calm">${tr('noPlantsHere')}</div>`
     : grouped ? state.sites.map(s => { const ps = shown.filter(p => p.siteId === s.id); return ps.length ? `<div class="sitegroup"><h3>${esc(s.name)}</h3><div class="grid">${ps.map(card).join('')}</div></div>` : ''; }).join('')
     : `<div class="grid">${shown.map(card).join('')}</div>`;
-  $('#app').innerHTML = `${lvlHtml()}${sitesBar()}${vac}<section><h2>${tr('h_today')}</h2><div class="today">${today}</div></section><section><h2>${tr('h_next')}</h2>${weekHtml()}</section><section><h2>${tr('h_plants')}</h2>${chips}${cards}</section><section><h2>${tr('h_badges')}</h2>${badgesHtml()}</section>${footHtml(true)}`;
+  $('#app').innerHTML = `${lvlHtml()}${sitesBar()}${vac}<section><h2>${tr('h_today')}</h2><div class="today">${today}</div></section><section><h2>${tr('h_next')}</h2>${weekHtml()}</section><section><h2>${tr('h_plants')}</h2>${chips}${cards}</section><section><h2>${tr('h_badges')}</h2>${badgesHtml()}</section>${footHtml()}`;
 }
-function footHtml(full){
-  const sel = `<label class="langsel"><span>${tr('lang')}</span><select id="langSel">${LANGS.map(l => `<option value="${l}" ${l === lang() ? 'selected' : ''}>${I18N[l].langName}</option>`).join('')}</select></label>`;
-  const inst = canInstall() ? `<button data-action="install">${tr('foot_install')}</button>` : '';
-  const exp = full ? `<button data-action="export">${tr('foot_export')}</button>` : '';
-  return `<div class="foot">${inst}${full ? `<button data-action="vac">${tr('foot_vac')}</button><button data-action="demo">${tr('foot_demo')}</button>` : ''}${exp}<button data-action="import">${tr('foot_import')}</button>${full ? `<button data-action="reset">${tr('foot_reset')}</button>` : ''}${sel}</div>`;
+// Ferienmodus, Daten, Sprache usw. liegen in den Einstellungen (Zahnrad oben rechts)
+function footHtml(){
+  return canInstall() ? `<div class="foot"><button data-action="install">${tr('foot_install')}</button></div>` : '';
 }
 
 /* ---------- Detailansicht ---------- */
@@ -411,7 +412,7 @@ function loadDemo(){
     game: { xp: 265, level: levelOf(265), streak: 4, best: 9, lastCheck: dkey(y), dayDone: null, badges: [] }
   };
   roomFilter = null;
-  checkBadges(true); save(); render(); window.scrollTo(0, 0); toast(tr('demo_loaded'));
+  checkBadges(true); save(); replaced(); render(); window.scrollTo(0, 0); toast(tr('demo_loaded'));
 }
 
 /* ---------- Pflege eintragen ---------- */
@@ -503,7 +504,7 @@ $('#form').addEventListener('submit', e => {
 $('#formDelete').addEventListener('click', () => {
   const p = getP(editingId); if (!p) return;
   ask(tr('del_ask', { name: p.name }), tr('del'), () => {
-    state.plants = state.plants.filter(x => x.id !== editingId); save(); $('#formDlg').close(); render(); toast(tr('deleted', { name: p.name }));
+    state.plants = state.plants.filter(x => x.id !== editingId); (state.deleted ||= []).push({ id: editingId, at: Date.now() }); save(); $('#formDlg').close(); render(); toast(tr('deleted', { name: p.name }));
   });
 });
 function ask(txt, ok, fn){
@@ -602,23 +603,20 @@ document.addEventListener('click', e => {
   else if (action === 'vacoff'){ delete game().vacation; save(); $('#celDlg').close(); render(); toast(tr('vac_off')); }
   else if (action === 'cover'){ const p = getP(id), l = p && p.log.find(x => x.id === b.dataset.lid); if (l){ p.photo = l.img; save(); refresh(); toast(tr('cover_done')); } }
   else if (action === 'demo'){ if (!state.plants.length) loadDemo(); else ask(tr('demo_ask'), tr('load'), loadDemo); }
-  else if (action === 'reset') ask(tr('reset_ask'), tr('del'), () => { state = { lang: state.lang, plants: [] }; migrateSites(); game(); save(); render(); toast(tr('reset_done')); });
+  else if (action === 'reset') ask(tr('reset_ask'), tr('del'), () => { state = { lang: state.lang, plants: [] }; migrateSites(); game(); save(); replaced(); render(); toast(tr('reset_done')); });
   else if (action === 'install') install();
+  else if (action === 'settings') openSettings();
   else if (action === 'export') exportData();
   else if (action === 'import') $('#importIn').click();
   else if (action === 'close') b.closest('dialog').close();
 });
 document.addEventListener('change', e => {
   if (e.target.id !== 'langSel') return;
-  state.lang = e.target.value; save(); applyStatic(); refresh();
+  state.lang = e.target.value; save(); applyStatic(); refresh(); if ($('#setDlg').open) renderSettings();
 });
 document.querySelectorAll('dialog').forEach(d => d.addEventListener('click', e => { if (e.target === d) d.close(); }));
 document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'noteIn'){ e.preventDefault(); const p = e.target.nextElementSibling; p && p.click(); } });
 
-load().then(() => {
-  applyStatic(); dailyCheck(); render(); checkLevel() || checkBadges();
-  document.addEventListener('visibilitychange', () => { if (!document.hidden){ dailyCheck(); render(); checkLevel(); } });
-});
 
 /* ---------- PWA: Service Worker und Installation (nur eigener Server) ---------- */
 if (BUILD === 'pwa' && 'serviceWorker' in navigator) {

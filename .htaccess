@@ -10,3 +10,8 @@ AddType font/woff2 .woff2
     Header set Cache-Control "no-cache"
   </IfModule>
 </FilesMatch>
+
+# Server-Dateien, die nicht direkt aufgerufen werden sollen
+<FilesMatch "^(lib\.php|config\.php|config\.example\.php|.*\.sqlite)$">
+  Require all denied
+</FilesMatch>

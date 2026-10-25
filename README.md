@@ -16,6 +16,14 @@ Dann http://localhost:8000 öffnen. PHP braucht es nur für die Pflanzenerkennun
 2. `api/config.example.php` kopieren nach `ileafyou-config.php` eine Ebene über dem Webroot (oder lokal nach `api/config.php`).
 3. Schlüssel eintragen. Die Datei ist in `.gitignore` und gehört nie ins Repo.
 
+## Konten und Datenbank einrichten
+
+1. Im Hosttech-Kundencenter eine MariaDB-Datenbank anlegen (oder die von famileat mitbenutzen, die Tabellen heissen `ileafyou_…`).
+2. In `ileafyou-config.php` (über dem Webroot) `db_name`, `db_user`, `db_pass` und `mail_from` eintragen, Vorlage in `api/config.example.php`.
+3. App neu laden: Ab jetzt ist die Anmeldung Pflicht. Wer schon Pflanzen auf dem Handy hat, erstellt ein Konto, die Daten werden hochgeladen.
+
+Ohne diese Einträge läuft die App wie bisher nur auf dem Gerät.
+
 ## Auf dem Handy installieren
 
 Die App muss über **HTTPS** laufen.
@@ -40,13 +48,18 @@ index.html              App-Markup
 css/app.css             Styles und Design-Tokens
 js/i18n.js              alle Texte in vier Sprachen
 js/care.js              Pflegetabelle (Giess- und Düngevorschläge)
-js/app.js               gesamte App-Logik (Vanilla JS)
+js/app.js               App-Logik (Vanilla JS)
+js/account.js           Login, Sync, Einstellungen, App-Start
 sw.js                   Service Worker (offline)
 manifest.json           PWA-Manifest
 .htaccess               Dateitypen und Caching (Apache)
 img/                    App-Icons (nicht /icons/, den belegt Apache)
 fonts/                  Schriften (selbst gehostet, SIL OFL)
 api/identify.php        Proxy zu Pl@ntNet
+api/auth.php            Konten (Registrieren, Login, Passwort)
+api/sync.php            Daten und Fotos synchronisieren
+api/server.php          Server-Infos für die Einstellungen
+api/lib.php             Datenbank, Sitzung, Hilfsfunktionen
 api/config.example.php  Vorlage für die Konfiguration
 CLAUDE.md               Projektkontext für Claude Code
 ```

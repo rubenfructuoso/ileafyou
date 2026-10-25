@@ -4,3 +4,6 @@ ileafyou-config.php
 
 # System
 .DS_Store
+
+# Lokale Testdatenbank
+*.sqlite

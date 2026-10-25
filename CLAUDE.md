@@ -11,7 +11,7 @@ Die App bleibt grundsätzlich **kostenlos**. Eine KI-Erkennung als Abo ist eine 
 ## Stack und Regeln
 
 - **Vanilla HTML, CSS, JS.** Kein Framework, kein Build-Schritt, keine npm-Abhängigkeiten im Frontend. So bleibt das Projekt ohne Toolchain wartbar.
-- **PHP ≥ 8.1** nur für `api/` (Proxy zu Externen). Kein Datenbankserver bisher.
+- **PHP ≥ 8.1** nur für `api/`: Erkennungs-Proxy, Konten, Sync. MariaDB bei Hosttech (Tabellen mit Präfix `ileafyou_`, legt `api/lib.php` selbst an); lokal SQLite über `db_dsn`.
 - Daten liegen in IndexedDB (Datenbank `ileafyou`, Store `kv`, Schlüssel `ileafyou.v1`) als JSON-String, ohne das 5-MB-Limit von localStorage. Alte Daten aus `localStorage` (`ileafyou.v1`, `blattwerk.v1`) übernimmt `load()` beim ersten Start; ohne IndexedDB bleibt localStorage als Rückfall. Änderungen am Datenmodell brauchen eine Migration in `normalize()` (läuft beim Laden und beim Import), bestehende Daten dürfen nicht verloren gehen.
 - Datensicherung: „Daten sichern“ lädt `ileafyou-JJJJ-MM-TT.json` herunter (`{ app, v, exported, state }`), „Sicherung laden“ ersetzt nach Rückfrage alles auf dem Gerät.
 - Geheimnisse (API-Schlüssel) nie ins Frontend und nie ins Repo. Konfiguration: `ileafyou-config.php` über dem Webroot, Vorlage in `api/config.example.php`.
@@ -19,6 +19,15 @@ Die App bleibt grundsätzlich **kostenlos**. Eine KI-Erkennung als Abo ist eine 
 - Deployment: Push auf `main` lädt per FTPS nach `/ileafyou.rekreativ.ch` (Hosttech `181.hosttech.eu`, Benutzer `rekreativ`, Secret `FTP_PASSWORD`), siehe `.github/workflows/deploy.yml`.
 - **Direkt auf `main` arbeiten:** committen und `main` pushen, keine Branches und keine Pull Requests. Jeder Push geht sofort live.
 - Kleine, gezielte Änderungen statt Komplett-Umbauten. Rubén bevorzugt iteratives Verfeinern.
+
+## Konten und Sync
+
+- Eigene Konten mit E-Mail und Passwort (`api/auth.php`), Sitzung als httpOnly-Cookie `ily_session` (1 Jahr, Token gehasht in `sessions`). POSTs brauchen den Header `X-ILY: 1` (CSRF-Schutz), Fehler kommen als Code (`{ error: 'login_bad' }`), die App übersetzt sie mit `err_<code>`.
+- **Anmeldung ist Pflicht, sobald die Datenbank konfiguriert ist.** Ohne `db_name`/`db_dsn` meldet `auth.php?a=status` `configured:false`, dann läuft die App wie früher nur auf dem Gerät.
+- Sync (`api/sync.php`, `js/account.js`): ganzer Zustand als JSON mit Revision. Fotos stehen im Server-Zustand nur als Verweis `ily-photo:<sha256>` und liegen einzeln in `photos`. Speichern markiert „dirty“ und lädt nach 1,5 s hoch; beim Öffnen und bei Rückkehr in die App wird zuerst geholt. Bei Konflikt (409) führt `merge()` zusammen: Pflanzen und Log-Einträge nach `id` vereint, gelöschte Pflanzen über `state.deleted`. Import, Zurücksetzen und Beispielgarten ersetzen den Server-Stand (`replaced()`).
+- Offline arbeitet ein angemeldetes Gerät mit dem letzten Stand weiter und synchronisiert später. Abmelden löscht die Daten auf dem Gerät (sie liegen auf dem Server).
+- Passwort vergessen: `auth.php?a=forgot` schickt per `mail()` einen Link `?reset=<token>` (1 Stunde gültig). Die Mailtexte stehen in `auth.php` (`RESET_MAIL`), nicht in `i18n.js`.
+- Einstellungen (Zahnrad oben rechts): Konto, Darstellung (pro Gerät in localStorage `ileafyou.theme`), Sprache, Garten, Daten, Server-Infos (`api/server.php`, Sicherheitsstand in `PHP_SICHER` nachführen).
 
 ## Sprachen und Texte
 
@@ -69,6 +78,7 @@ state = {
   lang,                                  // 'de' | 'en' | 'es' | 'fr'
   sites: [{ id, name }],                 // Orte: Zuhause, Büro, Atelier …; mindestens einer
   site,                                  // aktiver Ort-Filter, null = alle Orte
+  deleted: [{ id, at }],                 // gelöschte Pflanzen, damit der Sync sie nicht zurückholt (max. 300)
   game: { xp, level, streak, best, lastCheck, dayDone, badges: [], vacation?: { until } }
 }
 ```
@@ -93,14 +103,14 @@ Log-Typen: `water`, `feed`, `repot`, `note`, `photo` (mit `img`), `check` (Spät
 
 ## Stand
 
-Fertig: vier Sprachen, Pflanzen erfassen und bearbeiten, Fälligkeiten, „Heute dran“, Wochenvorschau, Protokoll, Foto-Tagebuch, Später-Funktion, mehrere Orte mit Räume-Filter, Ferienmodus, Levels, Serie, Abzeichen, Beispielgarten, Pflegevorschläge (`js/care.js`), Datensicherung (Export/Import), Speicher in IndexedDB, Schriften selbst gehostet (`fonts/`), PWA (installierbar, offline, Button „App installieren“ mit Anleitung fürs iPhone), Erkennungs-Proxy.
+Fertig: vier Sprachen, Pflanzen erfassen und bearbeiten, Fälligkeiten, „Heute dran“, Wochenvorschau, Protokoll, Foto-Tagebuch, Später-Funktion, mehrere Orte mit Räume-Filter, Ferienmodus, Levels, Serie, Abzeichen, Beispielgarten, Pflegevorschläge (`js/care.js`), Datensicherung (Export/Import), Speicher in IndexedDB, Schriften selbst gehostet (`fonts/`), PWA (installierbar, offline, Button „App installieren“ mit Anleitung fürs iPhone), Erkennungs-Proxy, Konten mit Login, Sync zwischen Geräten, Einstellungen.
 
 Ungetestet: `api/identify.php` gegen die echte Pl@ntNet-API. Antwortformat vor dem ersten Einsatz mit einem echten Schlüssel prüfen.
 
 ## Nächste Schritte (Vorschläge, nicht beschlossen)
 
-1. **Erinnerungen:** Web Push mit VAPID-Schlüsseln, Abos serverseitig speichern, Cron-Job prüft täglich Fälligkeiten. Auf dem iPhone nur, wenn die App installiert ist (ab iOS 16.4). Braucht Fälligkeiten auf dem Server, also Sync.
-2. **Familie / mehrere Geräte:** Konten und Sync über PHP + MySQL.
+1. **Erinnerungen:** Web Push mit VAPID-Schlüsseln, Abos in der Datenbank, Cron-Job prüft täglich die Fälligkeiten aus dem synchronisierten Zustand. Auf dem iPhone nur, wenn die App installiert ist (ab iOS 16.4).
+2. **Familie:** Pflanzen oder Orte mit anderen Konten teilen.
 3. **Eigene Illustrationen** für Abzeichen und Pflanzen-Platzhalter statt Emojis.
 
 ## Build-Varianten
