@@ -23,17 +23,6 @@ jobs:
         run: sed -i "s/const VERSION = '[^']*';/const VERSION = 'ileafyou-${GITHUB_SHA::7}';/" sw.js
 
       - name: Per FTPS hochladen
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: 181.hosttech.eu
-          username: rekreativ
-          password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftps
-          server-dir: /ileafyou.rekreativ.ch/
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/.DS_Store
-            README.md
-            CLAUDE.md
-            api/config.php
+        run: python3 .github/ftp-deploy.py
+        env:
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
