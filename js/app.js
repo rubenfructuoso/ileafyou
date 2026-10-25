@@ -136,12 +136,34 @@ const verb = t => tr(t);
 const verbL = t => tr(t + 'L');
 
 /* ---------- Speichern & Laden ---------- */
-function load(){
-  try {
-    let r = localStorage.getItem(KEY);
-    if (!r) for (const k of OLD_KEYS){ r = localStorage.getItem(k); if (r) break; }
-    if (r) state = JSON.parse(r);
-  } catch(e) {}
+// IndexedDB statt localStorage: kein 5-MB-Limit, Platz für das Foto-Tagebuch.
+// Ohne IndexedDB (selten) bleibt localStorage. Alte localStorage-Daten werden beim ersten Start übernommen.
+let useLS = false, dbP = null;
+function idb(){
+  return dbP ||= new Promise((res, rej) => {
+    if (!window.indexedDB) return rej(new Error('no idb'));
+    const r = indexedDB.open('ileafyou', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('kv');
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+  });
+}
+const idbGet = () => idb().then(db => new Promise((res, rej) => { const q = db.transaction('kv').objectStore('kv').get(KEY); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); }));
+const idbPut = v => idb().then(db => new Promise((res, rej) => { const t = db.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, KEY); t.oncomplete = res; t.onerror = t.onabort = () => rej(t.error); }));
+function lsGet(){
+  try { let r = localStorage.getItem(KEY); if (!r) for (const k of OLD_KEYS){ r = localStorage.getItem(k); if (r) break; } return r; } catch(e) { return null; }
+}
+async function load(){
+  let r = null, fromLS = false;
+  try { r = await idbGet(); } catch(e) { useLS = true; }
+  if (!r){ r = lsGet(); fromLS = !!r; }
+  try { if (r) state = JSON.parse(r); } catch(e) {}
+  normalize();
+  if (fromLS && !useLS) idbPut(JSON.stringify(state)).then(() => { try { [KEY, ...OLD_KEYS].forEach(k => localStorage.removeItem(k)); } catch(e) {} }).catch(() => { useLS = true; });
+  if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+}
+// Datenmodell auf den aktuellen Stand bringen (beim Laden und beim Import)
+function normalize(){
+  if (!state || typeof state !== 'object') state = { plants: [] };
   if (!Array.isArray(state.plants)) state.plants = [];
   state.plants.forEach(p => { if (!p.icon){ p.icon = EMOJI_KIND[p.emoji] || (p.emoji === '🪴' && /aloe/i.test(p.species || '') ? 'aloe' : 'generic'); } delete p.emoji; });
   migrateSites(); game();
@@ -151,7 +173,30 @@ function migrateSites(){
   state.plants.forEach(p => { if (!state.sites.some(s => s.id === p.siteId)) p.siteId = state.sites[0].id; });
   if (state.site && !state.sites.some(s => s.id === state.site)) state.site = null;
 }
-function save(){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e) { toast(tr('saveFail')); } }
+function save(){
+  const s = JSON.stringify(state);
+  if (!useLS) return void idbPut(s).catch(() => toast(tr('saveFail')));
+  try { localStorage.setItem(KEY, s); } catch(e) { toast(tr('saveFail')); }
+}
+
+/* ---------- Datensicherung: Export und Import als JSON ---------- */
+function exportData(){
+  const data = JSON.stringify({ app: 'ileafyou', v: 1, exported: new Date().toISOString(), state });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([data], { type: 'application/json' }));
+  a.download = `ileafyou-${dkey(new Date())}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  toast(tr('exp_done'));
+}
+$('#importIn').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  let next;
+  try { const d = JSON.parse(await f.text()); next = d && d.app === 'ileafyou' ? d.state : d; } catch(err) {}
+  if (!next || !Array.isArray(next.plants)) return toast(tr('imp_bad'));
+  const apply = () => { const keepLang = state.lang; state = next; if (!state.lang) state.lang = keepLang; normalize(); save(); applyStatic(); render(); toast(tr('imp_done')); };
+  if (!state.plants.length) apply(); else ask(tr('imp_ask'), tr('imp_btn'), apply);
+});
 const siteName = id => (state.sites.find(s => s.id === id) || {}).name || '';
 const inView = p => !state.site || p.siteId === state.site;
 const siteTag = p => !state.site && state.sites.length > 1 ? `, ${esc(siteName(p.siteId))}` : '';
@@ -230,7 +275,8 @@ function render(){
 function footHtml(full){
   const sel = `<label class="langsel"><span>${tr('lang')}</span><select id="langSel">${LANGS.map(l => `<option value="${l}" ${l === lang() ? 'selected' : ''}>${I18N[l].langName}</option>`).join('')}</select></label>`;
   const inst = canInstall() ? `<button data-action="install">${tr('foot_install')}</button>` : '';
-  return `<div class="foot">${inst}${full ? `<button data-action="vac">${tr('foot_vac')}</button><button data-action="demo">${tr('foot_demo')}</button><button data-action="reset">${tr('foot_reset')}</button>` : ''}${sel}</div>`;
+  const exp = full ? `<button data-action="export">${tr('foot_export')}</button>` : '';
+  return `<div class="foot">${inst}${full ? `<button data-action="vac">${tr('foot_vac')}</button><button data-action="demo">${tr('foot_demo')}</button>` : ''}${exp}<button data-action="import">${tr('foot_import')}</button>${full ? `<button data-action="reset">${tr('foot_reset')}</button>` : ''}${sel}</div>`;
 }
 
 /* ---------- Detailansicht ---------- */
@@ -519,6 +565,8 @@ document.addEventListener('click', e => {
   else if (action === 'demo'){ if (!state.plants.length) loadDemo(); else ask(tr('demo_ask'), tr('load'), loadDemo); }
   else if (action === 'reset') ask(tr('reset_ask'), tr('del'), () => { state = { lang: state.lang, plants: [] }; migrateSites(); game(); save(); render(); toast(tr('reset_done')); });
   else if (action === 'install') install();
+  else if (action === 'export') exportData();
+  else if (action === 'import') $('#importIn').click();
   else if (action === 'close') b.closest('dialog').close();
 });
 document.addEventListener('change', e => {
@@ -528,8 +576,10 @@ document.addEventListener('change', e => {
 document.querySelectorAll('dialog').forEach(d => d.addEventListener('click', e => { if (e.target === d) d.close(); }));
 document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'noteIn'){ e.preventDefault(); const p = e.target.nextElementSibling; p && p.click(); } });
 
-load(); applyStatic(); dailyCheck(); render(); checkLevel() || checkBadges();
-document.addEventListener('visibilitychange', () => { if (!document.hidden){ dailyCheck(); render(); checkLevel(); } });
+load().then(() => {
+  applyStatic(); dailyCheck(); render(); checkLevel() || checkBadges();
+  document.addEventListener('visibilitychange', () => { if (!document.hidden){ dailyCheck(); render(); checkLevel(); } });
+});
 
 /* ---------- PWA: Service Worker und Installation (nur eigener Server) ---------- */
 if (BUILD === 'pwa' && 'serviceWorker' in navigator) {

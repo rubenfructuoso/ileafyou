@@ -1,3 +1,7 @@
+/* Schriften selbst gehostet (SIL OFL, Lizenzen in fonts/), Latin-Teilmenge für DE/EN/ES/FR */
+@font-face{font-family:"Atkinson Hyperlegible";font-style:normal;font-weight:400;font-display:swap;src:url(../fonts/atkinson-hyperlegible-400.woff2) format("woff2")}
+@font-face{font-family:"Atkinson Hyperlegible";font-style:normal;font-weight:700;font-display:swap;src:url(../fonts/atkinson-hyperlegible-700.woff2) format("woff2")}
+@font-face{font-family:"Gluten";font-style:normal;font-weight:400 900;font-display:swap;src:url(../fonts/gluten-variable.woff2) format("woff2")}
 :root{
   --bg:#F2F4EC;--surface:#FFFFFF;--ink:#3B2A20;--muted:#4E5A44;--line:#D5DBC8;--moss:#2F5A35;--onmoss:#F2F4EC;--trieb:#9BD25B;--water:#2F7CB0;--feed:#E0A43A;--onfeed:#3B2A20;--danger:#B2453A;--leafbg:#E3E8D8;--leafA:#2F5A35;--leafB:#9BD25B;--pot:#3B2A20;--gear:#E0A43A;
   color-scheme:light;box-sizing:border-box;
@@ -131,7 +135,7 @@ select{font:inherit;width:100%;padding:11px 12px;border-radius:12px;border:1px s
 .siterow button:disabled{opacity:.35;cursor:default}
 .foot{margin-top:40px;display:flex;gap:18px;justify-content:center;flex-wrap:wrap}
 .foot button{background:none;color:var(--muted);text-decoration:underline;padding:6px}
-.toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom,0px));transform:translate(-50%,8px);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;display:flex;gap:14px;align-items:center;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;max-width:calc(100% - 32px);z-index:50}
+.toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom,0px));transform:translate(-50%,8px);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:22px;display:flex;gap:14px;align-items:center;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;max-width:calc(100% - 32px);z-index:50}
 .toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
 .toast button{background:none;color:var(--bg);font-weight:700;text-decoration:underline;padding:0}
 :focus-visible{outline:3px solid var(--water);outline-offset:2px}

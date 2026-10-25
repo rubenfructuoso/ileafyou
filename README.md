@@ -44,6 +44,7 @@ sw.js                   Service Worker (offline)
 manifest.json           PWA-Manifest
 .htaccess               Dateitypen und Caching (Apache)
 img/                    App-Icons (nicht /icons/, den belegt Apache)
+fonts/                  Schriften (selbst gehostet, SIL OFL)
 api/identify.php        Proxy zu Pl@ntNet
 api/config.example.php  Vorlage für die Konfiguration
 CLAUDE.md               Projektkontext für Claude Code

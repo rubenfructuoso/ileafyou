@@ -14,9 +14,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="i leaf you">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Gluten:wght@400..900&display=swap" rel="stylesheet">
+<link rel="preload" href="fonts/gluten-variable.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/app.css">
 </head>
 <body data-build="pwa">
@@ -63,6 +61,7 @@
 <dialog id="celDlg"><div class="celebrate" id="cel"></div></dialog>
 <dialog id="askDlg"><div class="celebrate"><h2 id="askTxt" style="font-size:1.35rem"></h2><button class="primary" id="askOk"></button><button class="ghost" data-action="close" style="color:var(--muted)" data-i18n="cancel"></button></div></dialog>
 
+<input type="file" id="importIn" accept="application/json,.json" hidden>
 <div class="toast" id="toast" role="status"><span id="toastMsg"></span><button id="toastUndo" data-i18n="undo" hidden></button></div>
 
 <script src="js/i18n.js"></script>

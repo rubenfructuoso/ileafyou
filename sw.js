@@ -1,4 +1,4 @@
-// i leaf you Service Worker: App-Shell offline, Schriften aus dem Cache.
+// i leaf you Service Worker: App-Shell und Schriften offline.
 // Bei jeder Änderung an Shell-Dateien VERSION erhöhen, sonst sehen Nutzer die alte Version.
 const VERSION = 'ileafyou-v5';
 const SHELL = [
@@ -10,7 +10,10 @@ const SHELL = [
   'manifest.json',
   'img/icon.svg',
   'img/icon-192.png',
-  'img/icon-512.png'
+  'img/icon-512.png',
+  'fonts/atkinson-hyperlegible-400.woff2',
+  'fonts/atkinson-hyperlegible-700.woff2',
+  'fonts/gluten-variable.woff2'
 ];
 
 self.addEventListener('install', e => {
@@ -32,18 +35,6 @@ self.addEventListener('fetch', e => {
 
   // API nie cachen
   if (url.pathname.includes('/api/')) return;
-
-  // Google Fonts: Cache zuerst, im Hintergrund aktualisieren
-  if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
-    e.respondWith(
-      caches.open(VERSION).then(async c => {
-        const hit = await c.match(req);
-        const net = fetch(req).then(r => { c.put(req, r.clone()); return r; }).catch(() => hit);
-        return hit || net;
-      })
-    );
-    return;
-  }
 
   // Eigene Dateien: Netz zuerst, offline aus dem Cache
   if (url.origin === location.origin) {

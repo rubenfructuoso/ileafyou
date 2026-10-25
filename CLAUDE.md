@@ -12,7 +12,8 @@ Die App bleibt grundsätzlich **kostenlos**. Eine KI-Erkennung als Abo ist eine 
 
 - **Vanilla HTML, CSS, JS.** Kein Framework, kein Build-Schritt, keine npm-Abhängigkeiten im Frontend. So bleibt das Projekt ohne Toolchain wartbar.
 - **PHP ≥ 8.1** nur für `api/` (Proxy zu Externen). Kein Datenbankserver bisher.
-- Daten liegen in `localStorage` unter dem Schlüssel `ileafyou.v1` (alte Daten unter `blattwerk.v1` werden beim Laden übernommen). Änderungen am Datenmodell brauchen eine Migration in `load()`, bestehende Daten dürfen nicht verloren gehen.
+- Daten liegen in IndexedDB (Datenbank `ileafyou`, Store `kv`, Schlüssel `ileafyou.v1`) als JSON-String, ohne das 5-MB-Limit von localStorage. Alte Daten aus `localStorage` (`ileafyou.v1`, `blattwerk.v1`) übernimmt `load()` beim ersten Start; ohne IndexedDB bleibt localStorage als Rückfall. Änderungen am Datenmodell brauchen eine Migration in `normalize()` (läuft beim Laden und beim Import), bestehende Daten dürfen nicht verloren gehen.
+- Datensicherung: „Daten sichern“ lädt `ileafyou-JJJJ-MM-TT.json` herunter (`{ app, v, exported, state }`), „Sicherung laden“ ersetzt nach Rückfrage alles auf dem Gerät.
 - Geheimnisse (API-Schlüssel) nie ins Frontend und nie ins Repo. Konfiguration: `ileafyou-config.php` über dem Webroot, Vorlage in `api/config.example.php`.
 - `VERSION` in `sw.js` setzt der Deploy-Workflow automatisch auf den Commit-Hash. Neue Shell-Dateien in `SHELL` in `sw.js` eintragen.
 - Deployment: Push auf `main` lädt per FTPS nach `/ileafyou.rekreativ.ch` (Hosttech `181.hosttech.eu`, Benutzer `rekreativ`, Secret `FTP_PASSWORD`), siehe `.github/workflows/deploy.yml`.
@@ -87,18 +88,15 @@ Log-Typen: `water`, `feed`, `repot`, `note`, `photo` (mit `img`), `check` (Spät
 
 ## Stand
 
-Fertig: vier Sprachen, Pflanzen erfassen und bearbeiten, Fälligkeiten, „Heute dran“, Wochenvorschau, Protokoll, Foto-Tagebuch, Später-Funktion, mehrere Orte mit Räume-Filter, Ferienmodus, Levels, Serie, Abzeichen, Beispielgarten, PWA (installierbar, offline, Button „App installieren“ mit Anleitung fürs iPhone), Erkennungs-Proxy.
+Fertig: vier Sprachen, Pflanzen erfassen und bearbeiten, Fälligkeiten, „Heute dran“, Wochenvorschau, Protokoll, Foto-Tagebuch, Später-Funktion, mehrere Orte mit Räume-Filter, Ferienmodus, Levels, Serie, Abzeichen, Beispielgarten, Datensicherung (Export/Import), Speicher in IndexedDB, Schriften selbst gehostet (`fonts/`), PWA (installierbar, offline, Button „App installieren“ mit Anleitung fürs iPhone), Erkennungs-Proxy.
 
 Ungetestet: `api/identify.php` gegen die echte Pl@ntNet-API. Antwortformat vor dem ersten Einsatz mit einem echten Schlüssel prüfen.
 
 ## Nächste Schritte (Vorschläge, nicht beschlossen)
 
 1. **Erinnerungen:** Web Push mit VAPID-Schlüsseln, Abos serverseitig speichern, Cron-Job prüft täglich Fälligkeiten. Auf dem iPhone nur, wenn die App installiert ist (ab iOS 16.4). Braucht Fälligkeiten auf dem Server, also Sync.
-2. **Datensicherung:** Export und Import als JSON, damit beim Handywechsel nichts verloren geht.
-3. **Schriften selbst hosten** statt Google Fonts (Datenschutz, nDSG).
-4. **Speicher:** Fotos aus `localStorage` nach IndexedDB verschieben, sobald das Tagebuch wächst (localStorage ist auf ca. 5 MB begrenzt).
-5. **Familie / mehrere Geräte:** Konten und Sync über PHP + MySQL.
-6. **Eigene Illustrationen** für Abzeichen und Pflanzen-Platzhalter statt Emojis.
+2. **Familie / mehrere Geräte:** Konten und Sync über PHP + MySQL.
+3. **Eigene Illustrationen** für Abzeichen und Pflanzen-Platzhalter statt Emojis.
 
 ## Build-Varianten
 
