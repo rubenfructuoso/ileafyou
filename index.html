@@ -5,15 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>i leaf you</title>
 <meta name="description" content="Pflanzen pflegen, Level sammeln.">
-<meta name="theme-color" content="#F2F4EC" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#2F5A35" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#18231A" media="(prefers-color-scheme: dark)">
 <script>
 // Darstellung pro Gerät: 'light', 'dark' oder leer (= wie das Handy). Vor dem CSS, damit nichts aufblitzt.
+// Hell: Theme-Farbe Moos, damit Android die Navigationsleiste grün mit weissen Buttons zeigt.
 function ilyTheme(t){
   var r = document.documentElement;
   if (t === 'light' || t === 'dark') r.setAttribute('data-theme', t); else r.removeAttribute('data-theme');
   document.querySelectorAll('meta[name="theme-color"]').forEach(function (m) {
-    m.content = t === 'dark' ? '#18231A' : t === 'light' ? '#F2F4EC' : (/dark/.test(m.media) ? '#18231A' : '#F2F4EC');
+    m.content = t === 'dark' ? '#18231A' : t === 'light' ? '#2F5A35' : (/dark/.test(m.media) ? '#18231A' : '#2F5A35');
   });
 }
 try { ilyTheme(localStorage.getItem('ileafyou.theme')); } catch (e) {}

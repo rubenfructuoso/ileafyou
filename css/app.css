@@ -219,3 +219,10 @@ header.top .date{grid-column:1 / -1}
 .pill{display:inline-block;border-radius:999px;padding:2px 10px;font-size:.85rem;font-weight:700;margin:2px 0}
 .pill.ok{background:var(--leafbg);color:var(--moss)}
 .pill.bad{background:var(--danger);color:#fff}
+
+/* Pflegetipps in der Detailansicht */
+.care{margin-top:18px;background:var(--leafbg);border-radius:16px;padding:14px 16px}
+.care h2{font-size:1.15rem;margin-bottom:4px}
+.care .facts{margin-top:6px;grid-template-columns:1fr;gap:2px}
+.care .facts dt{font-weight:700;color:var(--moss);margin-top:8px}
+.caretip{margin-top:10px}

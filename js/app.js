@@ -281,6 +281,15 @@ function footHtml(){
 }
 
 /* ---------- Detailansicht ---------- */
+// Pflegetipps aus CARE: über die Art, sonst über einen genau passenden Namen
+function careHtml(p){
+  const c = careFor(p.species || '') || CARE.find(x => Object.values(x.names).some(n => norm(n) === norm(p.name)));
+  if (!c) return `<p class="hint caretip">${tr('care_none')}</p>`;
+  return `<section class="care"><h2>${tr('h_care')}</h2><dl class="facts">
+    <dt>${tr('d_light')}</dt><dd>${tr('light_' + c.light)}</dd>
+    <dt>${tr('d_waterhow')}</dt><dd>${tr('wat_' + c.wat)}</dd>
+    <dt>${tr('d_fert')}</dt><dd>${tr('fert_' + c.fert)}</dd></dl><p class="hint">${tr('care_season')}</p></section>`;
+}
 function renderDetail(){
   const p = getP(detailId); if (!p){ $('#detailDlg').close(); return; }
   const dw = due(p,'water'), df = due(p,'feed');
@@ -299,6 +308,7 @@ function renderDetail(){
     </dl>
     ${p.notes ? `<div class="notes">${esc(p.notes)}</div>` : ''}
     <button class="linkbtn" data-action="edit" data-id="${p.id}">${tr('edit')}</button>
+    ${careHtml(p)}
     <div class="actions">
       <button class="act water" data-action="log" data-type="water" data-id="${p.id}">${typeLabel('water')}<small>${tr('logNow')}</small></button>
       <button class="act feed" data-action="log" data-type="feed" data-id="${p.id}">${typeLabel('feed')}<small>${tr('logNow')}</small></button>

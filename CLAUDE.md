@@ -27,6 +27,7 @@ Die App bleibt grundsätzlich **kostenlos**. Eine KI-Erkennung als Abo ist eine 
 - Sync (`api/sync.php`, `js/account.js`): ganzer Zustand als JSON mit Revision. Fotos stehen im Server-Zustand nur als Verweis `ily-photo:<sha256>` und liegen einzeln in `photos`. Speichern markiert „dirty“ und lädt nach 1,5 s hoch; beim Öffnen und bei Rückkehr in die App wird zuerst geholt. Bei Konflikt (409) führt `merge()` zusammen: Pflanzen und Log-Einträge nach `id` vereint, gelöschte Pflanzen über `state.deleted`. Import, Zurücksetzen und Beispielgarten ersetzen den Server-Stand (`replaced()`).
 - Offline arbeitet ein angemeldetes Gerät mit dem letzten Stand weiter und synchronisiert später. Abmelden löscht die Daten auf dem Gerät (sie liegen auf dem Server).
 - Passwort vergessen: `auth.php?a=forgot` schickt per `mail()` einen Link `?reset=<token>` (1 Stunde gültig). Die Mailtexte stehen in `auth.php` (`RESET_MAIL`), nicht in `i18n.js`.
+- Theme-Farbe im hellen Design ist Moos (`#2F5A35`), damit Android die grüne Navigationsleiste mit weissen Buttons zeigt.
 - Einstellungen (Zahnrad oben rechts): Konto, Darstellung (pro Gerät in localStorage `ileafyou.theme`), Sprache, Garten, Daten, Server-Infos (`api/server.php`, Sicherheitsstand in `PHP_SICHER` nachführen).
 
 ## Sprachen und Texte
@@ -89,7 +90,7 @@ Log-Typen: `water`, `feed`, `repot`, `note`, `photo` (mit `img`), `check` (Spät
 
 ## Pflegevorschläge
 
-`js/care.js` enthält `CARE`: rund 60 gängige Zimmer-, Balkonpflanzen und Kräuter mit wissenschaftlichem Namen, Namen in vier Sprachen, Giess- und Düngeintervall, Pixel-Symbol und Synonymen. Gratis, offline, ohne API. Beim Tippen in Name oder Art schlägt das Formular passende Pflanzen vor; ein Tipp füllt Art, Intervalle und Symbol. Nach der Foto-Erkennung sucht `careFor()` zuerst die Art, dann die Gattung, und übernimmt die Werte automatisch. Neue Pflanzen einfach als Zeile in `CARE` ergänzen.
+`js/care.js` enthält `CARE`: rund 60 gängige Zimmer-, Balkonpflanzen und Kräuter mit wissenschaftlichem Namen, Namen in vier Sprachen, Giess- und Düngeintervall, Pixel-Symbol und Synonymen. Gratis, offline, ohne API. Beim Tippen in Name oder Art schlägt das Formular passende Pflanzen vor; ein Tipp füllt Art, Intervalle und Symbol. Nach der Foto-Erkennung sucht `careFor()` zuerst die Art, dann die Gattung, und übernimmt die Werte automatisch. Jede Zeile hat ausserdem Standort (`sun`, `bright`, `partial`, `shade`), Giessart (`dry`, `moderate`, `moist`, `orchid`) und Düngerart (`green`, `bloom`, `cactus`, `citrus`, `orchid`, `herb`, `veg`); die Texte dazu (`light_*`, `wat_*`, `fert_*`) stehen in `i18n.js` und erscheinen als „Pflegetipps“ in der Detailansicht (`careHtml()`). Neue Pflanzen einfach als Zeile in `CARE` ergänzen.
 
 ## Spielregeln
 
