@@ -16,6 +16,7 @@ Die App bleibt grundsätzlich **kostenlos**. Eine KI-Erkennung als Abo ist eine 
 - Geheimnisse (API-Schlüssel) nie ins Frontend und nie ins Repo. Konfiguration: `ileafyou-config.php` über dem Webroot, Vorlage in `api/config.example.php`.
 - `VERSION` in `sw.js` setzt der Deploy-Workflow automatisch auf den Commit-Hash. Neue Shell-Dateien in `SHELL` in `sw.js` eintragen.
 - Deployment: Push auf `main` lädt per FTPS nach `/ileafyou.rekreativ.ch` (Hosttech `181.hosttech.eu`, Benutzer `rekreativ`, Secret `FTP_PASSWORD`), siehe `.github/workflows/deploy.yml`.
+- **Direkt auf `main` arbeiten:** committen und `main` pushen, keine Branches und keine Pull Requests. Jeder Push geht sofort live.
 - Kleine, gezielte Änderungen statt Komplett-Umbauten. Rubén bevorzugt iteratives Verfeinern.
 
 ## Sprachen und Texte
