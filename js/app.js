@@ -1,6 +1,7 @@
 /* i leaf you: App-Logik. Texte nur über tr(), nie hart codiert. */
 const KEY = 'ileafyou.v1', OLD_KEYS = ['blattwerk.v1'];
 const BUILD = document.body.dataset.build || 'pwa';
+let installEvt = null; // gemerktes beforeinstallprompt-Ereignis
 let state = { plants: [] };
 let pendingIcon = 'generic', roomFilter = null, editingId = null, pendingPhoto = null, detailId = null, undoFn = null, toastTimer = null;
 
@@ -228,7 +229,8 @@ function render(){
 }
 function footHtml(full){
   const sel = `<label class="langsel"><span>${tr('lang')}</span><select id="langSel">${LANGS.map(l => `<option value="${l}" ${l === lang() ? 'selected' : ''}>${I18N[l].langName}</option>`).join('')}</select></label>`;
-  return `<div class="foot">${full ? `<button data-action="vac">${tr('foot_vac')}</button><button data-action="demo">${tr('foot_demo')}</button><button data-action="reset">${tr('foot_reset')}</button>` : ''}${sel}</div>`;
+  const inst = canInstall() ? `<button data-action="install">${tr('foot_install')}</button>` : '';
+  return `<div class="foot">${inst}${full ? `<button data-action="vac">${tr('foot_vac')}</button><button data-action="demo">${tr('foot_demo')}</button><button data-action="reset">${tr('foot_reset')}</button>` : ''}${sel}</div>`;
 }
 
 /* ---------- Detailansicht ---------- */
@@ -516,6 +518,7 @@ document.addEventListener('click', e => {
   else if (action === 'cover'){ const p = getP(id), l = p && p.log.find(x => x.id === b.dataset.lid); if (l){ p.photo = l.img; save(); refresh(); toast(tr('cover_done')); } }
   else if (action === 'demo'){ if (!state.plants.length) loadDemo(); else ask(tr('demo_ask'), tr('load'), loadDemo); }
   else if (action === 'reset') ask(tr('reset_ask'), tr('del'), () => { state = { lang: state.lang, plants: [] }; migrateSites(); game(); save(); render(); toast(tr('reset_done')); });
+  else if (action === 'install') install();
   else if (action === 'close') b.closest('dialog').close();
 });
 document.addEventListener('change', e => {
@@ -528,7 +531,22 @@ document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id
 load(); applyStatic(); dailyCheck(); render(); checkLevel() || checkBadges();
 document.addEventListener('visibilitychange', () => { if (!document.hidden){ dailyCheck(); render(); checkLevel(); } });
 
-/* ---------- PWA: Service Worker (nur eigener Server) ---------- */
+/* ---------- PWA: Service Worker und Installation (nur eigener Server) ---------- */
 if (BUILD === 'pwa' && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 }
+// Android/Chrome liefert einen Installationsdialog, iPhone braucht eine Anleitung (Teilen, Zum Home-Bildschirm)
+function isStandalone(){ return matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; }
+function isIOS(){ return /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); }
+function canInstall(){ return BUILD === 'pwa' && !isStandalone() && (!!installEvt || isIOS()); }
+async function install(){
+  if (installEvt){
+    installEvt.prompt();
+    const { outcome } = await installEvt.userChoice; installEvt = null; render();
+    if (outcome === 'accepted') toast(tr('inst_done'));
+    return;
+  }
+  openCel(`<div class="big">${plantSvg(7)}</div><h2>${tr('inst_h')}</h2><p>${isIOS() ? tr('inst_ios') : tr('inst_other')}</p><button class="primary" data-action="close">${tr('btn_continue')}</button>`);
+}
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; render(); });
+window.addEventListener('appinstalled', () => { installEvt = null; render(); });
