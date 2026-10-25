@@ -1,0 +1,39 @@
+# Lädt i leaf you bei jedem Push auf main per FTPS auf ileafyou.rekreativ.ch (hosttech).
+# Passwort als Repository-Secret FTP_PASSWORD (Benutzer rekreativ).
+# ileafyou-config.php liegt von Hand über dem Webroot und wird hier nicht angefasst.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Neue Cache-Version pro Commit, damit Nutzer nie die alte App-Shell sehen
+      - name: Service-Worker-Version setzen
+        run: sed -i "s/const VERSION = '[^']*';/const VERSION = 'ileafyou-${GITHUB_SHA::7}';/" sw.js
+
+      - name: Per FTPS hochladen
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: 181.hosttech.eu
+          username: rekreativ
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          server-dir: /ileafyou.rekreativ.ch/
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/.DS_Store
+            README.md
+            CLAUDE.md
+            api/config.php

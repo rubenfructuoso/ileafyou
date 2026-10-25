@@ -1,0 +1,6 @@
+# Zugangsdaten – nie ins Repo
+api/config.php
+ileafyou-config.php
+
+# System
+.DS_Store
