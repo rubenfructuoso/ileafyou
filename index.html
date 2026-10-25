@@ -41,6 +41,8 @@
     <input id="fSpecies" data-i18n-ph="f_speciesPh">
     <button type="button" class="linkbtn" id="identifyBtn" data-i18n="f_identify" hidden></button>
     <div class="chips idres" id="idResults"></div>
+    <div class="chips idres" id="careSug"></div>
+    <div class="hint carehint" id="careHint" hidden></div>
     <div class="row">
       <div><label for="fSite" data-i18n="f_site"></label><select id="fSite"></select></div>
       <div><label for="fLoc" data-i18n="f_place"></label><input id="fLoc" data-i18n-ph="f_placePh"></div>
@@ -65,6 +67,7 @@
 <div class="toast" id="toast" role="status"><span id="toastMsg"></span><button id="toastUndo" data-i18n="undo" hidden></button></div>
 
 <script src="js/i18n.js"></script>
+<script src="js/care.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

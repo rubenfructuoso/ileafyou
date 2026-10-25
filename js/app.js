@@ -461,6 +461,7 @@ function openForm(id){
   $('#fWater').value = p ? p.waterEvery : 7; $('#fFeed').value = p ? p.feedEvery : 30; $('#fNotes').value = p?.notes || '';
   pendingIcon = p?.icon || 'generic'; renderIconPick();
   setPhoto(p?.photo || null); $('#formDelete').hidden = !p;
+  $('#careSug').innerHTML = ''; $('#careHint').hidden = true;
   if ($('#detailDlg').open) $('#detailDlg').close();
   $('#formDlg').showModal();
 }
@@ -538,7 +539,45 @@ $('#idResults').addEventListener('click', e => {
   $('#fSpecies').value = c.dataset.sci;
   if (!$('#fName').value.trim()) $('#fName').value = c.dataset.common || c.dataset.sci;
   $('#idResults').innerHTML = '';
+  const care = careFor(c.dataset.sci); if (care) applyCare(care, false);
 });
+
+/* ---------- Pflegevorschläge aus CARE (js/care.js) ---------- */
+const norm = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+// Wissenschaftlicher Name (z. B. aus der Erkennung): zuerst Art, sonst Gattung
+function careFor(sci){
+  const w = norm(sci).replace(/\s+x\s+|\s*×\s*/g, ' ').split(/\s+/), sp = w.slice(0, 2).join(' '), genus = w[0];
+  const all = c => [c.sci, ...c.syn].map(x => norm(x).replace(/\s*×\s*/g, ' '));
+  return CARE.find(c => all(c).includes(sp)) || CARE.find(c => all(c).includes(genus)) || null;
+}
+// Freitext (Name oder Art): Treffer in allen Sprachen, Anfang vor Mitte, aktuelle Sprache zuerst
+function careSearch(q){
+  q = norm(q); if (q.length < 3) return [];
+  const score = c => {
+    const own = norm(c.names[lang()]), rest = [c.sci, ...c.syn, ...Object.values(c.names)].map(norm);
+    if (own.startsWith(q)) return 0; if (rest.some(x => x.startsWith(q))) return 1;
+    if (own.includes(q)) return 2; if (rest.some(x => x.includes(q))) return 3; return 9;
+  };
+  return CARE.map(c => [score(c), c]).filter(x => x[0] < 9).sort((a, b) => a[0] - b[0]).slice(0, 4).map(x => x[1]);
+}
+function showCareSug(e){
+  const hits = careSearch(e.target.value), sp = norm($('#fSpecies').value);
+  $('#careSug').innerHTML = hits.filter(c => norm(c.sci) !== sp).map(c => `<button type="button" class="chip" data-care="${esc(c.sci)}">${esc(c.names[lang()])} <small>${esc(c.sci)}</small></button>`).join('');
+}
+function applyCare(c, setName){
+  $('#fSpecies').value = c.sci;
+  // Namensfeld ergänzen, wenn leer oder nur ein Suchbegriff für diese Pflanze («Fenster» → «Fensterblatt»)
+  const n = norm($('#fName').value);
+  if (setName && (!n || [c.sci, ...c.syn, ...Object.values(c.names)].some(x => norm(x).includes(n)))) $('#fName').value = c.names[lang()];
+  $('#fWater').value = c.water; $('#fFeed').value = c.feed;
+  if (pendingIcon === 'generic' && c.icon !== 'generic'){ pendingIcon = c.icon; renderIconPick(); }
+  $('#careSug').innerHTML = '';
+  const h = $('#careHint'); h.hidden = false;
+  h.textContent = tr('care_hint', { name: c.names[lang()], w: c.water, feed: c.feed ? tr('care_feedN', { n: c.feed }) : tr('care_feed0') });
+}
+$('#fName').addEventListener('input', showCareSug);
+$('#fSpecies').addEventListener('input', showCareSug);
+$('#careSug').addEventListener('click', e => { const c = e.target.closest('[data-care]'); if (c) applyCare(CARE.find(x => x.sci === c.dataset.care), true); });
 
 /* ---------- Ereignisse ---------- */
 document.addEventListener('click', e => {

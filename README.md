@@ -39,6 +39,7 @@ Die `VERSION` in `sw.js` setzt der Workflow beim Deployen automatisch auf den Co
 index.html              App-Markup
 css/app.css             Styles und Design-Tokens
 js/i18n.js              alle Texte in vier Sprachen
+js/care.js              Pflegetabelle (Giess- und Düngevorschläge)
 js/app.js               gesamte App-Logik (Vanilla JS)
 sw.js                   Service Worker (offline)
 manifest.json           PWA-Manifest

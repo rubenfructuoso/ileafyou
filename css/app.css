@@ -164,6 +164,7 @@ select{font:inherit;width:100%;padding:11px 12px;border-radius:12px;border:1px s
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 .idres{margin:6px 0 0;flex-wrap:wrap}
 .idres .chip small{font-weight:400;color:var(--muted)}
+.carehint{margin-top:8px;color:var(--moss)}
 .linkbtn:disabled{opacity:.5}
 .langsel{display:flex;align-items:center;gap:8px;color:var(--muted)}
 .langsel select{width:auto;padding:6px 10px;font-size:.95rem}

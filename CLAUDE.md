@@ -27,6 +27,7 @@ Die App bleibt grundsätzlich **kostenlos**. Eine KI-Erkennung als Abo ist eine 
 - Datumsformate über `locale` je Sprache (de-CH, en-GB, es-ES, fr-CH).
 - Deutsch in Schweizer Schreibweise: **ss statt ß**.
 - Typografie je Sprache: ’ als Apostroph; Anführungszeichen „ “ (DE), “ ” (EN), « » (ES), « » mit geschütztem Leerzeichen (FR); im Französischen geschütztes Leerzeichen vor : ? !. Im Code bleiben ' und ".
+- Ausnahme: Pflanzennamen der Pflegetabelle stehen mit allen vier Sprachen direkt in `js/care.js` (Daten, keine Bedienungstexte).
 - Vom Nutzer eingegebene Texte (Pflanzennamen, Orte, Notizen) werden nicht übersetzt.
 - Ton: kurz, direkt, freundlich, nicht übererklärend. Buttons sagen, was passiert („Pflanze speichern“, nicht „Absenden“).
 - Fehlermeldungen erklären, was los ist und was hilft. Keine Entschuldigungen.
@@ -76,6 +77,10 @@ Orte filtern „Heute dran“, „Nächste Tage“ und die Pflanzenliste. Punkte
 
 Log-Typen: `water`, `feed`, `repot`, `note`, `photo` (mit `img`), `check` (Später/Erde feucht, mit `for` und `days`; der Text wird beim Anzeigen übersetzt, nicht gespeichert).
 
+## Pflegevorschläge
+
+`js/care.js` enthält `CARE`: rund 60 gängige Zimmer-, Balkonpflanzen und Kräuter mit wissenschaftlichem Namen, Namen in vier Sprachen, Giess- und Düngeintervall, Pixel-Symbol und Synonymen. Gratis, offline, ohne API. Beim Tippen in Name oder Art schlägt das Formular passende Pflanzen vor; ein Tipp füllt Art, Intervalle und Symbol. Nach der Foto-Erkennung sucht `careFor()` zuerst die Art, dann die Gattung, und übernimmt die Werte automatisch. Neue Pflanzen einfach als Zeile in `CARE` ergänzen.
+
 ## Spielregeln
 
 - Pünktlich giessen/düngen +10, verspätet +5, zu früh +2, ohne Rhythmus +3
@@ -88,7 +93,7 @@ Log-Typen: `water`, `feed`, `repot`, `note`, `photo` (mit `img`), `check` (Spät
 
 ## Stand
 
-Fertig: vier Sprachen, Pflanzen erfassen und bearbeiten, Fälligkeiten, „Heute dran“, Wochenvorschau, Protokoll, Foto-Tagebuch, Später-Funktion, mehrere Orte mit Räume-Filter, Ferienmodus, Levels, Serie, Abzeichen, Beispielgarten, Datensicherung (Export/Import), Speicher in IndexedDB, Schriften selbst gehostet (`fonts/`), PWA (installierbar, offline, Button „App installieren“ mit Anleitung fürs iPhone), Erkennungs-Proxy.
+Fertig: vier Sprachen, Pflanzen erfassen und bearbeiten, Fälligkeiten, „Heute dran“, Wochenvorschau, Protokoll, Foto-Tagebuch, Später-Funktion, mehrere Orte mit Räume-Filter, Ferienmodus, Levels, Serie, Abzeichen, Beispielgarten, Pflegevorschläge (`js/care.js`), Datensicherung (Export/Import), Speicher in IndexedDB, Schriften selbst gehostet (`fonts/`), PWA (installierbar, offline, Button „App installieren“ mit Anleitung fürs iPhone), Erkennungs-Proxy.
 
 Ungetestet: `api/identify.php` gegen die echte Pl@ntNet-API. Antwortformat vor dem ersten Einsatz mit einem echten Schlüssel prüfen.
 
@@ -106,4 +111,3 @@ Ungetestet: `api/identify.php` gegen die echte Pl@ntNet-API. Antwortformat vor d
 
 - Markenrecht: Vor dem öffentlichen Start prüfen, ob „i leaf you“ als Name und Domain frei ist.
 
-- Soll die Erkennung auch Pflegewerte (Giessintervall) vorschlagen? Dafür bräuchte es eine zusätzliche Datenquelle.

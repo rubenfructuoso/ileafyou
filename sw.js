@@ -6,6 +6,7 @@ const SHELL = [
   'index.html',
   'css/app.css',
   'js/i18n.js',
+  'js/care.js',
   'js/app.js',
   'manifest.json',
   'img/icon.svg',
