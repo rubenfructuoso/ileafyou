@@ -232,6 +232,7 @@ function celebrate(kind, extra){
 
 /* ---------- Hauptansicht ---------- */
 function render(){
+  const weekScroll = document.querySelector('.week')?.scrollLeft || 0;   // Wischposition der Vorschau behalten
   $('#date').textContent = fmtDay(new Date(), { weekday:'long', day:'numeric', month:'long' });
   const plants = state.plants;
   if (!plants.length){
@@ -275,6 +276,7 @@ function render(){
     : grouped ? state.sites.map(s => { const ps = shown.filter(p => p.siteId === s.id); return ps.length ? `<div class="sitegroup"><h3>${esc(s.name)}</h3><div class="grid">${ps.map(card).join('')}</div></div>` : ''; }).join('')
     : `<div class="grid">${shown.map(card).join('')}</div>`;
   $('#app').innerHTML = `${lvlHtml()}${sitesBar()}${vac}<section><h2>${tr('h_today')}</h2><div class="today">${today}</div></section><section><h2>${tr('h_next')}</h2>${weekHtml()}</section><section><h2>${tr('h_plants')}</h2>${chips}${cards}</section><section><h2>${tr('h_badges')}</h2>${badgesHtml()}</section>${footHtml()}`;
+  if ($('.week')) $('.week').scrollLeft = weekScroll;
 }
 // Ferienmodus, Daten, Sprache usw. liegen in den Einstellungen (Zahnrad oben rechts)
 function footHtml(){
@@ -384,8 +386,9 @@ function dayItems(i){
 const dayDate = i => { const d = new Date(); d.setDate(d.getDate() + i); return d; };
 // Wochenvorschau: Tipp auf einen Tag zeigt die Aufgaben direkt darunter, nochmals tippen schliesst
 let selDay = null;
+const WEEK_DAYS = 28;   // vier Wochen, sieben sichtbar, waagrecht wischen
 function weekHtml(){
-  const week = `<div class="week">${[0,1,2,3,4,5,6].map(i => { const dt = dayDate(i), items = dayItems(i);
+  const week = `<div class="week">${Array.from({ length: WEEK_DAYS }, (_, i) => i).map(i => { const dt = dayDate(i), items = dayItems(i);
     return `<button class="wd ${i === 0 ? 'now' : ''} ${i === selDay ? 'sel' : ''}" data-action="day" data-i="${i}" aria-expanded="${i === selDay}"><b>${i === 0 ? tr('today') : fmtDay(dt, { weekday:'short' })}</b><span class="num">${dt.getDate()}</span><span class="dots">${items.map(x => `<i class="${x.t === 'feed' ? 'f' : ''}"></i>`).join('')}</span></button>`; }).join('')}</div>`;
   return week + (selDay === null ? `<div class="hint">${tr('weekHint')}</div>` : dayHtml(selDay));
 }

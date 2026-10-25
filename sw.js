@@ -13,6 +13,7 @@ const SHELL = [
   'img/icon.svg',
   'img/icon-192.png',
   'img/icon-512.png',
+  'img/badge-96.png',
   'fonts/atkinson-hyperlegible-400.woff2',
   'fonts/atkinson-hyperlegible-700.woff2',
   'fonts/gluten-variable.woff2'
@@ -57,7 +58,7 @@ self.addEventListener('push', e => {
     tag: m.tag || 'ileafyou',
     renotify: true,
     icon: 'img/icon-192.png',
-    badge: 'img/icon-192.png',
+    badge: 'img/badge-96.png',   // einfarbige Silhouette für die Android-Statusleiste
     data: { url: m.url || './' }
   }));
 });

@@ -97,7 +97,9 @@ textarea{min-height:76px;resize:vertical}
 .dot{width:10px;height:10px;border-radius:50%;margin-top:8px;flex:none}
 .log .when{font-size:.85rem;color:var(--muted)}
 
-.week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.week{display:grid;grid-auto-flow:column;grid-auto-columns:calc((100% - 36px) / 7);gap:6px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:2px 0}
+.week::-webkit-scrollbar{display:none}
+.wd{scroll-snap-align:start}
 .wd{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:8px 2px;text-align:center;min-height:82px;display:block}
 .wd.now{border:2px solid var(--moss)}
 .wd b{display:block;font-size:.78rem;color:var(--muted);font-weight:400}
@@ -235,3 +237,11 @@ header.top .date{grid-column:1 / -1}
 .daytask{width:100%;background:none;text-align:left;color:inherit}
 .dayinfo .daytask:last-child{border-bottom:0}
 .wd.sel .dots i{box-shadow:0 0 0 2px var(--onmoss)}
+
+/* Kopf: Wortmarke bleibt einzeilig neben Logo und Zahnrad */
+.logo{gap:clamp(10px,3vw,20px);min-width:0}
+.wordmark{white-space:nowrap;font-size:clamp(1.7rem,8.5vw,2.5rem)}
+/* Waagrecht scrollende Chip-Leisten ohne sichtbare Scrollleiste */
+.sites,.chips{scrollbar-width:none}
+.sites::-webkit-scrollbar,.chips::-webkit-scrollbar{display:none}
+.toast{width:max-content}   /* nicht auf halbe Bildschirmbreite schrumpfen (left:50%) */
