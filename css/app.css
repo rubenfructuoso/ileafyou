@@ -266,3 +266,16 @@ label.check input{width:22px;height:22px;accent-color:var(--moss);flex:none}
 #geoForm{margin-top:12px}
 .outcare{background:var(--surface);border:1px solid var(--line)}
 .sitegeo{font-size:.9rem;color:var(--muted);margin:2px 0 6px}
+
+/* Wetterlage pro Ort */
+.wx{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:12px 16px;margin-bottom:12px}
+.wxhead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.wxhead span{color:var(--muted)}
+.wxhead .linkbtn{margin-left:auto}
+.wxnights{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:8px;text-align:center}
+.wxn{background:var(--bg);border-radius:10px;padding:6px 0}
+.wxn small{display:block;font-size:.75rem;color:var(--muted)}
+.wxn b{font-family:"Gluten",system-ui,sans-serif;font-size:1.05rem}
+.wxn.cold{background:var(--water);color:#fff}
+.wxn.cold small{color:#fff}
+.wx .hint{margin:8px 0 0}

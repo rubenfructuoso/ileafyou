@@ -46,9 +46,9 @@ async function loadWeather(){
     const k = geoKey(g), w = weather[k];
     if (w && Date.now() - w.at < 3 * 3600e3) continue;
     try {
-      const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${g.lat}&longitude=${g.lon}&daily=temperature_2m_min&timezone=auto&forecast_days=8`);
+      const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${g.lat}&longitude=${g.lon}&daily=temperature_2m_min&current=temperature_2m&timezone=auto&forecast_days=8`);
       const j = await r.json();
-      weather[k] = { at: Date.now(), days: j.daily.time.map((date, i) => ({ date, min: Math.round(j.daily.temperature_2m_min[i]) })) };
+      weather[k] = { at: Date.now(), now: j.current ? Math.round(j.current.temperature_2m) : null, days: j.daily.time.map((date, i) => ({ date, min: Math.round(j.daily.temperature_2m_min[i]) })) };
       changed = true;
     } catch(e) {}
   }
@@ -88,13 +88,25 @@ function outdoorHtml(){
   if (!out.length) return '';
   const noGeo = [...new Set(out.filter(p => !siteGeo(p.siteId)).map(p => p.siteId))];
   const items = out.map(p => ({ p, s: outStatus(p) })).filter(x => x.s).sort((a, b) => (a.s.i ?? 9) - (b.s.i ?? 9));
-  if (!noGeo.length && !items.length) return '';
   const btn = (p, s) => s.kind === 'warm' ? `<button class="do" data-action="coldout" data-id="${p.id}">${tr('btn_out')}</button>`
     : ['inside', 'cool'].includes(p.winter) ? `<button class="do" data-action="coldin" data-id="${p.id}">${tr('btn_in')}</button>`
     : `<button class="do" data-action="coldok" data-id="${p.id}" data-date="${s.date}">${tr('btn_ok')}</button>`;
   const rows = items.map(({ p, s }) => `<div class="task outtask ${s.kind}">${thumb(p, 'thumb')}<button class="t" data-action="open" data-id="${p.id}"><div class="s">${outMsg(p, s)}</div></button>${btn(p, s)}</div>`).join('');
   const geo = noGeo.map(id => `<div class="geoask"><p>${tr('geo_need', { site: esc(siteName(id)) })}</p><div class="setrow"><button class="setbtn" data-action="geohere" data-sid="${id}">${tr('geo_here')}</button><button class="setbtn" data-action="geosearch" data-sid="${id}">${tr('geo_search')}</button></div></div>`).join('');
-  return `<section><h2>${tr('h_out')}</h2><div class="today outdoor">${rows}${geo}</div></section>`;
+  const wx = [...new Set(out.map(p => p.siteId))].filter(id => siteGeo(id)).map(id => wxHtml(id, out.filter(p => p.siteId === id))).join('');
+  return `<section><h2>${tr('h_out')}</h2>${wx}${rows || geo ? `<div class="today outdoor">${rows}${geo}</div>` : ''}</section>`;
+}
+// Wetterlage eines Orts: Standort, aktuelle Temperatur, Tiefstwerte der nächsten 7 Nächte (zu kalt = markiert)
+function wxHtml(sid, plants){
+  const g = siteGeo(sid), w = weather[geoKey(g)], place = esc(g.name || siteName(sid));
+  const change = `<button class="linkbtn" data-action="geosearch" data-sid="${sid}">${tr('wx_change')}</button>`;
+  if (!w) return `<div class="wx"><div class="wxhead"><b>${place}</b>${change}</div><p class="hint">${tr('st_load')}</p></div>`;
+  const today = dkey(new Date()), warmest = Math.max(...plants.filter(p => !p.inNow).map(p => p.minT), -99);
+  const n = w.days.filter(d => d.date > today).slice(0, 7);
+  const time = new Date(w.at).toLocaleTimeString(loc(), { hour: '2-digit', minute: '2-digit' });
+  return `<div class="wx"><div class="wxhead"><b>${place}</b>${w.now !== null && w.now !== undefined ? `<span>${tr('wx_now', { t: deg(w.now) })}</span>` : ''}${change}</div>
+    <div class="wxnights">${n.map((d, i) => `<div class="wxn ${d.min < warmest ? 'cold' : ''}"><small>${i === 0 ? tr('wx_tonight') : fmtDay(fromKey(d.date), { weekday: 'short' })}</small><b>${deg(d.min)}°</b></div>`).join('')}</div>
+    <p class="hint">${tr('wx_hint', { time, site: esc(siteName(sid)) })}</p></div>`;
 }
 
 /* ---------- Detailansicht ---------- */
