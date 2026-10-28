@@ -4,8 +4,9 @@ AddType text/javascript .js
 AddType image/svg+xml .svg
 AddType font/woff2 .woff2
 
-# Service Worker und Manifest nie aus dem Browser-Cache, sonst bleiben Updates hängen
-<FilesMatch "^(sw\.js|manifest\.json)$">
+# App-Dateien bei jedem Start beim Server prüfen, sonst bleiben Updates im Browser-Cache hängen
+# (Schriften und Bilder dürfen im Cache bleiben)
+<FilesMatch "\.(html|js|css|json)$|^$">
   <IfModule mod_headers.c>
     Header set Cache-Control "no-cache"
   </IfModule>

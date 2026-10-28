@@ -21,7 +21,8 @@ const SHELL = [
 ];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  // cache: 'reload' umgeht den HTTP-Cache des Browsers, sonst landen alte Dateien in der neuen Version
+  e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL.map(u => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', e => {
@@ -43,7 +44,7 @@ self.addEventListener('fetch', e => {
   // Eigene Dateien: Netz zuerst, offline aus dem Cache
   if (url.origin === location.origin) {
     e.respondWith(
-      fetch(req)
+      fetch(req, { cache: 'no-cache' })   // beim Server nachfragen, nicht die alte Kopie aus dem HTTP-Cache nehmen
         .then(r => { const copy = r.clone(); caches.open(VERSION).then(c => c.put(req, copy)); return r; })
         .catch(() => caches.match(req).then(r => r || caches.match('index.html')))
     );
