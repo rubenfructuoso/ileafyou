@@ -305,13 +305,13 @@ document.addEventListener('submit', async e => {
 /* ---------- Start ---------- */
 function startApp(){
   document.body.classList.remove('authing');
-  applyStatic(); dailyCheck(); render(); checkLevel() || checkBadges();
+  applyStatic(); dailyCheck(); render(); checkLevel() || checkBadges(); loadWeather();
   if (started) return;
   started = true;
   document.addEventListener('visibilitychange', async () => {
     if (document.hidden) return;
     if (account.email) await syncNow().catch(() => {});
-    if (!document.body.classList.contains('authing')){ dailyCheck(); render(); checkLevel(); }
+    if (!document.body.classList.contains('authing')){ dailyCheck(); render(); checkLevel(); loadWeather(); }
   });
   window.addEventListener('online', () => { if (account.email) syncNow().catch(() => {}); });
 }

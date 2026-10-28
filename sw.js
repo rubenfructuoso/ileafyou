@@ -9,6 +9,7 @@ const SHELL = [
   'js/care.js',
   'js/app.js',
   'js/account.js',
+  'js/outdoor.js',
   'manifest.json',
   'img/icon.svg',
   'img/icon-192.png',

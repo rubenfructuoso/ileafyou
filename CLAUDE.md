@@ -72,6 +72,7 @@ state = {
     id, name, species, siteId,           // siteId verweist auf state.sites
     location,                            // Raum oder Platz, "Raum, Detail"; Raum = Teil vor dem Komma
     family?,                             // Pflanzenfamilie aus der Foto-Erkennung (z. B. 'Araceae'), für Pflegetipps
+    outdoor?, minT?, winter?, inNow?, coldAck?, // draussen: verträgt Kälte bis °C, Winter inside|cool|cover|hardy|annual, im Winterquartier, Warnung für Datum erledigt
     icon,                                // Pixel-Symbol, falls kein Foto: generic, monstera, herb, lemon, orchid, pothos, aloe, cactus
     waterEvery, feedEvery,               // Tage, 0 = keine Erinnerung
     notes, photo,                        // photo: JPEG als data-URL, max. 640 px
@@ -79,7 +80,7 @@ state = {
     log: [{ id, type, date, note, xp, bonus?, for?, days?, img? }]
   }],
   lang,                                  // 'de' | 'en' | 'es' | 'fr'
-  sites: [{ id, name }],                 // Orte: Zuhause, Büro, Atelier …; mindestens einer
+  sites: [{ id, name, geo? }],           // Orte: Zuhause, Büro, Atelier …; mindestens einer; geo { lat, lon, name } für den Wetterbericht (auf 0,01° gerundet)
   site,                                  // aktiver Ort-Filter, null = alle Orte
   deleted: [{ id, at }],                 // gelöschte Pflanzen, damit der Sync sie nicht zurückholt (max. 300)
   game: { xp, level, streak, best, lastCheck, dayDone, badges: [], vacation?: { until } }
@@ -94,6 +95,10 @@ Log-Typen: `water`, `feed`, `repot`, `note`, `photo` (mit `img`), `check` (Spät
 
 `js/care.js` enthält `CARE`: rund 100 gängige Zimmer-, Balkonpflanzen und Kräuter mit wissenschaftlichem Namen, Namen in vier Sprachen, Giess- und Düngeintervall, Pixel-Symbol und Synonymen. Gratis, offline, ohne API. Beim Tippen in Name oder Art schlägt das Formular passende Pflanzen vor; ein Tipp füllt Art, Intervalle und Symbol. Nach der Foto-Erkennung sucht `careFor()` zuerst die Art, dann die Gattung, dann eine andere Art derselben Gattung, und übernimmt die Werte automatisch. Ohne Treffer zeigt die Detailansicht allgemeine Tipps nach Pflanzenfamilie (`CARE_FAMILY`, Familie kommt aus der Erkennung und steht in `plant.family`). Fehlt die Familie, schlägt `lookupFamily()` sie bei GBIF nach (`api.gbif.org/v1/species/match`, frei, ohne Schlüssel; es geht nur der botanische Name raus). Bis dahin oder ohne Art gelten Grundregeln (`CARE_GENERAL`), so hat jede Pflanze Tipps. Jede Zeile hat ausserdem Standort (`sun`, `bright`, `partial`, `shade`), Giessart (`dry`, `moderate`, `moist`, `orchid`) und Düngerart (`green`, `bloom`, `cactus`, `citrus`, `orchid`, `herb`, `veg`); die Texte dazu (`light_*`, `wat_*`, `fert_*`) stehen in `i18n.js` und erscheinen als „Pflegetipps“ in der Detailansicht (`careHtml()`). Neue Pflanzen einfach als Zeile in `CARE` ergänzen.
 
+## Pflanzen draussen
+
+`js/outdoor.js`: Pflanzen mit „Steht draussen“ haben `minT` (verträgt Kälte bis °C) und `winter` (`inside` Zimmerpflanze, `cool` hell und kühl überwintern, `cover` draussen mit Schutz, `hardy` winterhart, `annual` einjährig). Vorschläge aus `COLD`/`COLD_FAMILY` in `care.js`, im Formular änderbar. Wetter: Open-Meteo (frei, ohne Schlüssel, nur für nicht-kommerzielle Nutzung gratis), Tiefstwerte der nächsten Nächte für den Wetter-Standort des Orts, 3 Stunden zwischengespeichert. Die Startseite zeigt unter „Draussen“ Warnungen für die nächsten 4 Nächte (reinholen, schützen, ernten) und im Frühling „darf wieder raus“; „Reingeholt“/„Rausgestellt“ setzt `inNow`. Die Push-Erinnerung um 18 Uhr enthält Frostwarnungen für heute Nacht (`cold_alerts()` in `reminders.php`, Texte in `COLD_TEXT`), auch an Tagen ohne fällige Pflege.
+
 ## Spielregeln
 
 - Pünktlich giessen/düngen +10, verspätet +5, zu früh +2, ohne Rhythmus +3
@@ -106,9 +111,9 @@ Log-Typen: `water`, `feed`, `repot`, `note`, `photo` (mit `img`), `check` (Spät
 
 ## Stand
 
-Fertig: vier Sprachen, Pflanzen erfassen und bearbeiten, Fälligkeiten, „Heute dran“, Wochenvorschau, Protokoll, Foto-Tagebuch, Später-Funktion, mehrere Orte mit Räume-Filter, Ferienmodus, Levels, Serie, Abzeichen, Beispielgarten, Pflegevorschläge (`js/care.js`), Datensicherung (Export/Import), Speicher in IndexedDB, Schriften selbst gehostet (`fonts/`), PWA (installierbar, offline, Button „App installieren“ mit Anleitung fürs iPhone), Erkennungs-Proxy, Konten mit Login, Sync zwischen Geräten, Einstellungen, Pflegetipps, Push-Erinnerungen.
+Fertig: vier Sprachen, Pflanzen erfassen und bearbeiten, Fälligkeiten, „Heute dran“, Wochenvorschau, Protokoll, Foto-Tagebuch, Später-Funktion, mehrere Orte mit Räume-Filter, Ferienmodus, Levels, Serie, Abzeichen, Beispielgarten, Pflegevorschläge (`js/care.js`), Datensicherung (Export/Import), Speicher in IndexedDB, Schriften selbst gehostet (`fonts/`), PWA (installierbar, offline, Button „App installieren“ mit Anleitung fürs iPhone), Erkennungs-Proxy, Konten mit Login, Sync zwischen Geräten, Einstellungen, Pflegetipps, Push-Erinnerungen, Pflanzen draussen mit Frostwarnungen.
 
-Ungetestet: Push-Versand an echte Push-Dienste (Google, Apple, Mozilla); Verschlüsselung und VAPID-Signatur sind gegen eine unabhängige Node-Implementierung geprüft.
+Push über Google (Android, Chrome) im Einsatz geprüft; Apple (iPhone) und Mozilla noch ungetestet. Open-Meteo und GBIF sind nur mit simulierten Antworten getestet.
 
 ## Nächste Schritte (Vorschläge, nicht beschlossen)
 

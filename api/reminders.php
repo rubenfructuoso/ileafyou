@@ -6,6 +6,13 @@
  */
 declare(strict_types=1);
 
+const COLD_TEXT = [
+    'de' => ['in' => '{min} °C heute Nacht: {name} reinholen', 'cover' => '{min} °C heute Nacht: {name} abdecken', 'hardy' => '{min} °C heute Nacht: Topf von {name} schützen', 'annual' => '{min} °C heute Nacht: {name} vorher ernten'],
+    'en' => ['in' => '{min} °C tonight: bring {name} inside', 'cover' => '{min} °C tonight: cover {name}', 'hardy' => '{min} °C tonight: protect the pot of {name}', 'annual' => '{min} °C tonight: harvest {name} first'],
+    'es' => ['in' => '{min} °C esta noche: mete {name} dentro', 'cover' => '{min} °C esta noche: cubre {name}', 'hardy' => '{min} °C esta noche: protege la maceta de {name}', 'annual' => '{min} °C esta noche: cosecha {name} antes'],
+    'fr' => ['in' => "{min}\u{00A0}°C cette nuit\u{00A0}: rentrer {name}", 'cover' => "{min}\u{00A0}°C cette nuit\u{00A0}: couvrir {name}", 'hardy' => "{min}\u{00A0}°C cette nuit\u{00A0}: protéger le pot de {name}", 'annual' => "{min}\u{00A0}°C cette nuit\u{00A0}: récolter {name} avant"],
+];
+
 const PUSH_TEXT = [
     'de' => ['water' => 'giessen', 'feed' => 'düngen', 'today' => 'Heute dran: {list}', 'more' => '{list} und {n} weitere', 'test' => 'So sehen deine Erinnerungen aus. Sie kommen um {hour} Uhr, wenn etwas fällig ist.'],
     'en' => ['water' => 'water', 'feed' => 'feed', 'today' => 'Due today: {list}', 'more' => '{list} and {n} more', 'test' => 'This is what your reminders look like. They come at {hour}:00 when something is due.'],
@@ -50,6 +57,35 @@ function due_tasks(array $state, DateTimeZone $tz): array {
     return $out;
 }
 
+// Tiefstwerte der nächsten Tage von Open-Meteo, pro Koordinate einmal pro Lauf: ['YYYY-MM-DD' => min]
+function forecast_min(float $lat, float $lon): array {
+    static $cache = [];
+    $k = sprintf('%.2f,%.2f', $lat, $lon);
+    if (isset($cache[$k])) return $cache[$k];
+    $ch = curl_init(sprintf('https://api.open-meteo.com/v1/forecast?latitude=%.2f&longitude=%.2f&daily=temperature_2m_min&timezone=auto&forecast_days=3', $lat, $lon));
+    curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 10]);
+    $j = json_decode((string)curl_exec($ch), true); curl_close($ch);
+    $out = [];
+    foreach ($j['daily']['time'] ?? [] as $i => $d) $out[$d] = (int)round((float)$j['daily']['temperature_2m_min'][$i]);
+    return $cache[$k] = $out;
+}
+
+/** Frostwarnungen für heute Nacht (Tiefstwert des nächsten Morgens), wie outStatus() in js/outdoor.js */
+function cold_alerts(array $state, DateTimeZone $tz, string $lang): array {
+    $tomorrow = (new DateTimeImmutable('tomorrow', $tz))->format('Y-m-d');
+    $geo = [];
+    foreach ($state['sites'] ?? [] as $s) if (isset($s['geo']['lat'], $s['geo']['lon'])) $geo[$s['id']] = $s['geo'];
+    $out = [];
+    foreach ($state['plants'] ?? [] as $p) {
+        if (empty($p['outdoor']) || !empty($p['inNow']) || !isset($geo[$p['siteId'] ?? ''], $p['minT'])) continue;
+        $min = forecast_min((float)$geo[$p['siteId']]['lat'], (float)$geo[$p['siteId']]['lon'])[$tomorrow] ?? null;
+        if ($min === null || $min >= (int)$p['minT'] || ($p['coldAck'] ?? '') === $tomorrow) continue;
+        $w = in_array($p['winter'] ?? '', ['cover', 'hardy', 'annual'], true) ? $p['winter'] : 'in';
+        $out[] = str_replace(['{min}', '{name}'], [str_replace('-', '−', (string)$min), (string)($p['name'] ?? '')], COLD_TEXT[$lang][$w]);
+    }
+    return $out;
+}
+
 /** Nachricht für ein Abo, null wenn nichts fällig ist (ausser bei der Probe) */
 function reminder_message(int $userId, array $sub, bool $test = false): ?array {
     $row = q('SELECT data FROM {p}states WHERE user_id = ?', [$userId])->fetchColumn();
@@ -57,8 +93,11 @@ function reminder_message(int $userId, array $sub, bool $test = false): ?array {
     $lang = in_array($state['lang'] ?? '', ['de', 'en', 'es', 'fr'], true) ? $state['lang'] : 'de';
     $T = PUSH_TEXT[$lang];
     $tasks = due_tasks($state, new DateTimeZone($sub['tz']));
-    if (!$tasks && !$test) return null;
-    if ($tasks) {
+    $cold = cold_alerts($state, new DateTimeZone($sub['tz']), $lang);
+    if (!$tasks && !$cold && !$test) return null;
+    if ($cold && !$tasks) {
+        $body = implode("\n", $cold);
+    } elseif ($tasks) {
         $items = array_map(fn($x) => $x[0] . ': ' . $T[$x[1]], array_slice($tasks, 0, 3));
         $list = implode(' · ', $items);
         if (count($tasks) > 3) $list = str_replace(['{list}', '{n}'], [$list, count($tasks) - 3], $T['more']);
@@ -66,7 +105,8 @@ function reminder_message(int $userId, array $sub, bool $test = false): ?array {
     } else {
         $body = str_replace('{hour}', (string)$sub['hour'], $T['test']);
     }
-    if ($test && $tasks) $body .= "\n" . str_replace('{hour}', (string)$sub['hour'], $T['test']);
+    if ($cold && $tasks) $body = implode("\n", $cold) . "\n" . $body;   // Frost zuerst, das eilt mehr
+    if ($test && ($tasks || $cold)) $body .= "\n" . str_replace('{hour}', (string)$sub['hour'], $T['test']);
     return ['title' => 'i leaf you', 'body' => $body, 'tag' => 'ileafyou-due', 'url' => './'];
 }
 

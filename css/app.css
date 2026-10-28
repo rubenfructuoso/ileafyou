@@ -251,3 +251,18 @@ header.top .date{grid-column:1 / -1}
 .act.water.on{background:var(--water);border-color:var(--water);color:#fff}
 .act.feed.on{background:var(--feed);border-color:var(--feed);color:var(--onfeed)}
 .act.on small{color:inherit;opacity:.9}
+
+/* Draussen: Warnungen, Wetter-Standort */
+label.check{display:flex;align-items:center;gap:10px;font-weight:700;margin:16px 0 4px;cursor:pointer}
+label.check input{width:22px;height:22px;accent-color:var(--moss);flex:none}
+.outdoor .outtask .s{color:var(--ink);font-size:.95rem}
+.outdoor .outtask.cold .do{background:var(--water)}
+.outdoor .outtask.warm .do{background:var(--moss);color:var(--onmoss)}
+.geoask{padding:12px 0}
+.geoask p{margin:0 0 4px}
+.georesults{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.georesults .setbtn{text-align:left}
+.georesults small{display:block;font-weight:400;color:var(--muted)}
+#geoForm{margin-top:12px}
+.outcare{background:var(--surface);border:1px solid var(--line)}
+.sitegeo{font-size:.9rem;color:var(--muted);margin:2px 0 6px}

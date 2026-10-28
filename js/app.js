@@ -168,6 +168,8 @@ async function load(){
 function normalize(){
   if (!state || typeof state !== 'object') state = { plants: [] };
   if (!Array.isArray(state.plants)) state.plants = [];
+  // Draussen-Pflanzen ohne Kälte-Werte (ältere Daten): Vorschlag aus der Pflanzenliste
+  state.plants.forEach(p => { if (p.outdoor && (typeof p.minT !== 'number' || !p.winter)){ const [t, w] = coldFor(p.species, p.family, p.name); if (typeof p.minT !== 'number') p.minT = t; p.winter = p.winter || w; } });
   state.plants.forEach(p => { if (!p.icon){ p.icon = EMOJI_KIND[p.emoji] || (p.emoji === '🪴' && /aloe/i.test(p.species || '') ? 'aloe' : 'generic'); } delete p.emoji; });
   migrateSites(); game();
 }
@@ -275,7 +277,7 @@ function render(){
   const cards = !vis.length ? `<div class="calm">${tr('noPlantsHere')}</div>`
     : grouped ? state.sites.map(s => { const ps = shown.filter(p => p.siteId === s.id); return ps.length ? `<div class="sitegroup"><h3>${esc(s.name)}</h3><div class="grid">${ps.map(card).join('')}</div></div>` : ''; }).join('')
     : `<div class="grid">${shown.map(card).join('')}</div>`;
-  $('#app').innerHTML = `${lvlHtml()}${sitesBar()}${vac}<section><h2>${tr('h_today')}</h2><div class="today">${today}</div></section><section><h2>${tr('h_next')}</h2>${weekHtml()}</section><section><h2>${tr('h_plants')}</h2>${chips}${cards}</section><section><h2>${tr('h_badges')}</h2>${badgesHtml()}</section>${footHtml()}`;
+  $('#app').innerHTML = `${lvlHtml()}${sitesBar()}${vac}${outdoorHtml()}<section><h2>${tr('h_today')}</h2><div class="today">${today}</div></section><section><h2>${tr('h_next')}</h2>${weekHtml()}</section><section><h2>${tr('h_plants')}</h2>${chips}${cards}</section><section><h2>${tr('h_badges')}</h2>${badgesHtml()}</section>${footHtml()}`;
   if ($('.week')) $('.week').scrollLeft = weekScroll;
 }
 // Ferienmodus, Daten, Sprache usw. liegen in den Einstellungen (Zahnrad oben rechts)
@@ -330,6 +332,7 @@ function renderDetail(){
     ${p.notes ? `<div class="notes">${esc(p.notes)}</div>` : ''}
     <button class="linkbtn" data-action="edit" data-id="${p.id}">${tr('edit')}</button>
     ${careHtml(p)}
+    ${outDetailHtml(p)}
     <div class="actions">
       ${['water', 'feed', 'repot'].map(t => { const on = !!loggedToday(p, t); return `<button class="act ${t === 'repot' ? '' : t} ${on ? 'on' : ''}" data-action="${on ? 'unlog' : 'log'}" data-type="${t}" data-id="${p.id}" aria-pressed="${on}">${typeLabel(t)}<small>${tr(on ? 'doneToday' : 'logNow')}</small></button>`; }).join('')}
       <label class="act" for="diaryIn">${typeLabel('photo')}<small>${tr('photoSub')}</small></label>
@@ -412,7 +415,7 @@ function sitesBar(){
   return `<div class="sites">${s.length > 1 ? `<button class="chip ${state.site ? '' : 'on'}" data-action="site" data-sid="">${tr('allSites')}</button>` : ''}${s.map(x => `<button class="chip ${state.site === x.id || s.length === 1 ? 'on' : ''}" data-action="site" data-sid="${x.id}">${esc(x.name)}</button>`).join('')}<button class="chip" data-action="sites">${tr('addSite')}</button></div>`;
 }
 function siteSheet(){
-  openCel(`<h2>${tr('sites_h')}</h2><p>${tr('sites_p')}</p><div class="siteman">${state.sites.map(s => { const n = state.plants.filter(p => p.siteId === s.id).length; return `<div class="siterow"><input class="sitename" data-sid="${s.id}" value="${esc(s.name)}" aria-label="${esc(tr('nameOf', { name: s.name }))}"><button class="del" data-action="sitedel" data-sid="${s.id}" ${n || state.sites.length === 1 ? 'disabled' : ''}>${tr('del')}</button></div>`; }).join('')}<label for="newSite">${tr('newSite')}</label><div class="siterow" style="margin-top:0"><input id="newSite" placeholder="${esc(tr('newSitePh'))}"><button data-action="siteadd">${tr('add')}</button></div></div><button class="primary" data-action="close">${tr('done')}</button>`);
+  openCel(`<h2>${tr('sites_h')}</h2><p>${tr('sites_p')}</p><div class="siteman">${state.sites.map(s => { const n = state.plants.filter(p => p.siteId === s.id).length; return `<div class="siterow"><input class="sitename" data-sid="${s.id}" value="${esc(s.name)}" aria-label="${esc(tr('nameOf', { name: s.name }))}"><button class="del" data-action="sitedel" data-sid="${s.id}" ${n || state.sites.length === 1 ? 'disabled' : ''}>${tr('del')}</button></div><div class="sitegeo">${s.geo ? esc(tr('geo_label', { place: s.geo.name || `${s.geo.lat}, ${s.geo.lon}` })) : ''} <button class="linkbtn" data-action="geosearch" data-sid="${s.id}">${tr('geo_change')}</button></div>`; }).join('')}<label for="newSite">${tr('newSite')}</label><div class="siterow" style="margin-top:0"><input id="newSite" placeholder="${esc(tr('newSitePh'))}"><button data-action="siteadd">${tr('add')}</button></div></div><button class="primary" data-action="close">${tr('done')}</button>`);
 }
 $('#cel').addEventListener('change', e => {
   if (!e.target.classList.contains('sitename')) return;
@@ -516,7 +519,7 @@ function openForm(id){
   $('#fWater').value = p ? p.waterEvery : 7; $('#fFeed').value = p ? p.feedEvery : 30; $('#fNotes').value = p?.notes || '';
   pendingIcon = p?.icon || 'generic'; pendingFamily = p?.family || null; renderIconPick();
   setPhoto(p?.photo || null); $('#formDelete').hidden = !p;
-  $('#careSug').innerHTML = ''; $('#careHint').hidden = true;
+  $('#careSug').innerHTML = ''; $('#careHint').hidden = true; outForm(p);
   if ($('#detailDlg').open) $('#detailDlg').close();
   $('#formDlg').showModal();
 }
@@ -550,7 +553,7 @@ $('#form').addEventListener('submit', e => {
   const name = $('#fName').value.trim(); if (!name){ $('#fName').focus(); return; }
   const data = { name, species: $('#fSpecies').value.trim(), location: $('#fLoc').value.trim(), siteId: $('#fSite').value,
     waterEvery: Math.max(0, parseInt($('#fWater').value) || 0), feedEvery: Math.max(0, parseInt($('#fFeed').value) || 0),
-    notes: $('#fNotes').value.trim(), photo: pendingPhoto, icon: pendingIcon, family: pendingFamily || undefined };
+    notes: $('#fNotes').value.trim(), photo: pendingPhoto, icon: pendingIcon, family: pendingFamily || undefined, ...outData() };
   if (editingId) Object.assign(getP(editingId), data);
   else state.plants.push({ id: uid(), created: new Date().toISOString(), log: [], ...data });
   save(); $('#formDlg').close(); render(); toast(editingId ? tr('saved') : tr('added', { name })); checkBadges();
@@ -591,7 +594,7 @@ async function identify(){
 $('#identifyBtn').addEventListener('click', identify);
 $('#idResults').addEventListener('click', e => {
   const c = e.target.closest('[data-sci]'); if (!c) return;
-  $('#fSpecies').value = c.dataset.sci; pendingFamily = c.dataset.family || null;
+  $('#fSpecies').value = c.dataset.sci; pendingFamily = c.dataset.family || null; outPrefill(true);
   if (!$('#fName').value.trim()) $('#fName').value = c.dataset.common || c.dataset.sci;
   $('#idResults').innerHTML = '';
   const care = careFor(c.dataset.sci); if (care) applyCare(care, false);
@@ -627,7 +630,7 @@ function applyCare(c, setName){
   if (setName && (!n || [c.sci, ...c.syn, ...Object.values(c.names)].some(x => norm(x).includes(n)))) $('#fName').value = c.names[lang()];
   $('#fWater').value = c.water; $('#fFeed').value = c.feed;
   if (pendingIcon === 'generic' && c.icon !== 'generic'){ pendingIcon = c.icon; renderIconPick(); }
-  $('#careSug').innerHTML = '';
+  $('#careSug').innerHTML = ''; outPrefill(true);
   const h = $('#careHint'); h.hidden = false;
   h.textContent = tr('care_hint', { name: c.names[lang()], w: c.water, feed: c.feed ? tr('care_feedN', { n: c.feed }) : tr('care_feed0') });
 }

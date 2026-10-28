@@ -144,3 +144,43 @@ const CARE_FAMILY = {
 };
 // Grundregeln, wenn weder Art noch Familie bekannt sind
 const CARE_GENERAL = ['bright', 'moderate', 'green'];
+
+// Draussen: [verträgt Kälte bis °C (kurzzeitig), Winter: inside | cool | cover | hardy | annual]
+// inside = Zimmerpflanze, nur im Sommer draussen; cool = hell und kühl überwintern (5–12 °C);
+// cover = bleibt draussen mit Schutz; hardy = winterhart; annual = einjährig, lebt eine Saison
+const COLD = {
+  'Monstera deliciosa': [12, 'inside'], 'Epipremnum aureum': [15, 'inside'], 'Philodendron': [12, 'inside'], 'Ficus elastica': [10, 'inside'],
+  'Ficus lyrata': [12, 'inside'], 'Ficus benjamina': [12, 'inside'], 'Dracaena trifasciata': [10, 'inside'], 'Zamioculcas zamiifolia': [12, 'inside'],
+  'Dracaena': [12, 'inside'], 'Chlorophytum comosum': [8, 'inside'], 'Spathiphyllum': [15, 'inside'], 'Goeppertia': [16, 'inside'],
+  'Maranta leuconeura': [15, 'inside'], 'Yucca': [5, 'cool'], 'Chamaedorea elegans': [12, 'inside'], 'Dypsis lutescens': [15, 'inside'],
+  'Howea forsteriana': [10, 'inside'], 'Strelitzia': [5, 'cool'], 'Pilea peperomioides': [10, 'inside'], 'Peperomia': [12, 'inside'],
+  'Hedera helix': [-15, 'hardy'], 'Aglaonema': [15, 'inside'], 'Dieffenbachia': [15, 'inside'], 'Alocasia': [15, 'inside'],
+  'Tradescantia': [10, 'inside'], 'Ceropegia woodii': [10, 'inside'], 'Curio rowleyanus': [8, 'inside'], 'Nephrolepis exaltata': [12, 'inside'],
+  'Phalaenopsis': [15, 'inside'], 'Anthurium': [15, 'inside'], 'Begonia': [12, 'inside'], 'Saintpaulia': [16, 'inside'],
+  'Hibiscus rosa-sinensis': [10, 'cool'], 'Euphorbia pulcherrima': [12, 'inside'], 'Schlumbergera': [10, 'inside'], 'Rhipsalis': [10, 'inside'],
+  'Epiphyllum': [8, 'cool'], 'Hatiora gaertneri': [8, 'cool'], 'Aloe vera': [5, 'cool'], 'Crassula ovata': [5, 'cool'],
+  'Echeveria': [3, 'cool'], 'Haworthiopsis': [5, 'cool'], 'Kalanchoe blossfeldiana': [10, 'inside'], 'Echinocactus grusonii': [5, 'cool'],
+  'Opuntia': [-5, 'cover'], 'Cactaceae': [5, 'cool'], 'Citrus limon': [3, 'cool'], 'Citrus': [2, 'cool'],
+  'Olea europaea': [-7, 'cover'], 'Coffea arabica': [12, 'inside'], 'Pelargonium': [2, 'cool'], 'Rosa': [-20, 'hardy'],
+  'Hydrangea macrophylla': [-15, 'hardy'], 'Lavandula': [-15, 'hardy'], 'Solanum lycopersicum': [8, 'annual'], 'Capsicum': [10, 'annual'],
+  'Fragaria × ananassa': [-15, 'hardy'], 'Ocimum basilicum': [10, 'annual'], 'Mentha': [-20, 'hardy'], 'Petroselinum crispum': [-10, 'hardy'],
+  'Salvia rosmarinus': [-8, 'cover'], 'Thymus vulgaris': [-15, 'hardy'], 'Salvia officinalis': [-15, 'hardy'], 'Allium schoenoprasum': [-20, 'hardy'],
+  'Coriandrum sativum': [-5, 'annual'], 'Origanum vulgare': [-15, 'hardy'], 'Melissa officinalis': [-15, 'hardy'], 'Anethum graveolens': [0, 'annual'],
+  'Cymbopogon citratus': [8, 'cool'], 'Laurus nobilis': [-5, 'cover'], 'Schefflera': [12, 'inside'], 'Aspidistra elatior': [5, 'inside'],
+  'Asplenium nidus': [15, 'inside'], 'Asparagus setaceus': [10, 'inside'], 'Beaucarnea recurvata': [8, 'inside'], 'Pachira aquatica': [12, 'inside'],
+  'Dracaena sanderiana': [15, 'inside'], 'Rhapis excelsa': [5, 'cool'], 'Cycas revoluta': [-3, 'cool'], 'Syngonium podophyllum': [15, 'inside'],
+  'Scindapsus pictus': [15, 'inside'], 'Ficus pumila': [5, 'inside'], 'Fittonia': [16, 'inside'], 'Codiaeum variegatum': [15, 'inside'],
+  'Hoya': [12, 'inside'], 'Cyclamen persicum': [5, 'cool'], 'Clivia miniata': [8, 'cool'], 'Zantedeschia': [5, 'cool'],
+  'Hippeastrum': [10, 'inside'], 'Guzmania': [15, 'inside'], 'Dendrobium': [12, 'inside'], 'Euphorbia milii': [10, 'inside'],
+  'Agave': [-5, 'cover'], 'Gasteria': [5, 'cool'], 'Sedum': [-20, 'hardy'], 'Lithops': [5, 'cool'],
+  'Bougainvillea': [5, 'cool'], 'Nerium oleander': [-3, 'cool'], 'Fuchsia': [2, 'cool'], 'Petunia': [3, 'annual'],
+  'Lactuca sativa': [-2, 'annual'], 'Cucumis sativus': [10, 'annual'], 'Cucurbita pepo': [8, 'annual']
+};
+// Rückfall nach Familie; sonst [10, 'inside'] (lieber zu früh reinholen als erfrieren lassen)
+const COLD_FAMILY = {
+  Cactaceae: [5, 'cool'], Crassulaceae: [5, 'cool'], Asphodelaceae: [5, 'cool'], Aizoaceae: [5, 'cool'], Rutaceae: [3, 'cool'],
+  Lamiaceae: [-10, 'hardy'], Rosaceae: [-15, 'hardy'], Apiaceae: [-5, 'hardy'], Oleaceae: [-5, 'cover'], Lauraceae: [-5, 'cover'],
+  Solanaceae: [10, 'annual'], Cucurbitaceae: [10, 'annual'], Brassicaceae: [-5, 'annual'], Asteraceae: [0, 'annual'],
+  Geraniaceae: [2, 'cool'], Onagraceae: [2, 'cool'], Nyctaginaceae: [5, 'cool'], Hydrangeaceae: [-15, 'hardy'], Ericaceae: [-15, 'hardy']
+};
+const COLD_DEFAULT = [10, 'inside'];
