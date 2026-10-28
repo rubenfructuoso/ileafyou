@@ -97,7 +97,7 @@ function outdoorHtml(){
   return `<section><h2>${tr('h_out')}</h2>${wx}${rows || geo ? `<div class="today outdoor">${rows}${geo}</div>` : ''}</section>`;
 }
 // Wetterlage eines Orts: Standort, aktuelle Temperatur, Tiefstwerte der nächsten 7 Nächte (zu kalt = markiert)
-function wxHtml(sid, plants){
+function wxHtml(sid, plants, one){
   const g = siteGeo(sid), w = weather[geoKey(g)], place = esc(g.name || siteName(sid));
   const change = `<button class="linkbtn" data-action="geosearch" data-sid="${sid}">${tr('wx_change')}</button>`;
   if (!w) return `<div class="wx"><div class="wxhead"><b>${place}</b>${change}</div><p class="hint">${tr('st_load')}</p></div>`;
@@ -106,7 +106,7 @@ function wxHtml(sid, plants){
   const time = new Date(w.at).toLocaleTimeString(loc(), { hour: '2-digit', minute: '2-digit' });
   return `<div class="wx"><div class="wxhead"><b>${place}</b>${w.now !== null && w.now !== undefined ? `<span>${tr('wx_now', { t: deg(w.now) })}</span>` : ''}${change}</div>
     <div class="wxnights">${n.map((d, i) => `<div class="wxn ${d.min < warmest ? 'cold' : ''}"><small>${i === 0 ? tr('wx_tonight') : fmtDay(fromKey(d.date), { weekday: 'short' })}</small><b>${deg(d.min)}°</b></div>`).join('')}</div>
-    <p class="hint">${tr('wx_hint', { time, site: esc(siteName(sid)) })}</p></div>`;
+    <p class="hint">${tr(one ? 'wx_hint_one' : 'wx_hint', { time, site: esc(siteName(sid)) })}</p></div>`;
 }
 
 /* ---------- Detailansicht ---------- */
@@ -122,7 +122,8 @@ function outDetailHtml(p){
   const toggle = ['inside', 'cool'].includes(p.winter)
     ? `<button class="setbtn" data-action="${p.inNow ? 'coldout' : 'coldin'}" data-id="${p.id}">${tr(p.inNow ? 'btn_out' : 'btn_in')}</button>` : '';
   const spring = ['inside', 'cool'].includes(p.winter) ? ' ' + tr('win_spring', { t: deg(p.minT + 3) }) : '';
-  return `<section class="care outcare"><h2>${tr('h_out')}</h2><p class="setp"><b>${st}</b></p><p>${tr('win_' + p.winter, { t: deg(p.minT) })}${spring}</p>
+  const wx = siteGeo(p.siteId) ? wxHtml(p.siteId, [{ ...p, inNow: false }], true) : '';   // blau = zu kalt für diese Pflanze
+  return `<section class="care outcare"><h2>${tr('h_out')}</h2>${wx}<p class="setp"><b>${st}</b></p><p>${tr('win_' + p.winter, { t: deg(p.minT) })}${spring}</p>
     ${!siteGeo(p.siteId) ? `<div class="setrow"><button class="setbtn" data-action="geohere" data-sid="${p.siteId}">${tr('geo_here')}</button><button class="setbtn" data-action="geosearch" data-sid="${p.siteId}">${tr('geo_search')}</button></div>` : ''}
     <div class="setrow">${toggle}</div></section>`;
 }
