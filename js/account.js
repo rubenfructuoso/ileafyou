@@ -167,9 +167,10 @@ function pushStatHtml(){
   const when = t => new Date(t * 1000).toLocaleString(loc(), { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
   const c = pushStat.cron_last, old = !c || Date.now() / 1000 - c > 2 * 3600;
   const cron = !c ? tr('push_cron_never') : old ? tr('push_cron_old', { time: when(c) }) : tr('push_cron_ok', { time: when(c) });
+  if (!pushSub) return `<p class="hint ${old ? 'late' : ''}">${cron}</p>`;
   const l = pushStat.last;
   const last = !l ? tr('push_last_none') : l.what === 'sent' ? tr('push_last_sent', { when: when(l.at) }) : l.what === 'nothing' ? tr('push_last_nothing', { when: when(l.at) }) : tr('push_last_failed', { when: when(l.at), code: l.code });
-  return `<p class="hint ${old ? 'late' : ''}">${cron}</p><p class="hint">${last}</p>`;
+  return `<p class="hint ${old ? 'late' : ''}">${cron}</p><p class="hint">${last}</p>${pushStat.fixed ? `<p class="hint">${tr('push_fixed')}</p>` : ''}`;
 }
 function pushHtml(){
   let h = `<h3 class="seth">${tr('set_push')}</h3><p class="setp">${tr('push_p')}</p>`;
@@ -178,7 +179,7 @@ function pushHtml(){
   const sel = `<label class="langsel"><span>${tr('push_time')}</span><select id="pushHour">${Array.from({ length: 17 }, (_, i) => i + 6).map(x => `<option value="${x}" ${x === pushHour() ? 'selected' : ''}>${hourText(x)}</option>`).join('')}</select></label>`;
   return h + (pushSub
     ? `<p class="setp"><span class="pill ok">${tr('push_is_on')}</span></p>${pushStatHtml()}${sel}<div class="setrow"><button type="button" class="setbtn" data-action="pushtest">${tr('push_test')}</button><button type="button" class="setbtn" data-action="pushoff">${tr('push_off_btn')}</button></div>`
-    : `${sel}<div class="setrow"><button type="button" class="setbtn" data-action="pushon">${tr('push_on_btn')}</button></div>`);
+    : `${pushStatHtml()}${sel}<div class="setrow"><button type="button" class="setbtn" data-action="pushon">${tr('push_on_btn')}</button></div>`);
 }
 document.addEventListener('change', async e => {
   if (e.target.id !== 'pushHour') return;
@@ -246,7 +247,11 @@ async function openSettings(){
   renderSettings(); $('#setDlg').showModal();
   if (account.email && pushOK()){
     await pushCurrent().catch(() => {});
-    pushStat = pushSub ? await api('push.php?a=status', { endpoint: pushSub.endpoint }).catch(() => null) : null;
+    pushStat = await (pushSub ? api('push.php?a=status', { endpoint: pushSub.endpoint }) : api('push.php?a=cron', {})).catch(() => null);
+    // Browser hat ein Abo, der Server kennt es aber nicht: neu anmelden, sonst kommen keine Erinnerungen
+    if (pushSub && pushStat && pushStat.registered === false){
+      try { await pushSave(pushSub); pushStat = await api('push.php?a=status', { endpoint: pushSub.endpoint }); pushStat.fixed = true; } catch(e) {}
+    }
     renderSettings();
   }
 }
@@ -292,7 +297,7 @@ document.addEventListener('click', async e => {
       else if (a === 'pushoff'){ await pushOff(); toast(tr('push_disabled')); }
       else { await api('push.php?a=test', { endpoint: pushSub.endpoint }); toast(tr('push_sent')); }
     } catch(err){ toast(errText(err)); }
-    finally { pushBusy = false; renderSettings(); }
+    finally { pushBusy = false; pushStat = await (pushSub ? api('push.php?a=status', { endpoint: pushSub.endpoint }) : api('push.php?a=cron', {})).catch(() => pushStat); renderSettings(); }
   }
   else if (a === 'server'){ srvInfo = await api('server.php').catch(err => ({ error: errText(err) })); renderSettings(); }
   else if (a === 'pwform'){

@@ -19,6 +19,9 @@ try {
     if ($a === 'key') out(['key' => vapid_keys()[1]]);
     $b = body();
     $endpoint = (string)($b['sub']['endpoint'] ?? $b['endpoint'] ?? '');
+    if ($a === 'cron') {   // Cron-Status ohne Abo (für die Einstellungen, wenn Erinnerungen aus sind)
+        $cron = meta_get('cron_last'); out(['cron_last' => $cron ? (int)$cron : null]);
+    }
     if (!preg_match('#^https://[^\s]+$#', $endpoint) || strlen($endpoint) > 1000) fail(400, 'bad');
     $id = hash('sha256', $endpoint);
 
@@ -42,9 +45,8 @@ try {
 
         case 'status':   // für die Einstellungen: läuft der Cron-Job, was ging zuletzt an dieses Gerät?
             $sub = q('SELECT hour, tz, last_day FROM {p}push_subs WHERE id = ? AND user_id = ?', [$id, $u['id']])->fetch();
-            if (!$sub) fail(404, 'push_missing');
             $cron = meta_get('cron_last'); $last = meta_get('ps:' . substr($id, 0, 48));
-            out(['cron_last' => $cron ? (int)$cron : null, 'last' => $last ? json_decode($last, true) : null] + $sub);
+            out(['cron_last' => $cron ? (int)$cron : null, 'registered' => (bool)$sub, 'last' => $last ? json_decode($last, true) : null] + ($sub ?: []));
 
         case 'test':
             $sub = q('SELECT * FROM {p}push_subs WHERE id = ? AND user_id = ?', [$id, $u['id']])->fetch();
