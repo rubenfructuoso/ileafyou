@@ -3,6 +3,9 @@
    Pro Ort: geo { lat, lon, name } für den Wetterbericht. Lädt nach app.js. */
 
 const WINTERS = ['inside', 'cool', 'cover', 'hardy', 'annual'];
+// Saison Juli bis Juni: «Geerntet» bei einjährigen Pflanzen gilt bis zum nächsten Sommer
+const season = (d = new Date()) => d.getMonth() >= 6 ? d.getFullYear() : d.getFullYear() - 1;
+const harvested = p => p.winter === 'annual' && p.coldSeason === season();
 const deg = n => String(n).replace('-', '\u2212');   // echtes Minuszeichen
 let weather = {};   // 'lat,lon' → { at, days: [{ date, min }] }
 
@@ -68,7 +71,7 @@ function outStatus(p){
   const n = nights(p); if (!n) return null;
   if (!p.inNow){
     const i = n.slice(0, 4).findIndex(d => d.min < p.minT);
-    if (i >= 0 && p.coldAck !== n[i].date) return { kind: 'cold', i, ...n[i] };
+    if (i >= 0 && p.coldAck !== n[i].date && !harvested(p)) return { kind: 'cold', i, ...n[i] };
   } else if (['inside', 'cool'].includes(p.winter)){
     const m = new Date().getMonth();
     const week = n.slice(0, 7), lo = Math.min(...week.map(d => d.min));
@@ -90,6 +93,7 @@ function outdoorHtml(){
   const items = out.map(p => ({ p, s: outStatus(p) })).filter(x => x.s).sort((a, b) => (a.s.i ?? 9) - (b.s.i ?? 9));
   const btn = (p, s) => s.kind === 'warm' ? `<button class="do" data-action="coldout" data-id="${p.id}">${tr('btn_out')}</button>`
     : ['inside', 'cool'].includes(p.winter) ? `<button class="do" data-action="coldin" data-id="${p.id}">${tr('btn_in')}</button>`
+    : p.winter === 'annual' ? `<button class="do" data-action="coldharvest" data-id="${p.id}">${tr('btn_harvest')}</button>`
     : `<button class="do" data-action="coldok" data-id="${p.id}" data-date="${s.date}">${tr('btn_ok')}</button>`;
   const rows = items.map(({ p, s }) => `<div class="task outtask ${s.kind}">${thumb(p, 'thumb')}<button class="t" data-action="open" data-id="${p.id}"><div class="s">${outMsg(p, s)}</div></button>${btn(p, s)}</div>`).join('');
   const geo = noGeo.map(id => `<div class="geoask"><p>${tr('geo_need', { site: esc(siteName(id)) })}</p><div class="setrow"><button class="setbtn" data-action="geohere" data-sid="${id}">${tr('geo_here')}</button><button class="setbtn" data-action="geosearch" data-sid="${id}">${tr('geo_search')}</button></div></div>`).join('');
@@ -114,13 +118,15 @@ function outDetailHtml(p){
   if (!p.outdoor) return '';
   const s = outStatus(p), n = nights(p);
   let st;
-  if (p.inNow) st = s ? outMsg(p, s) : tr('st_in');
+  if (harvested(p)) st = tr('st_harvested');
+  else if (p.inNow) st = s ? outMsg(p, s) : tr('st_in');
   else if (!siteGeo(p.siteId)) st = tr('geo_need', { site: esc(siteName(p.siteId)) });
   else if (s) st = outMsg(p, s);
   else if (n) st = tr('st_ok', { min: deg(Math.min(...n.slice(0, 7).map(d => d.min))), t: deg(p.minT) });
   else st = tr('st_load');
   const toggle = ['inside', 'cool'].includes(p.winter)
-    ? `<button class="setbtn" data-action="${p.inNow ? 'coldout' : 'coldin'}" data-id="${p.id}">${tr(p.inNow ? 'btn_out' : 'btn_in')}</button>` : '';
+    ? `<button class="setbtn" data-action="${p.inNow ? 'coldout' : 'coldin'}" data-id="${p.id}">${tr(p.inNow ? 'btn_out' : 'btn_in')}</button>`
+    : harvested(p) ? `<button class="setbtn" data-action="coldresume" data-id="${p.id}">${tr('cold_resume')}</button>` : '';
   const spring = ['inside', 'cool'].includes(p.winter) ? ' ' + tr('win_spring', { t: deg(p.minT + 3) }) : '';
   const wx = siteGeo(p.siteId) ? wxHtml(p.siteId, [{ ...p, inNow: false }], true) : '';   // blau = zu kalt für diese Pflanze
   return `<section class="care outcare"><h2>${tr('h_out')}</h2>${wx}<p class="setp"><b>${st}</b></p><p>${tr('win_' + p.winter, { t: deg(p.minT) })}${spring}</p>
@@ -157,6 +163,8 @@ document.addEventListener('click', e => {
   if (a === 'coldin' && p){ p.inNow = true; save(); refresh(); toast(tr('done_in', { name: p.name })); }
   else if (a === 'coldout' && p){ p.inNow = false; delete p.coldAck; save(); refresh(); toast(tr('done_out', { name: p.name })); }
   else if (a === 'coldok' && p){ p.coldAck = b.dataset.date; save(); refresh(); }
+  else if (a === 'coldharvest' && p){ p.coldSeason = season(); save(); refresh(); toast(tr('done_harvest', { name: p.name })); }
+  else if (a === 'coldresume' && p){ delete p.coldSeason; save(); refresh(); }
   else if (a === 'geosearch') geoSearchSheet(b.dataset.sid);
   else if (a === 'geopick'){ $('#celDlg').close(); setGeo(b.dataset.sid, { lat: +b.dataset.lat, lon: +b.dataset.lon, name: b.dataset.name }); }
   else if (a === 'geohere'){

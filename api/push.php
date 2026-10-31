@@ -40,6 +40,12 @@ try {
             q('DELETE FROM {p}push_subs WHERE id = ? AND user_id = ?', [$id, $u['id']]);
             out(['ok' => true]);
 
+        case 'status':   // für die Einstellungen: läuft der Cron-Job, was ging zuletzt an dieses Gerät?
+            $sub = q('SELECT hour, tz, last_day FROM {p}push_subs WHERE id = ? AND user_id = ?', [$id, $u['id']])->fetch();
+            if (!$sub) fail(404, 'push_missing');
+            $cron = meta_get('cron_last'); $last = meta_get('ps:' . substr($id, 0, 48));
+            out(['cron_last' => $cron ? (int)$cron : null, 'last' => $last ? json_decode($last, true) : null] + $sub);
+
         case 'test':
             $sub = q('SELECT * FROM {p}push_subs WHERE id = ? AND user_id = ?', [$id, $u['id']])->fetch();
             if (!$sub) fail(404, 'push_missing');

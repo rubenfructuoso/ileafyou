@@ -73,6 +73,8 @@ function forecast_min(float $lat, float $lon): array {
 /** Frostwarnungen für heute Nacht (Tiefstwert des nächsten Morgens), wie outStatus() in js/outdoor.js */
 function cold_alerts(array $state, DateTimeZone $tz, string $lang): array {
     $tomorrow = (new DateTimeImmutable('tomorrow', $tz))->format('Y-m-d');
+    $now = new DateTimeImmutable('now', $tz);
+    $season = (int)$now->format('n') >= 7 ? (int)$now->format('Y') : (int)$now->format('Y') - 1;   // wie season() in outdoor.js
     $geo = [];
     foreach ($state['sites'] ?? [] as $s) if (isset($s['geo']['lat'], $s['geo']['lon'])) $geo[$s['id']] = $s['geo'];
     $out = [];
@@ -80,6 +82,7 @@ function cold_alerts(array $state, DateTimeZone $tz, string $lang): array {
         if (empty($p['outdoor']) || !empty($p['inNow']) || !isset($geo[$p['siteId'] ?? ''], $p['minT'])) continue;
         $min = forecast_min((float)$geo[$p['siteId']]['lat'], (float)$geo[$p['siteId']]['lon'])[$tomorrow] ?? null;
         if ($min === null || $min >= (int)$p['minT'] || ($p['coldAck'] ?? '') === $tomorrow) continue;
+        if (($p['winter'] ?? '') === 'annual' && (int)($p['coldSeason'] ?? 0) === $season) continue;   // geerntet, Pflanze bleibt
         $w = in_array($p['winter'] ?? '', ['cover', 'hardy', 'annual'], true) ? $p['winter'] : 'in';
         $out[] = str_replace(['{min}', '{name}'], [str_replace('-', '−', (string)$min), (string)($p['name'] ?? '')], COLD_TEXT[$lang][$w]);
     }
@@ -113,17 +116,19 @@ function reminder_message(int $userId, array $sub, bool $test = false): ?array {
 /** Täglicher Versand: alle Abos, deren Uhrzeit erreicht ist und die heute noch nichts bekommen haben */
 function run_reminders(): array {
     $sent = 0; $skipped = 0; $removed = 0; $failed = 0;
+    meta_set('cron_last', (string)time());
+    $log = fn($sub, string $what, int $code = 0) => meta_set('ps:' . substr($sub['id'], 0, 48), json_encode(['at' => time(), 'what' => $what, 'code' => $code]));
     foreach (q('SELECT * FROM {p}push_subs')->fetchAll() as $sub) {
         $now = new DateTimeImmutable('now', new DateTimeZone($sub['tz']));
         $day = $now->format('Y-m-d');
         if ((int)$now->format('G') < (int)$sub['hour'] || $sub['last_day'] === $day) continue;
         $done = fn() => q('UPDATE {p}push_subs SET last_day = ? WHERE id = ?', [$day, $sub['id']]);
         $msg = reminder_message((int)$sub['user_id'], $sub);
-        if (!$msg) { $done(); $skipped++; continue; }
+        if (!$msg) { $done(); $skipped++; $log($sub, 'nothing'); continue; }
         $code = push_send($sub, $msg);
         if ($code === 404 || $code === 410) { q('DELETE FROM {p}push_subs WHERE id = ?', [$sub['id']]); $removed++; }
-        elseif ($code >= 200 && $code < 300) { $done(); $sent++; }
-        else $failed++;   // Netz- oder Serverfehler: nächste Stunde nochmals versuchen
+        elseif ($code >= 200 && $code < 300) { $done(); $sent++; $log($sub, 'sent', $code); }
+        else { $failed++; $log($sub, 'failed', $code); }   // Netz- oder Serverfehler: nächste Stunde nochmals versuchen
     }
     return ['sent' => $sent, 'nothing_due' => $skipped, 'removed' => $removed, 'failed' => $failed];
 }

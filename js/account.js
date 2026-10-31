@@ -129,7 +129,7 @@ async function attach(email){
 }
 
 /* ---------- Erinnerungen (Web Push, Versand durch api/cron.php) ---------- */
-let pushSub = null, pushBusy = false;
+let pushSub = null, pushBusy = false, pushStat = null;   // pushStat: was der Server zuletzt gemacht hat
 const pushOK = () => BUILD === 'pwa' && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
 function pushHour(){ try { const h = localStorage.getItem('ileafyou.pushHour'); return h === null ? 18 : +h; } catch(e) { return 18; } }
 function setPushHour(h){ try { localStorage.setItem('ileafyou.pushHour', String(h)); } catch(e) {} }
@@ -161,13 +161,23 @@ async function pushOff(){
   await api('push.php?a=unsubscribe', { endpoint: sub.endpoint }).catch(() => {});
   await sub.unsubscribe().catch(() => {}); pushSub = null;
 }
+// Wann hat der Server zuletzt geprüft, was ging an dieses Gerät? Hilft, wenn keine Erinnerung kommt.
+function pushStatHtml(){
+  if (!pushStat) return '';
+  const when = t => new Date(t * 1000).toLocaleString(loc(), { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  const c = pushStat.cron_last, old = !c || Date.now() / 1000 - c > 2 * 3600;
+  const cron = !c ? tr('push_cron_never') : old ? tr('push_cron_old', { time: when(c) }) : tr('push_cron_ok', { time: when(c) });
+  const l = pushStat.last;
+  const last = !l ? tr('push_last_none') : l.what === 'sent' ? tr('push_last_sent', { when: when(l.at) }) : l.what === 'nothing' ? tr('push_last_nothing', { when: when(l.at) }) : tr('push_last_failed', { when: when(l.at), code: l.code });
+  return `<p class="hint ${old ? 'late' : ''}">${cron}</p><p class="hint">${last}</p>`;
+}
 function pushHtml(){
   let h = `<h3 class="seth">${tr('set_push')}</h3><p class="setp">${tr('push_p')}</p>`;
   if (!pushOK()) return h + `<p class="hint">${tr(isIOS() && !isStandalone() ? 'push_ios' : 'push_unsupported')}</p>`;
   if (Notification.permission === 'denied') return h + `<p class="hint">${tr('push_denied')}</p>`;
   const sel = `<label class="langsel"><span>${tr('push_time')}</span><select id="pushHour">${Array.from({ length: 17 }, (_, i) => i + 6).map(x => `<option value="${x}" ${x === pushHour() ? 'selected' : ''}>${hourText(x)}</option>`).join('')}</select></label>`;
   return h + (pushSub
-    ? `<p class="setp"><span class="pill ok">${tr('push_is_on')}</span></p>${sel}<div class="setrow"><button type="button" class="setbtn" data-action="pushtest">${tr('push_test')}</button><button type="button" class="setbtn" data-action="pushoff">${tr('push_off_btn')}</button></div>`
+    ? `<p class="setp"><span class="pill ok">${tr('push_is_on')}</span></p>${pushStatHtml()}${sel}<div class="setrow"><button type="button" class="setbtn" data-action="pushtest">${tr('push_test')}</button><button type="button" class="setbtn" data-action="pushoff">${tr('push_off_btn')}</button></div>`
     : `${sel}<div class="setrow"><button type="button" class="setbtn" data-action="pushon">${tr('push_on_btn')}</button></div>`);
 }
 document.addEventListener('change', async e => {
@@ -232,7 +242,14 @@ function getTheme(){ try { return localStorage.getItem('ileafyou.theme') || ''; 
 function setTheme(t){ try { t ? localStorage.setItem('ileafyou.theme', t) : localStorage.removeItem('ileafyou.theme'); } catch(e) {} ilyTheme(t); }
 
 /* ---------- Einstellungen ---------- */
-async function openSettings(){ renderSettings(); $('#setDlg').showModal(); if (account.email && pushOK()){ await pushCurrent().catch(() => {}); renderSettings(); } }
+async function openSettings(){
+  renderSettings(); $('#setDlg').showModal();
+  if (account.email && pushOK()){
+    await pushCurrent().catch(() => {});
+    pushStat = pushSub ? await api('push.php?a=status', { endpoint: pushSub.endpoint }).catch(() => null) : null;
+    renderSettings();
+  }
+}
 function renderSettings(){
   const th = getTheme(), btn = (act, key, cls) => `<button type="button" class="setbtn ${cls || ''}" data-action="${act}">${tr(key)}</button>`;
   let h = `<div class="sheethead"><h2>${tr('set_h')}</h2><button class="x" data-action="close" aria-label="${tr('close')}">×</button></div>`;

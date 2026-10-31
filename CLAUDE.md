@@ -72,7 +72,7 @@ state = {
     id, name, species, siteId,           // siteId verweist auf state.sites
     location,                            // Raum oder Platz, "Raum, Detail"; Raum = Teil vor dem Komma
     family?,                             // Pflanzenfamilie aus der Foto-Erkennung (z. B. 'Araceae'), für Pflegetipps
-    outdoor?, minT?, winter?, inNow?, coldAck?, // draussen: verträgt Kälte bis °C, Winter inside|cool|cover|hardy|annual, im Winterquartier, Warnung für Datum erledigt
+    outdoor?, minT?, winter?, inNow?, coldAck?, coldSeason?, // draussen: verträgt Kälte bis °C, Winter inside|cool|cover|hardy|annual, im Winterquartier, Warnung für Datum erledigt, einjährig geerntet (Saison Juli–Juni, keine Frostwarnungen mehr)
     icon,                                // Pixel-Symbol, falls kein Foto: generic, monstera, herb, lemon, orchid, pothos, aloe, cactus
     waterEvery, feedEvery,               // Tage, 0 = keine Erinnerung
     notes, photo,                        // photo: JPEG als data-URL, max. 640 px
@@ -97,7 +97,9 @@ Log-Typen: `water`, `feed`, `repot`, `note`, `photo` (mit `img`), `check` (Spät
 
 ## Pflanzen draussen
 
-`js/outdoor.js`: Pflanzen mit „Steht draussen“ haben `minT` (verträgt Kälte bis °C) und `winter` (`inside` Zimmerpflanze, `cool` hell und kühl überwintern, `cover` draussen mit Schutz, `hardy` winterhart, `annual` einjährig). Vorschläge aus `COLD`/`COLD_FAMILY` in `care.js`, im Formular änderbar. Wetter: Open-Meteo (frei, ohne Schlüssel, nur für nicht-kommerzielle Nutzung gratis), Tiefstwerte der nächsten Nächte für den Wetter-Standort des Orts, 3 Stunden zwischengespeichert. Die Startseite zeigt unter „Draussen“ pro Ort die Wetterlage (`wxHtml()`: Standort, aktuelle Temperatur, Tiefstwerte der nächsten 7 Nächte, zu kalte Nächte blau, Stand und Quelle, „Ort ändern“), darunter Warnungen für die nächsten 4 Nächte (reinholen, schützen, ernten) und im Frühling „darf wieder raus“; „Reingeholt“/„Rausgestellt“ setzt `inNow`. Die Push-Erinnerung um 18 Uhr enthält Frostwarnungen für heute Nacht (`cold_alerts()` in `reminders.php`, Texte in `COLD_TEXT`), auch an Tagen ohne fällige Pflege.
+`js/outdoor.js`: Pflanzen mit „Steht draussen“ haben `minT` (verträgt Kälte bis °C) und `winter` (`inside` Zimmerpflanze, `cool` hell und kühl überwintern, `cover` draussen mit Schutz, `hardy` winterhart, `annual` einjährig). Vorschläge aus `COLD`/`COLD_FAMILY` in `care.js`, im Formular änderbar. Wetter: Open-Meteo (frei, ohne Schlüssel, nur für nicht-kommerzielle Nutzung gratis), Tiefstwerte der nächsten Nächte für den Wetter-Standort des Orts, 3 Stunden zwischengespeichert. Die Startseite zeigt unter „Draussen“ pro Ort die Wetterlage (`wxHtml()`: Standort, aktuelle Temperatur, Tiefstwerte der nächsten 7 Nächte, zu kalte Nächte blau, Stand und Quelle, „Ort ändern“), darunter Warnungen für die nächsten 4 Nächte (reinholen, schützen, ernten) und im Frühling „darf wieder raus“; „Reingeholt“/„Rausgestellt“ setzt `inNow`. Die Push-Erinnerung um 18 Uhr enthält Frostwarnungen für heute Nacht (`cold_alerts()` in `reminders.php`, Texte in `COLD_TEXT`), auch an Tagen ohne fällige Pflege. Einjährige: „Geerntet“ setzt `coldSeason`, dann keine Frostwarnungen mehr bis zur nächsten Saison; die Pflanze bleibt mit ihren Giess-Erinnerungen.
+
+Diagnose Push: `cron.php` schreibt `cron_last` und pro Abo das letzte Ergebnis (`ps:<id>` in `meta`); die Einstellungen zeigen das unter „Erinnerungen“ (`push.php?a=status`).
 
 ## Spielregeln
 
