@@ -280,3 +280,11 @@ label.check input{width:22px;height:22px;accent-color:var(--moss);flex:none}
 .wxn.cold small{color:#fff}
 .wx .hint{margin:8px 0 0}
 .outcare .wx{background:var(--bg);margin:8px 0 12px}
+
+/* Heute dran: Name über die volle Breite, Später und Erledigt-Knopf darunter (lange Namen überlappen sonst) */
+.task:has(> .later){display:grid;grid-template-columns:48px 1fr auto auto;column-gap:12px;row-gap:6px}
+.task:has(> .later) > .thumb{grid-row:1 / span 2;align-self:center}
+.task:has(> .later) > .t{grid-column:2 / -1}
+.task:has(> .later) > .later{grid-column:3;grid-row:2}
+.task:has(> .later) > .do{grid-column:4;grid-row:2}
+.task .t .n{overflow-wrap:anywhere}
