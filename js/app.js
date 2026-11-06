@@ -234,7 +234,7 @@ function celebrate(kind, extra){
 
 /* ---------- Hauptansicht ---------- */
 function render(){
-  const weekScroll = document.querySelector('.week')?.scrollLeft || 0;   // Wischposition der Vorschau behalten
+  const weekScroll = document.querySelector('.week')?.scrollLeft;   // Wischposition der Vorschau behalten (beim ersten Mal: heute)
   $('#date').textContent = fmtDay(new Date(), { weekday:'long', day:'numeric', month:'long' });
   const plants = state.plants;
   if (!plants.length){
@@ -278,7 +278,7 @@ function render(){
     : grouped ? state.sites.map(s => { const ps = shown.filter(p => p.siteId === s.id); return ps.length ? `<div class="sitegroup"><h3>${esc(s.name)}</h3><div class="grid">${ps.map(card).join('')}</div></div>` : ''; }).join('')
     : `<div class="grid">${shown.map(card).join('')}</div>`;
   $('#app').innerHTML = `${lvlHtml()}${sitesBar()}${vac}${outdoorHtml()}<section><h2>${tr('h_today')}</h2><div class="today">${today}</div></section><section><h2>${tr('h_next')}</h2>${weekHtml()}</section><section><h2>${tr('h_plants')}</h2>${chips}${cards}</section><section><h2>${tr('h_badges')}</h2>${badgesHtml()}</section>${footHtml()}`;
-  if ($('.week')) $('.week').scrollLeft = weekScroll;
+  const wk = $('.week'); if (wk) wk.scrollLeft = weekScroll ?? wk.querySelector('.now').offsetLeft - wk.firstElementChild.offsetLeft;
 }
 // Ferienmodus, Daten, Sprache usw. liegen in den Einstellungen (Zahnrad oben rechts)
 function footHtml(){
@@ -375,6 +375,13 @@ function badgesHtml(){
 /* ---------- Woche & Tag ---------- */
 // Aufgaben für Tag i (0 = heute, mit Überfälligem). Wiederholungen werden vorausgerechnet:
 // Annahme, die Aufgabe wird am Fälligkeitstag erledigt, dann kommt sie alle n Tage wieder.
+// Vergangener Tag: was erledigt wurde (Protokoll) und was fällig war, aber liegen blieb
+function pastDay(i){
+  const dt = dayDate(i), key = dkey(dt), vis = state.plants.filter(inView);
+  const done = vis.flatMap(p => p.log.filter(l => dkey(l.date) === key && l.type !== 'check').map(l => ({ p, l }))).sort((a, b) => a.l.date.localeCompare(b.l.date));
+  const missed = vis.flatMap(p => ['water', 'feed'].map(t => ({ p, t, d: dueOn(p, t, dt) }))).filter(x => x.d !== null && x.d <= 0);
+  return { done, missed };
+}
 function dayItems(i){
   return state.plants.filter(inView).flatMap(p => ['water','feed'].map(t => ({ p, t, d: due(p, t), every: +(t === 'water' ? p.waterEvery : p.feedEvery) })))
     .filter(x => {
@@ -387,17 +394,33 @@ function dayItems(i){
 const dayDate = i => { const d = new Date(); d.setDate(d.getDate() + i); return d; };
 // Wochenvorschau: Tipp auf einen Tag zeigt die Aufgaben direkt darunter, nochmals tippen schliesst
 let selDay = null;
-const WEEK_DAYS = 28;   // vier Wochen, sieben sichtbar, waagrecht wischen
+const WEEK_DAYS = 28, WEEK_PAST = 14;   // vier Wochen voraus, zwei zurück; sieben sichtbar, waagrecht wischen
 function weekHtml(){
-  const week = `<div class="week">${Array.from({ length: WEEK_DAYS }, (_, i) => i).map(i => { const dt = dayDate(i), items = dayItems(i);
-    return `<button class="wd ${i === 0 ? 'now' : ''} ${i === selDay ? 'sel' : ''}" data-action="day" data-i="${i}" aria-expanded="${i === selDay}"><b>${i === 0 ? tr('today') : fmtDay(dt, { weekday:'short' })}</b><span class="num">${dt.getDate()}</span><span class="dots">${items.map(x => `<i class="${x.t === 'feed' ? 'f' : ''}"></i>`).join('')}</span></button>`; }).join('')}</div>`;
+  const dots = i => {
+    if (i >= 0) return dayItems(i).map(x => `<i class="${x.t === 'feed' ? 'f' : ''}"></i>`).join('');
+    const { done, missed } = pastDay(i);   // gefüllt = erledigt, Ring = liegen geblieben
+    return done.filter(x => ['water', 'feed'].includes(x.l.type)).map(x => `<i class="${x.l.type === 'feed' ? 'f' : ''}"></i>`).join('') + missed.map(() => '<i class="miss"></i>').join('');
+  };
+  const week = `<div class="week">${Array.from({ length: WEEK_PAST + WEEK_DAYS }, (_, k) => k - WEEK_PAST).map(i => { const dt = dayDate(i);
+    return `<button class="wd ${i === 0 ? 'now' : ''} ${i < 0 ? 'past' : ''} ${i === selDay ? 'sel' : ''}" data-action="day" data-i="${i}" aria-expanded="${i === selDay}"><b>${i === 0 ? tr('today') : fmtDay(dt, { weekday:'short' })}</b><span class="num">${dt.getDate()}</span><span class="dots">${dots(i)}</span></button>`; }).join('')}</div>`;
   return week + (selDay === null ? `<div class="hint">${tr('weekHint')}</div>` : dayHtml(selDay));
 }
 function dayHtml(i){
+  if (i < 0) return pastHtml(i);
   const items = dayItems(i), dt = dayDate(i);
   const h = i === 0 ? tr('today') : i === 1 ? tr('tomorrow') : fmtDay(dt, { weekday:'long', day:'numeric', month:'long' });
   const list = items.length ? items.map(({p,t,d}) => { const late = i === 0 && d < 0; return `<button class="task daytask" data-action="open" data-id="${p.id}">${thumb(p,'thumb')}<div class="t"><div class="n">${esc(p.name)}</div><div class="s ${late ? 'late' : ''}">${verb(t)}${late ? ', ' + dueText(d) : ''}${siteTag(p)}</div></div></button>`; }).join('') : `<div class="calm">${tr('nothing')}</div>`;
   return `<div class="dayinfo"><h3>${h}</h3>${list}</div>`;
+}
+
+function pastHtml(i){
+  const { done, missed } = pastDay(i), dt = dayDate(i);
+  const h = i === -1 ? tr('yesterday') : fmtDay(dt, { weekday:'long', day:'numeric', month:'long' });
+  const time = d => new Date(d).toLocaleTimeString(loc(), { hour: '2-digit', minute: '2-digit' });
+  const row = (p, s, cls) => `<button class="task daytask" data-action="open" data-id="${p.id}">${thumb(p,'thumb')}<div class="t"><div class="n">${esc(p.name)}</div><div class="s ${cls}">${s}${siteTag(p)}</div></div></button>`;
+  const doneH = done.length ? `<h4 class="dayh">${tr('h_done')}</h4>${done.map(({ p, l }) => row(p, `${typeLabel(l.type)}, ${time(l.date)}`, 'ok')).join('')}` : '';
+  const missH = missed.length ? `<h4 class="dayh">${tr('h_missed')}</h4>${missed.map(({ p, t, d }) => row(p, `${verb(t)}${d < 0 ? ', ' + tr('overdueAt', { n: -d }) : ''}`, 'late')).join('')}` : '';
+  return `<div class="dayinfo"><h3>${h}</h3>${doneH}${missH || (doneH ? '' : `<div class="calm">${tr('nothingPast')}</div>`)}</div>`;
 }
 
 /* ---------- Später, Ferien, Orte ---------- */

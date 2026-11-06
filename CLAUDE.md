@@ -87,6 +87,8 @@ state = {
 }
 ```
 
+Die Vorschau „Nächste Tage“ zeigt 28 Tage voraus und 14 zurück (`WEEK_DAYS`, `WEEK_PAST`), sieben sichtbar, startet bei heute. Künftige Tage rechnen Wiederholungen voraus (`dayItems()`), vergangene zeigen Erledigtes aus dem Protokoll und Liegengebliebenes (`pastDay()`, Ring-Punkte).
+
 Orte filtern „Heute dran“, „Nächste Tage“ und die Pflanzenliste. Punkte, Levels, Serie und der Bonus „Tag geschafft“ gelten über alle Orte gemeinsam. Bei „Alle Orte“ ist die Pflanzenliste nach Ort gruppiert. Ein Ort lässt sich nur löschen, wenn er leer ist. Alte Daten ohne `sites` migriert `migrateSites()` auf „Zuhause“.
 
 Log-Typen: `water`, `feed`, `repot`, `note`, `photo` (mit `img`), `check` (Später/Erde feucht, mit `for` und `days`; der Text wird beim Anzeigen übersetzt, nicht gespeichert).
