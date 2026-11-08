@@ -657,20 +657,22 @@ function applyCare(c, setName){
   const h = $('#careHint'); h.hidden = false;
   h.textContent = tr('care_hint', { name: c.names[lang()], w: c.water, feed: c.feed ? tr('care_feedN', { n: c.feed }) : tr('care_feed0') });
 }
-$('#fName').addEventListener('input', showCareSug);
+// Auch im Namensfeld (deutscher Name) in der Datenbank suchen, solange noch keine Art eingetragen ist
+$('#fName').addEventListener('input', e => { showCareSug(e); if (!$('#fSpecies').value.trim()) dbSearchSoon(e.target.value, true); });
 $('#fSpecies').addEventListener('input', e => { pendingFamily = null; showCareSug(e); dbSearchSoon(e.target.value); });   // Art von Hand geändert: Familie passt evtl. nicht mehr
 
 /* ---------- Art in der Datenbank suchen (GBIF, frei, ohne Schlüssel), z. B. wenn die Foto-Erkennung danebenlag ---------- */
 const GBIF_LANG = { de: 'deu', en: 'eng', es: 'spa', fr: 'fra' };
 let dbTimer = null, dbSeq = 0;
-function dbSearchSoon(q){
+function dbSearchSoon(q, quiet){
   clearTimeout(dbTimer); q = q.trim();
   if (q.length < 3 || BUILD !== 'pwa'){ $('#dbSug').hidden = true; return; }
-  dbTimer = setTimeout(() => dbSearch(q), 450);
+  dbTimer = setTimeout(() => dbSearch(q, quiet), 450);
 }
-async function dbSearch(q){
+// quiet: aus dem Namensfeld, dort nur Treffer zeigen (eigene Namen wie «Mein Bäumchen» finden nichts)
+async function dbSearch(q, quiet){
   const seq = ++dbSeq, box = $('#dbSug');
-  box.hidden = false; box.innerHTML = `<div class="hint">${tr('db_searching')}</div>`;
+  if (!quiet){ box.hidden = false; box.innerHTML = `<div class="hint">${tr('db_searching')}</div>`; }
   try {
     const r = await fetch('https://api.gbif.org/v1/species/search?highertaxonKey=6&datasetKey=d7dddbf4-2cf0-4f39-9b2a-bb099caae36c&limit=20&q=' + encodeURIComponent(q));
     const res = (await r.json()).results || [];
@@ -684,10 +686,12 @@ async function dbSearch(q){
       hits.push({ sci, family: x.family, common: v ? v.vernacularName : '' });
       if (hits.length === 6) break;
     }
+    if (quiet && !hits.length){ box.hidden = true; return; }
+    box.hidden = false;
     box.innerHTML = hits.length
       ? `<div class="hint">${tr('db_hint')}</div><div class="chips">${hits.map(h => `<button type="button" class="chip" data-dbsci="${esc(h.sci)}" data-dbfam="${esc(h.family)}">${esc(h.common || h.sci)} <small>${h.common ? esc(h.sci) + ', ' : ''}${esc(h.family)}</small></button>`).join('')}</div>`
       : `<div class="hint">${tr('db_none')}</div>`;
-  } catch(e){ if (seq === dbSeq) box.innerHTML = `<div class="hint">${tr('db_fail')}</div>`; }
+  } catch(e){ if (seq === dbSeq && !quiet){ box.hidden = false; box.innerHTML = `<div class="hint">${tr('db_fail')}</div>`; } }
 }
 $('#dbSug').addEventListener('click', e => {
   const b = e.target.closest('[data-dbsci]'); if (!b) return;
