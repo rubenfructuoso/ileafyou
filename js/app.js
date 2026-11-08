@@ -542,7 +542,7 @@ function openForm(id){
   $('#fWater').value = p ? p.waterEvery : 7; $('#fFeed').value = p ? p.feedEvery : 30; $('#fNotes').value = p?.notes || '';
   pendingIcon = p?.icon || 'generic'; pendingFamily = p?.family || null; renderIconPick();
   setPhoto(p?.photo || null); $('#formDelete').hidden = !p;
-  $('#careSug').innerHTML = ''; $('#careHint').hidden = true; outForm(p);
+  $('#careSug').innerHTML = ''; $('#careHint').hidden = true; $('#dbSug').hidden = true; outForm(p);
   if ($('#detailDlg').open) $('#detailDlg').close();
   $('#formDlg').showModal();
 }
@@ -658,7 +658,45 @@ function applyCare(c, setName){
   h.textContent = tr('care_hint', { name: c.names[lang()], w: c.water, feed: c.feed ? tr('care_feedN', { n: c.feed }) : tr('care_feed0') });
 }
 $('#fName').addEventListener('input', showCareSug);
-$('#fSpecies').addEventListener('input', e => { pendingFamily = null; showCareSug(e); });   // Art von Hand geändert: Familie passt evtl. nicht mehr
+$('#fSpecies').addEventListener('input', e => { pendingFamily = null; showCareSug(e); dbSearchSoon(e.target.value); });   // Art von Hand geändert: Familie passt evtl. nicht mehr
+
+/* ---------- Art in der Datenbank suchen (GBIF, frei, ohne Schlüssel), z. B. wenn die Foto-Erkennung danebenlag ---------- */
+const GBIF_LANG = { de: 'deu', en: 'eng', es: 'spa', fr: 'fra' };
+let dbTimer = null, dbSeq = 0;
+function dbSearchSoon(q){
+  clearTimeout(dbTimer); q = q.trim();
+  if (q.length < 3 || BUILD !== 'pwa'){ $('#dbSug').hidden = true; return; }
+  dbTimer = setTimeout(() => dbSearch(q), 450);
+}
+async function dbSearch(q){
+  const seq = ++dbSeq, box = $('#dbSug');
+  box.hidden = false; box.innerHTML = `<div class="hint">${tr('db_searching')}</div>`;
+  try {
+    const r = await fetch('https://api.gbif.org/v1/species/search?highertaxonKey=6&datasetKey=d7dddbf4-2cf0-4f39-9b2a-bb099caae36c&limit=20&q=' + encodeURIComponent(q));
+    const res = (await r.json()).results || [];
+    if (seq !== dbSeq) return;   // inzwischen weitergetippt
+    const seen = new Set(), hits = [];
+    for (const x of res){
+      const sci = (x.taxonomicStatus === 'ACCEPTED' ? x.canonicalName : (x.accepted || '').replace(/\s+\(?[A-Z][^]*$/, '')) || x.canonicalName;
+      if (!sci || !x.family || !['SPECIES', 'GENUS', 'VARIETY', 'SUBSPECIES'].includes(x.rank) || seen.has(sci)) continue;
+      seen.add(sci);
+      const v = (x.vernacularNames || []).find(n => n.language === GBIF_LANG[lang()]);
+      hits.push({ sci, family: x.family, common: v ? v.vernacularName : '' });
+      if (hits.length === 6) break;
+    }
+    box.innerHTML = hits.length
+      ? `<div class="hint">${tr('db_hint')}</div><div class="chips">${hits.map(h => `<button type="button" class="chip" data-dbsci="${esc(h.sci)}" data-dbfam="${esc(h.family)}">${esc(h.common || h.sci)} <small>${h.common ? esc(h.sci) + ', ' : ''}${esc(h.family)}</small></button>`).join('')}</div>`
+      : `<div class="hint">${tr('db_none')}</div>`;
+  } catch(e){ if (seq === dbSeq) box.innerHTML = `<div class="hint">${tr('db_fail')}</div>`; }
+}
+$('#dbSug').addEventListener('click', e => {
+  const b = e.target.closest('[data-dbsci]'); if (!b) return;
+  clearTimeout(dbTimer); dbSeq++;
+  $('#fSpecies').value = b.dataset.dbsci; pendingFamily = b.dataset.dbfam; $('#dbSug').hidden = true; $('#careSug').innerHTML = '';
+  const c = careFor(b.dataset.dbsci);
+  if (c) applyCare(c, false);   // in der eigenen Liste: Rhythmus, Symbol und Kälte-Werte übernehmen
+  else { outPrefill(true); const h = $('#careHint'); h.hidden = false; h.textContent = tr('db_family', { family: pendingFamily }); }
+});
 $('#careSug').addEventListener('click', e => { const c = e.target.closest('[data-care]'); if (c) applyCare(CARE.find(x => x.sci === c.dataset.care), true); });
 
 /* ---------- Ereignisse ---------- */
