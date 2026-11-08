@@ -298,3 +298,9 @@ label.check input{width:22px;height:22px;accent-color:var(--moss);flex:none}
 .dbsug{margin-top:6px}
 .dbsug .chips{flex-wrap:wrap;margin:4px 0 0}
 .dbsug .chip small{font-weight:400;color:var(--muted)}
+
+/* Pause einer Pflanze */
+.detlinks{display:flex;gap:18px;flex-wrap:wrap}
+.pausebox{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;background:var(--leafbg);border-radius:14px;padding:10px 14px}
+.pausebox button{background:none;color:var(--moss);font-weight:700;padding:6px 0;flex:none}
+.gl.paused{color:var(--muted)}

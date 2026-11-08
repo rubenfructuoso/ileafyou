@@ -33,6 +33,12 @@ function due_in(array $p, string $t, DateTimeImmutable $today, DateTimeZone $tz)
     $log = $p['log'] ?? [];
     $prior = null;
     foreach ($log as $l) if (($l['type'] ?? '') === $t && day_of($l['date'], $tz) <= $today && ($prior === null || $l['date'] > $prior)) $prior = $l['date'];
+    // Pause: bis pauseUntil keine Erinnerung, am Tag danach fällig (wie dueOn() in app.js)
+    $pu = (string)($p['pauseUntil'] ?? '');
+    if ($pu !== '' && ($prior === null || day_of($prior, $tz)->format('Y-m-d') <= $pu)) {
+        $until = new DateTimeImmutable($pu, $tz);
+        return $today <= $until ? null : 1 - days_from($until, $today);
+    }
     $d = $every - days_from(day_of($prior ?? $p['created'], $tz), $today);
     $chk = null;
     foreach ($log as $l) {

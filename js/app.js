@@ -97,6 +97,11 @@ function dueOn(p, t, day){
   const every = t === 'water' ? +p.waterEvery : +p.feedEvery; if (!every) return null;
   const end = day0(day); if (day0(p.created) > end) return null;
   const prior = p.log.filter(l => l.type === t && day0(l.date) <= end).map(l => l.date).sort().pop();
+  // Pause (z. B. frisch gepflanzte Kakteen): bis pauseUntil keine Erinnerung, am Tag danach fällig. Wie due_in() in reminders.php.
+  if (p.pauseUntil && (!prior || dkey(prior) <= p.pauseUntil)){
+    const until = fromKey(p.pauseUntil);
+    return end <= until ? null : 1 - Math.round((end - until) / 864e5);
+  }
   let d = every - Math.round((end - day0(prior || p.created)) / 864e5);
   const chk = p.log.filter(l => l.type === 'check' && l.for === t && day0(l.date) <= end && (!prior || l.date >= prior)).sort((a,b) => b.date.localeCompare(a.date))[0];
   if (chk) d = Math.max(d, chk.days - Math.round((end - day0(chk.date)) / 864e5));
@@ -266,7 +271,7 @@ function render(){
   const shown = sorted.filter(p => !roomFilter || roomOf(p) === roomFilter);
   const card = p => {
     const d = due(p, 'water');
-    let g = '';
+    let g = isPaused(p) ? `<div class="gl paused">${tr('paused_until', { date: pauseDate(p) })}</div>` : '';
     if (d !== null){
       const frac = Math.max(0, Math.min(1, d / +p.waterEvery));
       g = `<div class="gauge ${d <= 0 ? 'dry' : ''}"><i style="width:${d <= 0 ? 100 : Math.max(6, frac*100)}%"></i></div><div class="gl">${verb('water')} ${dueText(d)}</div>`;
@@ -317,7 +322,7 @@ function renderDetail(){
   const p = getP(detailId); if (!p){ $('#detailDlg').close(); return; }
   const dw = due(p,'water'), df = due(p,'feed');
   const fmt = iso => { const d = new Date(iso); return d.toLocaleDateString(loc(),{ day:'numeric', month:'short', year: d.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined }) + ', ' + d.toLocaleTimeString(loc(),{ hour:'2-digit', minute:'2-digit' }); };
-  const rhythm = (dd, every) => dd === null ? tr('noReminder') : `${tr('every', { n: every })}, ${dd < 0 ? `<span class="late">${dueText(dd)}</span>` : tr('nextWhen', { when: dueText(dd) })}`;
+  const rhythm = (dd, every) => dd === null ? (isPaused(p) && every ? tr('paused_until', { date: pauseDate(p) }) : tr('noReminder')) : `${tr('every', { n: every })}, ${dd < 0 ? `<span class="late">${dueText(dd)}</span>` : tr('nextWhen', { when: dueText(dd) })}`;
   const noteOf = l => l.type === 'check' && l.for ? tr('check_' + l.for, { when: whenText(l.days) }) : l.note;
   const log = [...p.log].sort((a,b) => b.date.localeCompare(a.date));
   $('#detail').innerHTML = `
@@ -330,7 +335,8 @@ function renderDetail(){
       <dt>${verb('feed')}</dt><dd>${rhythm(df, p.feedEvery)}</dd>
     </dl>
     ${p.notes ? `<div class="notes">${esc(p.notes)}</div>` : ''}
-    <button class="linkbtn" data-action="edit" data-id="${p.id}">${tr('edit')}</button>
+    ${isPaused(p) ? `<div class="pausebox"><span>${tr('paused_box', { date: pauseDate(p) })}</span><button data-action="unpause" data-id="${p.id}">${tr('pause_end')}</button></div>` : ''}
+    <div class="detlinks"><button class="linkbtn" data-action="edit" data-id="${p.id}">${tr('edit')}</button>${isPaused(p) || !(+p.waterEvery || +p.feedEvery) ? '' : `<button class="linkbtn" data-action="pause" data-id="${p.id}">${tr('pause_btn')}</button>`}</div>
     ${careHtml(p)}
     ${outDetailHtml(p)}
     <div class="actions">
@@ -421,6 +427,18 @@ function pastHtml(i){
   const doneH = done.length ? `<h4 class="dayh">${tr('h_done')}</h4>${done.map(({ p, l }) => row(p, `${typeLabel(l.type)}, ${time(l.date)}`, 'ok')).join('')}` : '';
   const missH = missed.length ? `<h4 class="dayh">${tr('h_missed')}</h4>${missed.map(({ p, t, d }) => row(p, `${verb(t)}${d < 0 ? ', ' + tr('overdueAt', { n: -d }) : ''}`, 'late')).join('')}` : '';
   return `<div class="dayinfo"><h3>${h}</h3>${doneH}${missH || (doneH ? '' : `<div class="calm">${tr('nothingPast')}</div>`)}</div>`;
+}
+
+/* ---------- Erinnerungen einer Pflanze pausieren (pauseUntil = letzter Tag der Pause) ---------- */
+const isPaused = p => !!p.pauseUntil && p.pauseUntil >= dkey(new Date());
+const pauseDate = p => fmtDay(fromKey(p.pauseUntil), { day: 'numeric', month: 'long' });
+function pauseSheet(id){
+  const p = getP(id); if (!p) return;
+  const until = n => dkey(dayDate(n));
+  openCel(`<h2>${tr('pause_h', { name: esc(p.name) })}</h2><p>${tr('pause_p')}</p>
+    <div class="snz">${[1, 2, 3].map(w => `<button class="act" data-action="pauseset" data-id="${id}" data-until="${until(w * 7)}">${w === 1 ? tr('pause_week1') : tr('pause_weeks', { n: w })}</button>`).join('')}</div>
+    <label for="pauseIn" style="text-align:left">${tr('pause_until')}</label><input type="date" id="pauseIn" value="${until(14)}" min="${until(1)}">
+    <button class="primary" data-action="pauseset" data-id="${id}">${tr('pause_save')}</button><button class="ghost" data-action="close" style="color:var(--muted)">${tr('cancel')}</button>`);
 }
 
 /* ---------- Später, Ferien, Orte ---------- */
@@ -650,7 +668,11 @@ function applyCare(c, setName){
   $('#fSpecies').value = c.sci;
   // Namensfeld ergänzen, wenn leer oder nur ein Suchbegriff für diese Pflanze («Fenster» → «Fensterblatt»)
   const n = norm($('#fName').value);
-  if (setName && (!n || [c.sci, ...c.syn, ...Object.values(c.names)].some(x => norm(x).includes(n)))) $('#fName').value = c.names[lang()];
+  if (setName && (!n || [c.sci, ...c.syn, ...Object.values(c.names)].some(x => norm(x).includes(n)))){
+    // Den Namen nehmen, den man getippt hat (z. B. «Ohrwaschel» → «Ohrwaschelkaktus»), sonst den üblichen der Sprache
+    const own = n && c.syn.find(x => /[a-zäöü]/.test(x) && x[0] === x[0].toUpperCase() && !x.includes(' ') && norm(x).startsWith(n) && !norm(c.sci).startsWith(n));
+    $('#fName').value = own || c.names[lang()];
+  }
   $('#fWater').value = c.water; $('#fFeed').value = c.feed;
   if (pendingIcon === 'generic' && c.icon !== 'generic'){ pendingIcon = c.icon; renderIconPick(); }
   $('#careSug').innerHTML = ''; outPrefill(true);
@@ -670,22 +692,44 @@ function dbSearchSoon(q, quiet){
   dbTimer = setTimeout(() => dbSearch(q, quiet), 450);
 }
 // quiet: aus dem Namensfeld, dort nur Treffer zeigen (eigene Namen wie «Mein Bäumchen» finden nichts)
+const GBIF = 'https://api.gbif.org/v1/species/';
+async function gbifSearch(q){
+  const res = (await (await fetch(GBIF + 'search?highertaxonKey=6&datasetKey=d7dddbf4-2cf0-4f39-9b2a-bb099caae36c&limit=20&q=' + encodeURIComponent(q))).json()).results || [];
+  const out = [], seen = new Set();
+  for (const x of res){
+    const sci = (x.taxonomicStatus === 'ACCEPTED' ? x.canonicalName : (x.accepted || '').replace(/\s+\(?[A-Z][^]*$/, '')) || x.canonicalName;
+    if (!sci || !x.family || !['SPECIES', 'GENUS', 'VARIETY', 'SUBSPECIES'].includes(x.rank) || seen.has(sci)) continue;
+    seen.add(sci);
+    const v = (x.vernacularNames || []).find(n => n.language === GBIF_LANG[lang()]);
+    out.push({ sci, family: x.family, common: v ? v.vernacularName : '' });
+  }
+  return out;
+}
+// Wikidata kennt viele Volksnamen (Label und Aliasse); botanischer Name aus P225, Familie und «ist eine Pflanze» über GBIF
+async function wikiSearch(q){
+  const W = 'https://www.wikidata.org/w/api.php?format=json&origin=*&';
+  const s = (await (await fetch(`${W}action=wbsearchentities&type=item&limit=7&language=${lang()}&uselang=${lang()}&search=${encodeURIComponent(q)}`)).json()).search || [];
+  if (!s.length) return [];
+  const ents = (await (await fetch(`${W}action=wbgetentities&props=claims|labels&languages=${lang()}&ids=${s.map(x => x.id).join('|')}`)).json()).entities || {};
+  const taxa = s.map(x => ents[x.id]).filter(e => e && e.claims && e.claims.P225).map(e => ({ sci: e.claims.P225[0].mainsnak.datavalue.value, label: (e.labels && e.labels[lang()] || {}).value || '' }));
+  const checked = await Promise.all(taxa.map(async t => {
+    const m = await (await fetch(GBIF + 'match?kingdom=Plantae&name=' + encodeURIComponent(t.sci))).json();
+    if (m.kingdom !== 'Plantae' || !m.family) return null;
+    return { sci: m.canonicalName || t.sci, family: m.family, common: t.label && norm(t.label) !== norm(t.sci) ? t.label : '' };
+  }));
+  return checked.filter(Boolean);
+}
 async function dbSearch(q, quiet){
   const seq = ++dbSeq, box = $('#dbSug');
   if (!quiet){ box.hidden = false; box.innerHTML = `<div class="hint">${tr('db_searching')}</div>`; }
   try {
-    const r = await fetch('https://api.gbif.org/v1/species/search?highertaxonKey=6&datasetKey=d7dddbf4-2cf0-4f39-9b2a-bb099caae36c&limit=20&q=' + encodeURIComponent(q));
-    const res = (await r.json()).results || [];
+    const [g, w] = await Promise.all([gbifSearch(q).catch(() => null), wikiSearch(q).catch(() => null)]);
     if (seq !== dbSeq) return;   // inzwischen weitergetippt
+    if (!g && !w) throw new Error('net');
+    // Wikidata zuerst: kennt mehr Volksnamen; doppelte Arten nur einmal
     const seen = new Set(), hits = [];
-    for (const x of res){
-      const sci = (x.taxonomicStatus === 'ACCEPTED' ? x.canonicalName : (x.accepted || '').replace(/\s+\(?[A-Z][^]*$/, '')) || x.canonicalName;
-      if (!sci || !x.family || !['SPECIES', 'GENUS', 'VARIETY', 'SUBSPECIES'].includes(x.rank) || seen.has(sci)) continue;
-      seen.add(sci);
-      const v = (x.vernacularNames || []).find(n => n.language === GBIF_LANG[lang()]);
-      hits.push({ sci, family: x.family, common: v ? v.vernacularName : '' });
-      if (hits.length === 6) break;
-    }
+    for (const h of [...(w || []), ...(g || [])]) if (!seen.has(h.sci)){ seen.add(h.sci); hits.push(h); }
+    hits.length = Math.min(hits.length, 6);
     if (quiet && !hits.length){ box.hidden = true; return; }
     box.hidden = false;
     box.innerHTML = hits.length
@@ -712,6 +756,9 @@ document.addEventListener('click', e => {
   else if (action === 'open'){ detailId = id; renderDetail(); $('#detailDlg').showModal(); }
   else if (action === 'log') logAction(id, type);
   else if (action === 'unlog') unlogToday(id, type);
+  else if (action === 'pause') pauseSheet(id);
+  else if (action === 'pauseset'){ const p = getP(id), v = b.dataset.until || $('#pauseIn').value; if (!p || !v){ $('#pauseIn')?.focus(); return; } p.pauseUntil = v; save(); $('#celDlg').close(); refresh(); toast(tr('pause_set', { name: p.name, date: pauseDate(p) })); }
+  else if (action === 'unpause'){ const p = getP(id); if (p){ delete p.pauseUntil; save(); refresh(); toast(tr('pause_off', { name: p.name })); } }
   else if (action === 'note'){ const v = $('#noteIn').value.trim(); if (!v){ $('#noteIn').focus(); return; } logAction(id, 'note', v); }
   else if (action === 'rules') celebrate('rules');
   else if (action === 'day'){ const i = +b.dataset.i; selDay = selDay === i ? null : i; render(); }
