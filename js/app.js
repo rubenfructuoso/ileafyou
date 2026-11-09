@@ -123,12 +123,14 @@ function openTasks(){ return state.plants.reduce((n, p) => n + ['water','feed'].
 // winterFeed: 'rest' (Pause), 'half' (halb so oft) oder 'normal'; im Winterquartier nie. Wie due_in() in reminders.php.
 const isWinter = day => { const m = day.getMonth(); return m >= 9 || m <= 1; };
 const winterFeedDefault = (species, family) => { const c = species && careFor(species); return c && WINTER_BLOOM.includes(c.sci) ? 'half' : 'rest'; };
-const feedRest = (p, day) => !!(p.outdoor && p.inNow) || (isWinter(day) && (p.winterFeed || 'rest') === 'rest');
+// Draussen nie im Winter (weiche Neutriebe erfrieren), im Winterquartier nie
+const feedRest = (p, day) => !!(p.outdoor && (p.inNow || isWinter(day))) || (isWinter(day) && (p.winterFeed || 'rest') === 'rest');
+const winterFeedEvery = every => Math.max(2 * every, 28);   // «Sparsam»: halbe Dosis, nicht öfter als alle 4 Wochen
 function dueOn(p, t, day){
   let every = t === 'water' ? +p.waterEvery : +p.feedEvery; if (!every) return null;
   const end = day0(day); if (day0(p.created) > end) return null;
   if (t === 'feed' && feedRest(p, end)) return null;
-  if (t === 'feed' && isWinter(end) && p.winterFeed === 'half') every *= 2;
+  if (t === 'feed' && isWinter(end) && p.winterFeed === 'half') every = winterFeedEvery(every);
   if (t === 'water' && p.outdoor && p.inNow && p.winter === 'cool') every *= 2;   // kühles Winterquartier: halb so oft giessen
   const prior = p.log.filter(l => l.type === t && day0(l.date) <= end).map(l => l.date).sort().pop();
   // Pause (z. B. frisch gepflanzte Kakteen): bis pauseUntil keine Erinnerung, am Tag danach fällig. Wie due_in() in reminders.php.
@@ -138,7 +140,7 @@ function dueOn(p, t, day){
   }
   let d = every - Math.round((end - day0(prior || p.created)) / 864e5);
   // Nach der Winterpause zählt Düngen ab 1. März, nicht ab dem letzten Mal im Herbst
-  if (t === 'feed' && (p.winterFeed || 'rest') === 'rest'){ const ss = new Date(end.getFullYear(), 2, 1); if (day0(prior || p.created) < ss) d = Math.max(d, -Math.round((end - ss) / 864e5)); }
+  if (t === 'feed' && (p.outdoor || (p.winterFeed || 'rest') === 'rest')){ const ss = new Date(end.getFullYear(), 2, 1); if (day0(prior || p.created) < ss) d = Math.max(d, -Math.round((end - ss) / 864e5)); }
   const chk = p.log.filter(l => l.type === 'check' && l.for === t && day0(l.date) <= end && (!prior || l.date >= prior)).sort((a,b) => b.date.localeCompare(a.date))[0];
   if (chk) d = Math.max(d, chk.days - Math.round((end - day0(chk.date)) / 864e5));
   return d;
@@ -369,7 +371,7 @@ function renderDetail(){
       ${p.species ? `<dt>${tr('d_species')}</dt><dd>${esc(p.species)}</dd>` : ''}
       ${state.sites.length > 1 ? `<dt>${tr('d_site')}</dt><dd>${esc(siteName(p.siteId))}</dd>` : ''}${p.location ? `<dt>${tr('d_place')}</dt><dd>${esc(p.location)}</dd>` : ''}
       <dt>${verb('water')}</dt><dd>${rhythm(dw, p.outdoor && p.inNow && p.winter === 'cool' ? 2 * p.waterEvery : p.waterEvery)}</dd>
-      <dt>${verb('feed')}</dt><dd>${rhythm(df, isWinter(new Date()) && p.winterFeed === 'half' && !(p.outdoor && p.inNow) ? 2 * p.feedEvery : p.feedEvery, 'feed')}</dd>
+      <dt>${verb('feed')}</dt><dd>${rhythm(df, isWinter(new Date()) && p.winterFeed === 'half' && !p.outdoor ? winterFeedEvery(+p.feedEvery) : p.feedEvery, 'feed')}</dd>
     </dl>
     ${p.notes ? `<div class="notes">${esc(p.notes)}</div>` : ''}
     ${isPaused(p) ? `<div class="pausebox"><span>${tr('paused_box', { date: pauseDate(p) })}</span><button data-action="unpause" data-id="${p.id}">${tr('pause_end')}</button></div>` : ''}
