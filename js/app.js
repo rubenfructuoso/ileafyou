@@ -24,7 +24,7 @@ const loc = () => L().locale;
 const lvName = k => L().lv[k];
 function applyStatic(){
   document.documentElement.lang = lang();
-  $('#logoMark').innerHTML = plantSvg(7, 'mark'); $('#gearBtn').innerHTML = pix('gear');
+  $('#logoMark').innerHTML = logoSvg('mark'); $('#gearBtn').innerHTML = pix('gear');
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = tr(el.dataset.i18n); });
   document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = tr(el.dataset.i18nPh); });
   document.querySelectorAll('[data-i18n-aria]').forEach(el => { el.setAttribute('aria-label', tr(el.dataset.i18nAria)); });
@@ -57,7 +57,6 @@ const KINDS = {
 };
 const KIND_KEYS = Object.keys(KINDS);
 const EMOJI_KIND = { '🌿': 'monstera', '🌱': 'herb', '🍋': 'lemon', '🌷': 'orchid', '🍃': 'pothos', '🌵': 'cactus' };
-const plantSvg = (i, cls) => pixGrid(PLANTS[Math.max(0, Math.min(7, i))], cls);
 
 /* ---------- Pixel-Icons für das Spiel (16×16, eigene Entwürfe im 16-Bit-Stil) ---------- */
 const PIXPAL = {"P": "#E58FB6", "p": "#B5547F", "E": "#3B2A20", "M": "#2F5A35", "T": "#9BD25B", "L": "#CFE3B8", "K": "#F2F4EC", "H": "#FFFFFF", "W": "#2F7CB0", "w": "#7FC0E8", "D": "#E0A43A", "d": "#A8741C", "b": "#8B5E3C", "n": "#5A3A24", "R": "#D2462E", "O": "#F08A2E", "Y": "#FFD84A", "G": "#9AA096", "g": "#5E645A"};
@@ -76,10 +75,37 @@ const PIX = {
   medal: ["................", "..WWW.....RRR...", "...WWW...RRR....", "....WWW.RRR.....", ".....WWWRR......", "......EEEE......", "....EEDDDDEE....", "...EDDYYYYDDE...", "...EDYYYYYEDE...", "..EDYYYYYEYDDE..", "..EDYEYYEYYDDE..", "..EDYYEEYYYDDE..", "...EDYYYYYYDE...", "...EDDDDDDDDE...", "....EEDDDDEE....", "......EEEE......"]
 };
 const pix = (name, cls) => PIX[name] ? pixGrid(PIX[name], cls) : '';
-function pixGrid(g, cls){
+// Spielpflanze: 8 Wachstumsstufen, 16 × 32 Pixel, wächst in die Höhe (Topf mit Herz wie im Logo)
+const GROW = [
+  ["................", "................", "................", "................", "................", "................", "................", "................", "................", "................", "................", "................", "................", "................", "................", "................", "................", "................", "................", "................", "................", "................", "........T.......", ".......bb.......", "..EEEEEEEEEEEEE.", "..EnnnnnnnnnnnE.", "..EEEEEEEEEEEEE.", "...EnnDDnDDnnE..", "...EnnDDDDDnnE..", "....EnnDDDnnE...", "....EnnnDnnnE...", ".....EEEEEEE...."],
+  ["................", "................", "................", "................", "................", "................", "................", "................", "................", "................", "................", "................", "................", "................", "................", "................", "................", "................", "................", "................", "......TTMTT.....", "........M.......", "........M.......", "........M.......", "..EEEEEEEEEEEEE.", "..EnnnnnnnnnnnE.", "..EEEEEEEEEEEEE.", "...EnnDDnDDnnE..", "...EnnDDDDDnnE..", "....EnnDDDnnE...", "....EnnnDnnnE...", ".....EEEEEEE...."],
+  ["................", "................", "................", "................", "................", "................", "................", "................", "................", "................", "................", "................", "................", "................", "................", "................", ".......TTT......", "........M.......", "........MT......", "........MTT.....", ".......TM.......", "......TTM.......", "........M.......", "........M.......", "..EEEEEEEEEEEEE.", "..EnnnnnnnnnnnE.", "..EEEEEEEEEEEEE.", "...EnnDDnDDnnE..", "...EnnDDDDDnnE..", "....EnnDDDnnE...", "....EnnnDnnnE...", ".....EEEEEEE...."],
+  ["................", "................", "................", "................", "................", "................", "................", "................", "................", "................", "................", "................", "........T.......", ".......TTT......", "........M.......", "........M.......", ".......TM.......", "......TTM.......", "........M.TT....", "........MTTLT...", ".....TT.MTT.....", "....TLTTM.......", "......TTM.......", "........M.......", "..EEEEEEEEEEEEE.", "..EnnnnnnnnnnnE.", "..EEEEEEEEEEEEE.", "...EnnDDnDDnnE..", "...EnnDDDDDnnE..", "....EnnDDDnnE...", "....EnnnDnnnE...", ".....EEEEEEE...."],
+  ["................", "................", "................", "................", "................", "................", "................", "................", "................", "........T.......", ".......TTT......", "........M.......", "........MT......", "........MTT.....", ".....TT.M.......", "....TLTTM.......", "......TTM.TT....", "........MTTLT...", "........MTT.....", "........M.......", ".....TT.M.TT....", "....TLTTMTTLT...", "......TTMTT.....", "........M.......", "..EEEEEEEEEEEEE.", "..EnnnnnnnnnnnE.", "..EEEEEEEEEEEEE.", "...EnnDDnDDnnE..", "...EnnDDDDDnnE..", "....EnnDDDnnE...", "....EnnnDnnnE...", ".....EEEEEEE...."],
+  ["................", "................", "................", "................", "................", "................", "........D.......", ".......TDT......", "........M.......", ".......TM.......", "......TTM.......", "........MT......", ".....TT.MTT.....", "....TLTTM.......", "......TTM.......", "........M.TT....", ".....TT.MTTLT...", "....TLTTMTT.....", "......TTM.......", "...TTT..M..TTT..", "..TLLTT.M.TTLLT.", "...TTTTTMTTTTT..", "......TTMTT.....", "........M.......", "..EEEEEEEEEEEEE.", "..EnnnnnnnnnnnE.", "..EEEEEEEEEEEEE.", "...EnnDDnDDnnE..", "...EnnDDDDDnnE..", "....EnnDDDnnE...", "....EnnnDnnnE...", ".....EEEEEEE...."],
+  ["................", "................", "........p.......", ".......PPP......", "........M.......", "........M.......", "........M.......", "........MT..p...", "........MTT.PP..", ".......TM...M...", "......TTM..M....", "........MMMT....", ".....TT.MTTLT...", "....TLTTMTT.....", "......TTM.......", "...TTT..M.TT....", "..TLLTT.MTTLT...", "...TTTTTMTT.....", "......TTM.......", "...TTT..M..TTT..", "..TLLTT.M.TTLLT.", "...TTTTTMTTTTT..", "......TTMTT.....", "........M.......", "..EEEEEEEEEEEEE.", "..EnnnnnnnnnnnE.", "..EEEEEEEEEEEEE.", "...EnnDDnDDnnE..", "...EnnDDDDDnnE..", "....EnnDDDnnE...", "....EnnnDnnnE...", ".....EEEEEEE...."],
+  ["................", "................", "................", "................", "................", "................", "................", "........M.......", "........MT......", "........MTT.....", "........M.......", "........M.......", "....MM..M.......", ".....TM.M.......", "....TLTMM.......", "......TTM..TMT..", "...TTT..M.MMLLT.", "..TLLTT.MMTTTT..", "...TTTTTMTT.....", "...TTTTTM..TTT..", "..TLLTT.M.TTLLT.", "...TTTTTMTTTTT..", "......TTMTT.....", "........M.......", "..EEEEEEEEEEEEE.", "..EnnnnnnnnnnnE.", "..EEEEEEEEEEEEE.", "...EnnDDnDDnnE..", "...EnnDDDDDnnE..", "....EnnDDDnnE...", "....EnnnDnnnE...", ".....EEEEEEE...."]
+];
+// Überraschung auf der höchsten Stufe: Blumen mit Gesichtern, eigene Ebenen zum Animieren. e = Auge, m = Mund
+const GROW_FLOWERS = [[5, 0, ["..PPP..", ".PYYYP.", "PYeYeYP", "PYYYYYP", "PYmYmYP", ".PYmYP.", "..PPP.."]], [1, 7, [".OOO.", "OeYeO", "OYYYO", "OYmYO", ".OOO."]], [10, 10, [".www.", "weYew", "wYYYw", "wYmYw", ".www."]]];
+function pixRects(g, ox = 0, oy = 0){
   let r = '';
-  g.forEach((row, y) => { for (let x = 0; x < 16;){ const c = row[x]; if (c === '.'){ x++; continue; } let x2 = x; while (x2 < 16 && row[x2] === c) x2++; r += `<rect x="${x}" y="${y}" width="${x2-x}" height="1" fill="${PIXPAL[c]}"/>`; x = x2; } });
-  return `<svg class="pix ${cls || ''}" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true">${r}</svg>`;
+  g.forEach((row, y) => { for (let x = 0; x < row.length;){ const c = row[x]; if (c === '.'){ x++; continue; } let x2 = x; while (x2 < row.length && row[x2] === c) x2++; r += `<rect x="${x + ox}" y="${y + oy}" width="${x2-x}" height="1" fill="${PIXPAL[c]}"/>`; x = x2; } });
+  return r;
+}
+function pixGrid(g, cls, extra){
+  return `<svg class="pix ${cls || ''}" viewBox="0 0 ${g[0].length} ${g.length}" shape-rendering="crispEdges" aria-hidden="true">${pixRects(g)}${extra || ''}</svg>`;
+}
+const logoSvg = cls => pixGrid(PLANTS[7], cls);   // Logo bleibt die 16×16-Pflanze
+// Spielpflanze einer Stufe; auf Stufe 8 mit Blumen, die wippen und blinzeln
+function plantSvg(i, cls){
+  const s = Math.max(0, Math.min(7, i));
+  const flowers = s < 7 ? '' : GROW_FLOWERS.map(([fx, fy, f], k) => {
+    let face = '';
+    const petals = f.map((row, y) => row.replace(/[em]/g, (c, x) => { face += `<rect class="${c === 'e' ? 'eye' : 'mouth'}" x="${fx + x}" y="${fy + y}" width="1" height="1" fill="${PIXPAL.E}"/>`; return 'Y'; }));
+    return `<g class="flw f${k}">${pixRects(petals, fx, fy)}${face}</g>`;
+  }).join('');
+  return pixGrid(GROW[s], 'tall ' + (cls || ''), flowers);
 }
 
 /* ---------- Datum & Spielstand ---------- */
@@ -233,7 +259,7 @@ function celebrate(kind, extra){
   else if (kind === 'down'){ big = plantSvg(lv); cls = 'down'; h = tr('cel_down', { name: lvName(lv) }); txt = tr('cel_downTxt'); }
   else if (kind === 'badge'){ const [n, d] = L().b[extra.id]; big = pix(extra.e); h = tr('cel_badge', { name: n }); txt = tr('cel_badgeTxt', { d }); }
   else if (kind === 'day'){ big = pix('medal'); h = tr('cel_day'); txt = tr('cel_dayTxt'); }
-  else { big = plantSvg(lv); h = tr('rules_h'); txt = `${tr('rules_txt')}<br><br><span class="rlist">${LEVELS.map((xp, k) => `<span>${plantSvg(k)} ${tr('rules_lvl', { name: lvName(k), xp })}</span>`).join('')}</span>`; }
+  else { big = plantSvg(lv); h = tr('rules_h'); txt = `${tr('rules_txt')}<br><br><span class="rlist">${LEVELS.map((xp, k) => `<span>${plantSvg(k, k === 7 && lv < 7 ? 'secret' : '')} ${tr('rules_lvl', { name: lvName(k), xp })}</span>`).join('')}</span>`; }
   openCel(`<div class="big">${big}</div><h2>${h}</h2><p>${txt}</p><button class="primary" data-action="close">${tr('btn_continue')}</button>`, cls);
 }
 
@@ -804,7 +830,7 @@ async function install(){
     if (outcome === 'accepted') toast(tr('inst_done'));
     return;
   }
-  openCel(`<div class="big">${plantSvg(7)}</div><h2>${tr('inst_h')}</h2><p>${isIOS() ? tr('inst_ios') : tr('inst_other')}</p><button class="primary" data-action="close">${tr('btn_continue')}</button>`);
+  openCel(`<div class="big">${logoSvg()}</div><h2>${tr('inst_h')}</h2><p>${isIOS() ? tr('inst_ios') : tr('inst_other')}</p><button class="primary" data-action="close">${tr('btn_continue')}</button>`);
 }
 window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; render(); });
 window.addEventListener('appinstalled', () => { installEvt = null; render(); });

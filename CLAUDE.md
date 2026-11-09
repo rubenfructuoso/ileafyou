@@ -62,7 +62,9 @@ Die App bleibt grundsätzlich **kostenlos**. Eine KI-Erkennung als Abo ist eine 
 
 **Spiel-Icons:** Abzeichen, Serie (Flamme) und „Tag geschafft“ (Medaille) sind 16×16-Pixel-Sprites im 16-Bit-Konsolenstil, definiert als Zeichenraster in `PIX` mit Palette `PIXPAL` in `app.js`, gerendert als SVG mit `crispEdges`. Eigene Motive, keine Figuren oder Gegenstände aus bestehenden Spielen. Neue Sprites im gleichen Raster und mit der gleichen Palette anlegen. Logo, Wachstumsstufen, Pflanzen-Symbole (`KINDS`, wählbar im Formular, wenn kein Foto da ist) und Spiel-Icons teilen Raster und Palette. Die App enthält keine Emojis mehr. Gluten bleibt für Titel, Atkinson Hyperlegible für Text.
 
-**Logo:** Pixel-Topfpflanze (16×16) mit Herz am Topf („love“), daneben die Wortmarke „i leaf you“ klein in Gluten (glatt, nicht gepixelt). Die Pflanze existiert in 8 Wachstumsstufen (`PLANTS` in `app.js`, gerendert über `plantSvg(stage)`), eine pro Level; Stufe 8 ist das Logo.
+**Logo:** Pixel-Topfpflanze (16×16) mit Herz am Topf („love“), daneben die Wortmarke „i leaf you“ klein in Gluten (glatt, nicht gepixelt). Das Logo ist `PLANTS[7]`, gerendert über `logoSvg()`; es bleibt so.
+
+**Spielpflanze:** eigene 8 Wachstumsstufen in `GROW` (16 × 32 Pixel, gleicher Topf mit Herz), eine pro Level, gerendert über `plantSvg(stage)`; sie wächst in die Höhe. Auf der höchsten Stufe kommen als Überraschung drei Blumen mit Gesichtern dazu (`GROW_FLOWERS`, eigene SVG-Gruppen; e = Auge, m = Mund): sie wippen, blinzeln und „singen“ per CSS-Animation (`.flw`, `sway`, `blink`, `sing`; aus bei `prefers-reduced-motion`). In der Level-Übersicht bleibt die letzte Stufe eine Silhouette (`.secret`), bis sie erreicht ist.
 
 ## Datenmodell
 
