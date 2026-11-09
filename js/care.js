@@ -185,3 +185,5 @@ const COLD_FAMILY = {
   Geraniaceae: [2, 'cool'], Onagraceae: [2, 'cool'], Nyctaginaceae: [5, 'cool'], Hydrangeaceae: [-15, 'hardy'], Ericaceae: [-15, 'hardy']
 };
 const COLD_DEFAULT = [10, 'inside'];
+// Winterblüher: im Winter weiter düngen, halb so oft (sonst Winterpause beim Düngen)
+const WINTER_BLOOM = ['Phalaenopsis', 'Dendrobium', 'Cyclamen persicum', 'Euphorbia pulcherrima', 'Saintpaulia', 'Anthurium', 'Hippeastrum', 'Schlumbergera'];

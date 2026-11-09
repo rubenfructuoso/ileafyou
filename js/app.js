@@ -120,11 +120,15 @@ function game(){
 }
 function openTasks(){ return state.plants.reduce((n, p) => n + ['water','feed'].filter(t => { const d = due(p, t); return d !== null && d <= 0; }).length, 0); }
 // Düngen nur in der Wachstumszeit (März bis September) und nie im Winterquartier, wie in den Pflegetipps
-const feedRest = (p, day) => { const m = day.getMonth(); return m >= 9 || m <= 1 || !!(p.outdoor && p.inNow); };
+// winterFeed: 'rest' (Pause), 'half' (halb so oft) oder 'normal'; im Winterquartier nie. Wie due_in() in reminders.php.
+const isWinter = day => { const m = day.getMonth(); return m >= 9 || m <= 1; };
+const winterFeedDefault = (species, family) => { const c = species && careFor(species); return c && WINTER_BLOOM.includes(c.sci) ? 'half' : 'rest'; };
+const feedRest = (p, day) => !!(p.outdoor && p.inNow) || (isWinter(day) && (p.winterFeed || 'rest') === 'rest');
 function dueOn(p, t, day){
   let every = t === 'water' ? +p.waterEvery : +p.feedEvery; if (!every) return null;
   const end = day0(day); if (day0(p.created) > end) return null;
   if (t === 'feed' && feedRest(p, end)) return null;
+  if (t === 'feed' && isWinter(end) && p.winterFeed === 'half') every *= 2;
   if (t === 'water' && p.outdoor && p.inNow && p.winter === 'cool') every *= 2;   // kühles Winterquartier: halb so oft giessen
   const prior = p.log.filter(l => l.type === t && day0(l.date) <= end).map(l => l.date).sort().pop();
   // Pause (z. B. frisch gepflanzte Kakteen): bis pauseUntil keine Erinnerung, am Tag danach fällig. Wie due_in() in reminders.php.
@@ -134,7 +138,7 @@ function dueOn(p, t, day){
   }
   let d = every - Math.round((end - day0(prior || p.created)) / 864e5);
   // Nach der Winterpause zählt Düngen ab 1. März, nicht ab dem letzten Mal im Herbst
-  if (t === 'feed'){ const ss = new Date(end.getFullYear(), 2, 1); if (day0(prior || p.created) < ss) d = Math.max(d, -Math.round((end - ss) / 864e5)); }
+  if (t === 'feed' && (p.winterFeed || 'rest') === 'rest'){ const ss = new Date(end.getFullYear(), 2, 1); if (day0(prior || p.created) < ss) d = Math.max(d, -Math.round((end - ss) / 864e5)); }
   const chk = p.log.filter(l => l.type === 'check' && l.for === t && day0(l.date) <= end && (!prior || l.date >= prior)).sort((a,b) => b.date.localeCompare(a.date))[0];
   if (chk) d = Math.max(d, chk.days - Math.round((end - day0(chk.date)) / 864e5));
   return d;
@@ -205,6 +209,7 @@ async function load(){
 function normalize(){
   if (!state || typeof state !== 'object') state = { plants: [] };
   if (!Array.isArray(state.plants)) state.plants = [];
+  state.plants.forEach(p => { if (!p.winterFeed) p.winterFeed = winterFeedDefault(p.species, p.family); });
   // Draussen-Pflanzen ohne Kälte-Werte (ältere Daten): Vorschlag aus der Pflanzenliste
   state.plants.forEach(p => { if (p.outdoor && (typeof p.minT !== 'number' || !p.winter)){ const [t, w] = coldFor(p.species, p.family, p.name); if (typeof p.minT !== 'number') p.minT = t; p.winter = p.winter || w; } });
   state.plants.forEach(p => { if (!p.icon){ p.icon = EMOJI_KIND[p.emoji] || (p.emoji === '🪴' && /aloe/i.test(p.species || '') ? 'aloe' : 'generic'); } delete p.emoji; });
@@ -364,7 +369,7 @@ function renderDetail(){
       ${p.species ? `<dt>${tr('d_species')}</dt><dd>${esc(p.species)}</dd>` : ''}
       ${state.sites.length > 1 ? `<dt>${tr('d_site')}</dt><dd>${esc(siteName(p.siteId))}</dd>` : ''}${p.location ? `<dt>${tr('d_place')}</dt><dd>${esc(p.location)}</dd>` : ''}
       <dt>${verb('water')}</dt><dd>${rhythm(dw, p.outdoor && p.inNow && p.winter === 'cool' ? 2 * p.waterEvery : p.waterEvery)}</dd>
-      <dt>${verb('feed')}</dt><dd>${rhythm(df, p.feedEvery, 'feed')}</dd>
+      <dt>${verb('feed')}</dt><dd>${rhythm(df, isWinter(new Date()) && p.winterFeed === 'half' && !(p.outdoor && p.inNow) ? 2 * p.feedEvery : p.feedEvery, 'feed')}</dd>
     </dl>
     ${p.notes ? `<div class="notes">${esc(p.notes)}</div>` : ''}
     ${isPaused(p) ? `<div class="pausebox"><span>${tr('paused_box', { date: pauseDate(p) })}</span><button data-action="unpause" data-id="${p.id}">${tr('pause_end')}</button></div>` : ''}
@@ -593,6 +598,8 @@ function openForm(id){
   pendingIcon = p?.icon || 'generic'; pendingFamily = p?.family || null; renderIconPick();
   setPhoto(p?.photo || null); $('#formDelete').hidden = !p;
   $('#careSug').innerHTML = ''; $('#careHint').hidden = true; $('#dbSug').hidden = true; outForm(p);
+  $('#fWinterFeed').innerHTML = ['rest', 'half', 'normal'].map(v => `<option value="${v}">${tr('wf_' + v)}</option>`).join('');
+  $('#fWinterFeed').value = p?.winterFeed || 'rest';
   if ($('#detailDlg').open) $('#detailDlg').close();
   $('#formDlg').showModal();
 }
@@ -626,7 +633,7 @@ $('#form').addEventListener('submit', e => {
   const name = $('#fName').value.trim(); if (!name){ $('#fName').focus(); return; }
   const data = { name, species: $('#fSpecies').value.trim(), location: $('#fLoc').value.trim(), siteId: $('#fSite').value,
     waterEvery: Math.max(0, parseInt($('#fWater').value) || 0), feedEvery: Math.max(0, parseInt($('#fFeed').value) || 0),
-    notes: $('#fNotes').value.trim(), photo: pendingPhoto, icon: pendingIcon, family: pendingFamily || undefined, ...outData() };
+    notes: $('#fNotes').value.trim(), photo: pendingPhoto, icon: pendingIcon, family: pendingFamily || undefined, winterFeed: $('#fWinterFeed').value, ...outData() };
   if (editingId) Object.assign(getP(editingId), data);
   else state.plants.push({ id: uid(), created: new Date().toISOString(), log: [], ...data });
   save(); $('#formDlg').close(); render(); toast(editingId ? tr('saved') : tr('added', { name })); checkBadges();
@@ -707,7 +714,7 @@ function applyCare(c, setName){
   }
   $('#fWater').value = c.water; $('#fFeed').value = c.feed;
   if (pendingIcon === 'generic' && c.icon !== 'generic'){ pendingIcon = c.icon; renderIconPick(); }
-  $('#careSug').innerHTML = ''; outPrefill(true);
+  $('#careSug').innerHTML = ''; outPrefill(true); $('#fWinterFeed').value = winterFeedDefault(c.sci);
   const h = $('#careHint'); h.hidden = false;
   h.textContent = tr('care_hint', { name: c.names[lang()], w: c.water, feed: c.feed ? tr('care_feedN', { n: c.feed }) : tr('care_feed0') });
 }
