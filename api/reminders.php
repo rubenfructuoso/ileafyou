@@ -30,6 +30,11 @@ function due_in(array $p, string $t, DateTimeImmutable $today, DateTimeZone $tz)
     $every = (int)($t === 'water' ? ($p['waterEvery'] ?? 0) : ($p['feedEvery'] ?? 0));
     if ($every <= 0 || empty($p['created'])) return null;
     if (day_of($p['created'], $tz) > $today) return null;
+    // Düngen nur März bis September und nie im Winterquartier (wie feedRest() in app.js)
+    $m = (int)$today->format('n');
+    $quarters = !empty($p['outdoor']) && !empty($p['inNow']);
+    if ($t === 'feed' && ($m >= 10 || $m <= 2 || $quarters)) return null;
+    if ($t === 'water' && $quarters && ($p['winter'] ?? '') === 'cool') $every *= 2;   // kühles Winterquartier: halb so oft giessen
     $log = $p['log'] ?? [];
     $prior = null;
     foreach ($log as $l) if (($l['type'] ?? '') === $t && day_of($l['date'], $tz) <= $today && ($prior === null || $l['date'] > $prior)) $prior = $l['date'];
@@ -40,6 +45,10 @@ function due_in(array $p, string $t, DateTimeImmutable $today, DateTimeZone $tz)
         return $today <= $until ? null : 1 - days_from($until, $today);
     }
     $d = $every - days_from(day_of($prior ?? $p['created'], $tz), $today);
+    if ($t === 'feed') {   // nach der Winterpause zählt Düngen ab 1. März
+        $ss = $today->setDate((int)$today->format('Y'), 3, 1);
+        if (day_of($prior ?? $p['created'], $tz) < $ss) $d = max($d, -days_from($ss, $today));
+    }
     $chk = null;
     foreach ($log as $l) {
         if (($l['type'] ?? '') !== 'check' || ($l['for'] ?? '') !== $t || day_of($l['date'], $tz) > $today) continue;

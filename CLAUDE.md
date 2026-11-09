@@ -112,6 +112,7 @@ Diagnose Push: `cron.php` schreibt `cron_last` und pro Abo das letzte Ergebnis (
 - Umtopfen +5, Foto +3, Notiz +2, Erde geprüft +2
 - Pro Pflanze und Typ nur einmal pro Tag Punkte
 - Alle fälligen Aufgaben eines Tages erledigt: +15 Bonus („Tag geschafft“)
+- Düngen nur von März bis September und nie im Winterquartier (`feedRest()` in `app.js`, gleich in `due_in()`); nach der Winterpause zählt die Düngerinnerung ab 1. März. Im kühlen Winterquartier (`winter: 'cool'`, `inNow`) halbiert sich der Giessrhythmus.
 - `dailyCheck()` wertet vergangene Tage aus: pro überfälliger Aufgabe und Tag −5, Serie zurück auf 0. Im Ferienmodus keine Abzüge, Serie bleibt stehen.
 - Levels ab 0, 50, 150, 300, 500, 800, 1200, 1800 Punkten. Namen je Sprache in `i18n.js` (`lv`), z. B. Samenkorn/Seed/Semilla/Graine bis Botanik-Legende/Botany legend/Leyenda botánica/Légende botanique
 - 10 Abzeichen in `BADGES`, Texte in `i18n.js` (`b`), einmal freigeschaltet bleiben sie
