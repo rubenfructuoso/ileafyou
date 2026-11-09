@@ -65,6 +65,7 @@ api/identify.php        Proxy zu Pl@ntNet
 api/auth.php            Konten (Registrieren, Login, Passwort)
 api/sync.php            Daten und Fotos synchronisieren
 api/server.php          Server-Infos für die Einstellungen
+api/weather.php         Wetter über den Server (Rückfall)
 api/push.php            Erinnerungen an- und abmelden, Probe
 api/cron.php            stündlicher Versand der Erinnerungen
 api/reminders.php       Fälligkeiten und Texte der Erinnerungen

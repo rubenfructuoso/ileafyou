@@ -41,21 +41,35 @@ const geoKey = g => g.lat.toFixed(2) + ',' + g.lon.toFixed(2);
 function siteGeo(id){ return (state.sites.find(s => s.id === id) || {}).geo || null; }
 function loadCache(){ try { weather = JSON.parse(localStorage.getItem('ileafyou.weather') || '{}'); } catch(e) { weather = {}; } }
 function saveCache(){ try { localStorage.setItem('ileafyou.weather', JSON.stringify(weather)); } catch(e) {} }
-async function loadWeather(){
+const wxErr = {};   // 'lat,lon' → Grund, warum das Wetter nicht kam (wird angezeigt)
+function fetchTimeout(url, ms){
+  const c = new AbortController(), t = setTimeout(() => c.abort(), ms);
+  return fetch(url, { signal: c.signal, credentials: 'same-origin' }).finally(() => clearTimeout(t));
+}
+async function loadWeather(force){
+  if (force) Object.keys(weather).forEach(k => { weather[k].at = 0; });
   if (!Object.keys(weather).length) loadCache();
   const geos = [...new Map(state.plants.filter(p => p.outdoor).map(p => siteGeo(p.siteId)).filter(Boolean).map(g => [geoKey(g), g])).values()];
   let changed = false;
   for (const g of geos){
     const k = geoKey(g), w = weather[k];
     if (w && Date.now() - w.at < 3 * 3600e3) continue;
-    try {
-      const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${g.lat}&longitude=${g.lon}&daily=temperature_2m_min&current=temperature_2m&timezone=auto&forecast_days=8`);
-      const j = await r.json();
-      weather[k] = { at: Date.now(), now: j.current ? Math.round(j.current.temperature_2m) : null, days: j.daily.time.map((date, i) => ({ date, min: Math.round(j.daily.temperature_2m_min[i]) })) };
-      changed = true;
-    } catch(e) {}
+    // Erst direkt bei Open-Meteo, sonst über den eigenen Server (api/weather.php), z. B. wenn ein Blocker die Abfrage abfängt
+    const direct = `https://api.open-meteo.com/v1/forecast?latitude=${g.lat}&longitude=${g.lon}&daily=temperature_2m_min&current=temperature_2m&timezone=auto&forecast_days=8`;
+    const errs = [];
+    for (const [src, url] of [['Open-Meteo', direct], ['Server', `api/weather.php?lat=${g.lat}&lon=${g.lon}`]]){
+      try {
+        const r = await fetchTimeout(url, 10000);
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok || !j.daily || !Array.isArray(j.daily.time)) throw new Error(j.reason || j.error || 'HTTP ' + r.status);
+        weather[k] = { at: Date.now(), now: j.current ? Math.round(j.current.temperature_2m) : null, days: j.daily.time.map((date, i) => ({ date, min: Math.round(j.daily.temperature_2m_min[i]) })) };
+        delete wxErr[k]; errs.length = 0; changed = true; break;
+      } catch(e) { errs.push(src + ': ' + (e.name === 'AbortError' ? tr('wx_timeout') : (e.message || 'net'))); }
+    }
+    if (errs.length){ wxErr[k] = errs.join(' · '); changed = true; }
   }
   if (changed){ saveCache(); if (!document.body.classList.contains('authing')) refresh(); }
+  return changed;
 }
 // Nächte ab heute: Index 0 = heute Nacht (Tiefstwert des nächsten Morgens)
 function nights(p){
@@ -104,7 +118,8 @@ function outdoorHtml(){
 function wxHtml(sid, plants, one){
   const g = siteGeo(sid), w = weather[geoKey(g)], place = esc(g.name || siteName(sid));
   const change = `<button class="linkbtn" data-action="geosearch" data-sid="${sid}">${tr('wx_change')}</button>`;
-  if (!w) return `<div class="wx"><div class="wxhead"><b>${place}</b>${change}</div><p class="hint">${tr('st_load')}</p></div>`;
+  const e = wxErr[geoKey(g)], retry = `<button class="linkbtn" data-action="wxretry">${tr('wx_retry')}</button>`;
+  if (!w) return `<div class="wx"><div class="wxhead"><b>${place}</b>${change}</div><p class="hint ${e ? 'late' : ''}">${e ? tr('wx_fail', { why: esc(e) }) : tr('st_load')}</p>${e ? retry : ''}</div>`;
   const today = dkey(new Date()), warmest = Math.max(...plants.filter(p => !p.inNow).map(p => p.minT), -99);
   const n = w.days.filter(d => d.date > today).slice(0, 7);
   const time = new Date(w.at).toLocaleTimeString(loc(), { hour: '2-digit', minute: '2-digit' });
@@ -166,6 +181,7 @@ document.addEventListener('click', e => {
   else if (a === 'coldharvest' && p){ p.coldSeason = season(); save(); refresh(); toast(tr('done_harvest', { name: p.name })); }
   else if (a === 'coldresume' && p){ delete p.coldSeason; save(); refresh(); }
   else if (a === 'geosearch') geoSearchSheet(b.dataset.sid);
+  else if (a === 'wxretry'){ b.disabled = true; b.textContent = tr('st_load'); loadWeather(true); }
   else if (a === 'geopick'){ $('#celDlg').close(); setGeo(b.dataset.sid, { lat: +b.dataset.lat, lon: +b.dataset.lon, name: b.dataset.name }); }
   else if (a === 'geohere'){
     if (!navigator.geolocation) return toast(tr('geo_fail'));
