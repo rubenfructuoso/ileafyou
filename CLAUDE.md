@@ -137,3 +137,7 @@ Push über Google (Android, Chrome) im Einsatz geprüft; Apple (iPhone) und Mozi
 
 - Markenrecht: Vor dem öffentlichen Start prüfen, ob „i leaf you“ als Name und Domain frei ist.
 
+
+## Arbeits-Log
+
+- Nach jeder abgeschlossenen Arbeit einen Eintrag fürs Arbeits-Log schreiben (mit Aufwand in 15-Minuten-Schritten): Skill `arbeits-log` (`.claude/skills/arbeits-log/SKILL.md`). Projekt-Slug steht in `.worklog/PROJECT`. Commit und Push genügen, das CMS holt den Eintrag ab.
