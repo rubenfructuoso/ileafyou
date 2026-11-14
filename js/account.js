@@ -137,11 +137,12 @@ function pushNudgeHtml(){
   if (!account.email || !pushKnown) return '';
   const ns = nudgeState(); if (ns.n >= 3 || Date.now() < ns.until) return '';
   let text, act;
-  if (pushOK()){ if (pushSub || Notification.permission === 'denied') return ''; text = tr('nudge_push', { time: hourText(pushHour()) }); act = `<button data-action="nudgeon">${tr('nudge_on')}</button>`; }
+  if (pushOK()){ if (pushSub || Notification.permission === 'denied') return ''; text = tr('nudge_push', { time: `<select id="nudgeHour" aria-label="${esc(tr('push_time'))}">${Array.from({ length: 17 }, (_, i) => i + 6).map(x => `<option value="${x}" ${x === pushHour() ? 'selected' : ''}>${hourText(x)}</option>`).join('')}</select>` }); act = `<button data-action="nudgeon">${tr('nudge_on')}</button>`; }
   else if (isIOS() && !isStandalone()){ text = tr('nudge_ios'); act = `<button data-action="install">${tr('foot_install')}</button>`; }
   else return '';
   return `<div class="vac nudge"><span>${text}</span><span class="nbtn">${act}<button data-action="nudgelater" class="later">${tr('nudge_later')}</button></span></div>`;
 }
+document.addEventListener('change', e => { if (e.target.id === 'nudgeHour') setPushHour(+e.target.value); });   // gleiche Einstellung wie unter Einstellungen → Erinnerungen
 document.addEventListener('click', async e => {
   const b = e.target.closest('#app [data-action="nudgeon"], #app [data-action="nudgelater"]'); if (!b) return;
   if (b.dataset.action === 'nudgelater'){

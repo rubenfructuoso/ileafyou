@@ -375,3 +375,4 @@ label.check input{width:22px;height:22px;accent-color:var(--moss);flex:none}
 .nudge .nbtn{display:flex;gap:14px;flex:none;align-items:center}
 .nudge .later{color:var(--muted);font-weight:400}
 @media (max-width:420px){ .nudge{flex-wrap:wrap} .nudge .nbtn{margin-left:auto} }
+.nudge select{width:auto;display:inline-block;padding:2px 6px;margin:0 2px;font:inherit;font-weight:700;border-radius:8px}
