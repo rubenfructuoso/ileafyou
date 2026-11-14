@@ -318,16 +318,14 @@ const VIEWS = ['grid', 'list', 'pics'];
 const SIGN = {
   in:      ["....n....", "...nnn...", "..nnnnn..", ".nnnnnnn.", "nnnnnnnnn", ".bbbbbbb.", ".bbbnbbb.", ".bbbnbbb.", ".bbbnbbb."],
   inout:   ["YY....n..", "YY...nnn.", "....nnnnn", "...nnnnnn", "...bbbbbb", "...bbnbbb", "...bbnbbb", "...bbnbbb", "TTTTTTTTT"],
-  out:     ["...TTT...", "..TTTTT..", ".TTTMTTT.", ".TMTTTTT.", ".TTTTTMT.", "..TTTTT..", "....b....", "....b....", "..MMMMM.."],
-  sun:     ["....Y....", ".Y.....Y.", "...YYY...", "..YYYYY..", "Y.YYYYY.Y", "..YYYYY..", "...YYY...", ".Y.....Y.", "....Y...."],
-  bright:  [".........", "...YYY...", "..YYYYY..", ".YYYYYYY.", ".YYYYYYY.", ".YYYYYYY.", "..YYYYY..", "...YYY...", "........."],
-  partial: ["...YYY...", "..YYYYY..", ".YYYYYY..", ".YYYgggg.", ".YYgGGGGg", "..gGGGGGg", "..gGGGGGg", "...ggggg.", "........."],
-  shade:   [".........", ".........", "...ggg...", "..gGGGgg.", ".gGGGGGGg", "gGGGGGGGg", "gGGGGGGGg", ".ggggggg.", "........."]
+  out:     ["...TTT...", "..TTTTT..", ".TTTMTTT.", ".TMTTTTT.", ".TTTTTMT.", "..TTTTT..", "....b....", "....b....", "..MMMMM.."]
 };
-// Tropfen, gefüllt nach Wasserbedarf (ab Zeile: wenig 6, mittel 4, viel 1)
-const DROP = ["....W....", "....W....", "...W.W...", "...W.W...", "..W...W..", ".W.....W.", ".W.....W.", ".W.....W.", "..WWWWW.."];
-const dropFill = from => DROP.map((r, y) => r.replace(/\./g, (m, x) => x > r.indexOf('W') && x < r.lastIndexOf('W') ? (y >= from ? 'W' : 'K') : '.'));
-SIGN.dry = dropFill(6); SIGN.moderate = dropFill(4); SIGN.moist = dropFill(1); SIGN.orchid = SIGN.moderate;
+// Licht und Wasser als Skala in drei Stufen: drei Sonnen bzw. drei Tropfen (5 × 5 Pixel), nicht erreichte Stufen grau
+const SUN5 = [".YYY.", "YYYYY", "YYYYY", "YYYYY", ".YYY."], DROP5 = ["..W..", ".WWW.", "WWWWW", "WWWWW", ".WWW."];
+const meter = (shape, col, n) => shape.map(r => [0, 1, 2].map(i => r.replace(/[A-Za-z]/g, i < n ? col : 'G')).join('.'));
+const LIGHT_LV = { shade: 1, partial: 1, bright: 2, sun: 3 }, WATER_LV = { dry: 1, moderate: 2, orchid: 2, moist: 3 };
+for (const [k, n] of Object.entries(LIGHT_LV)) SIGN[k] = meter(SUN5, 'Y', n);
+for (const [k, n] of Object.entries(WATER_LV)) SIGN[k] = meter(DROP5, 'W', n);
 // drinnen (Zimmerpflanze), im Sommer draussen (Winterquartier) oder bleibt draussen (winterhart, mit Schutz, einjährig)
 function placeOf(p){
   const w = p.outdoor && p.winter ? p.winter : coldFor(p.species, p.family, p.name)[1];
@@ -335,8 +333,8 @@ function placeOf(p){
 }
 function signsHtml(p){
   const c = careRule(p), pl = placeOf(p);
-  const ic = (k, label) => `<i title="${esc(label)}">${pixGrid(SIGN[k])}</i>`;
-  const all = [ic(pl, tr('sg_' + pl)), ic(c.light, tr('sl_' + c.light)), ic(c.wat, tr('sw_' + c.wat))];
+  const ic = (k, label, cls = '') => `<i class="${cls}" title="${esc(label)}">${pixGrid(SIGN[k])}</i>`;
+  const all = [ic(pl, tr('sg_' + pl)), ic(c.light, tr('sl_' + c.light), 'm'), ic(c.wat, tr('sw_' + c.wat), 'm')];
   return `<span class="sg" role="img" aria-label="${esc([tr('sg_' + pl), tr('sl_' + c.light), tr('sw_' + c.wat)].join(', '))}">${all.join('')}</span>`;
 }
 function plantView(){ try { const v = localStorage.getItem('ileafyou.view'); return VIEWS.includes(v) ? v : 'grid'; } catch(e) { return 'grid'; } }

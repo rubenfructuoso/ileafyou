@@ -357,3 +357,11 @@ label.check input{width:22px;height:22px;accent-color:var(--moss);flex:none}
 .pic .sg i{width:18px;height:18px;border-radius:5px;background:rgba(242,244,236,.92)}
 .pic .sg .pix{width:13px;height:13px}
 .care h2 .sg{margin-left:8px}
+/* Licht und Wasser: Skala in drei Stufen (17 × 5 Pixel) */
+.sg i.m{width:auto;padding:0 5px}
+.sg i.m .pix{width:34px;height:10px}
+.prow .sg i.m{padding:0 4px}
+.prow .sg i.m .pix{width:27.2px;height:8px}
+.pic .sg{flex-direction:column;align-items:flex-start}
+.pic .sg i.m{padding:0 3px;height:14px}
+.pic .sg i.m .pix{width:23.8px;height:7px}
