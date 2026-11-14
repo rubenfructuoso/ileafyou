@@ -365,3 +365,10 @@ label.check input{width:22px;height:22px;accent-color:var(--moss);flex:none}
 .pic .sg{flex-direction:column;align-items:flex-start}
 .pic .sg i.m{padding:0 3px;height:14px}
 .pic .sg i.m .pix{width:23.8px;height:7px}
+/* Legende zu den Signets */
+.sglegend{margin:-4px 0 12px;font-size:.9rem;color:var(--muted)}
+.sglegend summary{cursor:pointer;padding:4px 0;font-weight:700}
+.sglegend ul.sg{display:grid;grid-template-columns:1fr;gap:6px;margin:6px 0 0;padding:12px;list-style:none;background:var(--surface);border:1px solid var(--line);border-radius:14px}
+.sglegend li{display:flex;align-items:center;gap:10px}
+.sglegend li i{flex:none}
+.sglegend li:nth-child(3n):not(:last-child){padding-bottom:6px;border-bottom:1px solid var(--line)}

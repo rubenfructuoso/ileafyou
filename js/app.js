@@ -308,7 +308,7 @@ function render(){
   const view = plantView();
   const tools = vis.length ? `<div class="ptools"><input type="search" id="plantQ" value="${esc(plantQuery)}" placeholder="${esc(tr('search_ph'))}" aria-label="${esc(tr('search_ph'))}" autocomplete="off"><div class="seg vseg">${VIEWS.map(v => `<button type="button" data-action="view" data-view="${v}" class="${view === v ? 'on' : ''}" aria-pressed="${view === v}" aria-label="${esc(tr('v_' + v))}" title="${esc(tr('v_' + v))}">${viewSvg(v)}</button>`).join('')}</div></div>` : '';
   const cards = `<div id="plantList">${plantListHtml()}</div>`;
-  $('#app').innerHTML = `${lvlHtml()}${sitesBar()}${vac}${outdoorHtml()}<section><h2>${tr('h_today')}</h2><div class="today">${today}</div></section><section><h2>${tr('h_next')}</h2>${weekHtml()}</section><section><h2>${tr('h_plants')}</h2>${tools}${chips}${cards}</section><section><h2>${tr('h_badges')}</h2>${badgesHtml()}</section>${footHtml()}`;
+  $('#app').innerHTML = `${lvlHtml()}${sitesBar()}${vac}${outdoorHtml()}<section><h2>${tr('h_today')}</h2><div class="today">${today}</div></section><section><h2>${tr('h_next')}</h2>${weekHtml()}</section><section><h2>${tr('h_plants')}</h2>${tools}${vis.length ? legendHtml() : ''}${chips}${cards}</section><section><h2>${tr('h_badges')}</h2>${badgesHtml()}</section>${footHtml()}`;
   const wk = $('.week'); if (wk) wk.scrollLeft = weekScroll ?? wk.querySelector('.now').offsetLeft - wk.firstElementChild.offsetLeft;
 }
 /* ---------- Pflanzenliste: Kacheln oder Liste (pro Gerät gemerkt), Suche beim Tippen ---------- */
@@ -326,6 +326,16 @@ const meter = (shape, col, n) => shape.map(r => [0, 1, 2].map(i => r.replace(/[A
 const LIGHT_LV = { shade: 1, partial: 1, bright: 2, sun: 3 }, WATER_LV = { dry: 1, moderate: 2, orchid: 2, moist: 3 };
 for (const [k, n] of Object.entries(LIGHT_LV)) SIGN[k] = meter(SUN5, 'Y', n);
 for (const [k, n] of Object.entries(WATER_LV)) SIGN[k] = meter(DROP5, 'W', n);
+// Legende zu den Signets, aufklappbar unter der Suche; offen bleibt sie auch nach dem Neuzeichnen
+let legendOpen = false;
+function legendHtml(){
+  const row = (k, t, m) => `<li><i class="${m ? 'm' : ''}">${pixGrid(SIGN[k])}</i><span>${t}</span></li>`;
+  return `<details class="sglegend" ${legendOpen ? 'open' : ''}><summary>${tr('lg_title')}</summary><ul class="sg">
+    ${row('in', tr('sg_in'))}${row('inout', tr('sg_inout'))}${row('out', tr('sg_out'))}
+    ${row('shade', tr('lg_light1'), 1)}${row('bright', tr('sl_bright'), 1)}${row('sun', tr('sl_sun'), 1)}
+    ${row('dry', tr('sw_dry'), 1)}${row('moderate', tr('lg_water2'), 1)}${row('moist', tr('sw_moist'), 1)}</ul></details>`;
+}
+document.addEventListener('toggle', e => { if (e.target.classList && e.target.classList.contains('sglegend')) legendOpen = e.target.open; }, true);
 // drinnen (Zimmerpflanze), im Sommer draussen (Winterquartier) oder bleibt draussen (winterhart, mit Schutz, einjährig)
 function placeOf(p){
   const w = p.outdoor && p.winter ? p.winter : coldFor(p.species, p.family, p.name)[1];
