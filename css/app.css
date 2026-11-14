@@ -372,3 +372,6 @@ label.check input{width:22px;height:22px;accent-color:var(--moss);flex:none}
 .sglegend li{display:flex;align-items:center;gap:10px}
 .sglegend li i{flex:none}
 .sglegend li:nth-child(3n):not(:last-child){padding-bottom:6px;border-bottom:1px solid var(--line)}
+.nudge .nbtn{display:flex;gap:14px;flex:none;align-items:center}
+.nudge .later{color:var(--muted);font-weight:400}
+@media (max-width:420px){ .nudge{flex-wrap:wrap} .nudge .nbtn{margin-left:auto} }

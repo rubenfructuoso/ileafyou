@@ -308,7 +308,7 @@ function render(){
   const view = plantView();
   const tools = vis.length ? `<div class="ptools"><input type="search" id="plantQ" value="${esc(plantQuery)}" placeholder="${esc(tr('search_ph'))}" aria-label="${esc(tr('search_ph'))}" autocomplete="off"><div class="seg vseg">${VIEWS.map(v => `<button type="button" data-action="view" data-view="${v}" class="${view === v ? 'on' : ''}" aria-pressed="${view === v}" aria-label="${esc(tr('v_' + v))}" title="${esc(tr('v_' + v))}">${viewSvg(v)}</button>`).join('')}</div></div>` : '';
   const cards = `<div id="plantList">${plantListHtml()}</div>`;
-  $('#app').innerHTML = `${lvlHtml()}${sitesBar()}${vac}${outdoorHtml()}<section><h2>${tr('h_today')}</h2><div class="today">${today}</div></section><section><h2>${tr('h_next')}</h2>${weekHtml()}</section><section><h2>${tr('h_plants')}</h2>${tools}${vis.length ? legendHtml() : ''}${chips}${cards}</section><section><h2>${tr('h_badges')}</h2>${badgesHtml()}</section>${footHtml()}`;
+  $('#app').innerHTML = `${lvlHtml()}${sitesBar()}${vac}${typeof pushNudgeHtml === 'function' ? pushNudgeHtml() : ''}${outdoorHtml()}<section><h2>${tr('h_today')}</h2><div class="today">${today}</div></section><section><h2>${tr('h_next')}</h2>${weekHtml()}</section><section><h2>${tr('h_plants')}</h2>${tools}${vis.length ? legendHtml() : ''}${chips}${cards}</section><section><h2>${tr('h_badges')}</h2>${badgesHtml()}</section>${footHtml()}`;
   const wk = $('.week'); if (wk) wk.scrollLeft = weekScroll ?? wk.querySelector('.now').offsetLeft - wk.firstElementChild.offsetLeft;
 }
 /* ---------- Pflanzenliste: Kacheln oder Liste (pro Gerät gemerkt), Suche beim Tippen ---------- */

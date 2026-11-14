@@ -126,7 +126,33 @@ async function attach(email){
   account.email = email;
   await syncNow();
   pushRefresh();
+  pushCurrent().catch(() => {}).finally(() => { pushKnown = true; if (started) render(); });
 }
+
+/* ---------- Dezenter Hinweis auf der Startseite, solange Erinnerungen auf diesem Gerät aus sind ---------- */
+// «Später» blendet ihn 14 Tage aus, nach dem dritten Mal nicht mehr (localStorage ileafyou.pushNudge = { until, n })
+let pushKnown = false;
+function nudgeState(){ try { return JSON.parse(localStorage.getItem('ileafyou.pushNudge')) || { until: 0, n: 0 }; } catch(e) { return { until: 0, n: 0 }; } }
+function pushNudgeHtml(){
+  if (!account.email || !pushKnown) return '';
+  const ns = nudgeState(); if (ns.n >= 3 || Date.now() < ns.until) return '';
+  let text, act;
+  if (pushOK()){ if (pushSub || Notification.permission === 'denied') return ''; text = tr('nudge_push', { time: hourText(pushHour()) }); act = `<button data-action="nudgeon">${tr('nudge_on')}</button>`; }
+  else if (isIOS() && !isStandalone()){ text = tr('nudge_ios'); act = `<button data-action="install">${tr('foot_install')}</button>`; }
+  else return '';
+  return `<div class="vac nudge"><span>${text}</span><span class="nbtn">${act}<button data-action="nudgelater" class="later">${tr('nudge_later')}</button></span></div>`;
+}
+document.addEventListener('click', async e => {
+  const b = e.target.closest('#app [data-action="nudgeon"], #app [data-action="nudgelater"]'); if (!b) return;
+  if (b.dataset.action === 'nudgelater'){
+    const ns = nudgeState(); try { localStorage.setItem('ileafyou.pushNudge', JSON.stringify({ until: Date.now() + 14 * 864e5, n: ns.n + 1 })); } catch(err) {}
+    render(); return;
+  }
+  if (pushBusy) return; pushBusy = true; b.disabled = true;
+  try { await pushOn(); toast(tr('push_enabled', { time: hourText(pushHour()) })); }
+  catch(err){ toast(errText(err)); }
+  finally { pushBusy = false; render(); }
+});
 
 /* ---------- Erinnerungen (Web Push, Versand durch api/cron.php) ---------- */
 let pushSub = null, pushBusy = false, pushStat = null;   // pushStat: was der Server zuletzt gemacht hat
