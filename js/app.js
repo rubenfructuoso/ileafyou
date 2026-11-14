@@ -314,6 +314,31 @@ function render(){
 /* ---------- Pflanzenliste: Kacheln oder Liste (pro Gerät gemerkt), Suche beim Tippen ---------- */
 let plantQuery = '';
 const VIEWS = ['grid', 'list', 'pics'];
+/* Signets pro Pflanze (9 × 9 Pixel, Palette PIXPAL): drinnen/draussen, Licht, Wasser */
+const SIGN = {
+  in:      ["....n....", "...nnn...", "..nnnnn..", ".nnnnnnn.", "nnnnnnnnn", ".bbbbbbb.", ".bbbnbbb.", ".bbbnbbb.", ".bbbnbbb."],
+  inout:   ["YY....n..", "YY...nnn.", "....nnnnn", "...nnnnnn", "...bbbbbb", "...bbnbbb", "...bbnbbb", "...bbnbbb", "TTTTTTTTT"],
+  out:     ["...TTT...", "..TTTTT..", ".TTTMTTT.", ".TMTTTTT.", ".TTTTTMT.", "..TTTTT..", "....b....", "....b....", "..MMMMM.."],
+  sun:     ["....Y....", ".Y.....Y.", "...YYY...", "..YYYYY..", "Y.YYYYY.Y", "..YYYYY..", "...YYY...", ".Y.....Y.", "....Y...."],
+  bright:  [".........", "...YYY...", "..YYYYY..", ".YYYYYYY.", ".YYYYYYY.", ".YYYYYYY.", "..YYYYY..", "...YYY...", "........."],
+  partial: ["...YYY...", "..YYYYY..", ".YYYYYY..", ".YYYgggg.", ".YYgGGGGg", "..gGGGGGg", "..gGGGGGg", "...ggggg.", "........."],
+  shade:   [".........", ".........", "...ggg...", "..gGGGgg.", ".gGGGGGGg", "gGGGGGGGg", "gGGGGGGGg", ".ggggggg.", "........."]
+};
+// Tropfen, gefüllt nach Wasserbedarf (ab Zeile: wenig 6, mittel 4, viel 1)
+const DROP = ["....W....", "....W....", "...W.W...", "...W.W...", "..W...W..", ".W.....W.", ".W.....W.", ".W.....W.", "..WWWWW.."];
+const dropFill = from => DROP.map((r, y) => r.replace(/\./g, (m, x) => x > r.indexOf('W') && x < r.lastIndexOf('W') ? (y >= from ? 'W' : 'K') : '.'));
+SIGN.dry = dropFill(6); SIGN.moderate = dropFill(4); SIGN.moist = dropFill(1); SIGN.orchid = SIGN.moderate;
+// drinnen (Zimmerpflanze), im Sommer draussen (Winterquartier) oder bleibt draussen (winterhart, mit Schutz, einjährig)
+function placeOf(p){
+  const w = p.outdoor && p.winter ? p.winter : coldFor(p.species, p.family, p.name)[1];
+  return w === 'inside' ? (p.outdoor ? 'inout' : 'in') : w === 'cool' ? 'inout' : 'out';
+}
+function signsHtml(p){
+  const c = careRule(p), pl = placeOf(p);
+  const ic = (k, label) => `<i title="${esc(label)}">${pixGrid(SIGN[k])}</i>`;
+  const all = [ic(pl, tr('sg_' + pl)), ic(c.light, tr('sl_' + c.light)), ic(c.wat, tr('sw_' + c.wat))];
+  return `<span class="sg" role="img" aria-label="${esc([tr('sg_' + pl), tr('sl_' + c.light), tr('sw_' + c.wat)].join(', '))}">${all.join('')}</span>`;
+}
 function plantView(){ try { const v = localStorage.getItem('ileafyou.view'); return VIEWS.includes(v) ? v : 'grid'; } catch(e) { return 'grid'; } }
 // Symbole für die Ansicht, im Pixelraster wie die übrigen Icons (8 × 8)
 const VIEW_ICON = {
@@ -337,10 +362,10 @@ function plantListHtml(){
       const frac = Math.max(0, Math.min(1, d / +p.waterEvery));
       g = `<div class="gauge ${d <= 0 ? 'dry' : ''}"><i style="width:${d <= 0 ? 100 : Math.max(6, frac*100)}%"></i></div><div class="gl">${t}</div>`;
     }
-    return `<button class="card" data-action="open" data-id="${p.id}">${thumb(p,'ph')}<div class="b"><div class="n">${esc(p.name)}</div><div class="sp">${esc(p.species || p.location || '\u00a0')}</div>${g}</div></button>`;
+    return `<button class="card" data-action="open" data-id="${p.id}">${thumb(p,'ph')}<div class="b"><div class="n">${esc(p.name)}</div><div class="sp">${esc(p.species || p.location || '\u00a0')}</div>${signsHtml(p)}${g}</div></button>`;
   };
-  const row = p => { const { d, t } = status(p); return `<button class="prow" data-action="open" data-id="${p.id}">${thumb(p,'thumb')}<div class="t"><div class="n">${esc(p.name)}</div><div class="s">${esc(p.species || p.location || '')}</div></div><div class="due ${d !== null && d <= 0 ? 'late' : ''}">${t}</div></button>`; };
-  const pic = p => { const { d } = status(p); return `<button class="pic ${d !== null && d <= 0 ? 'late' : ''}" data-action="open" data-id="${p.id}" aria-label="${esc(p.name)}" title="${esc(p.name)}">${thumb(p,'ph')}</button>`; };
+  const row = p => { const { d, t } = status(p); return `<button class="prow" data-action="open" data-id="${p.id}">${thumb(p,'thumb')}<div class="t"><div class="n">${esc(p.name)}</div><div class="s">${signsHtml(p)}<span>${esc(p.species || p.location || '')}</span></div></div><div class="due ${d !== null && d <= 0 ? 'late' : ''}">${t}</div></button>`; };
+  const pic = p => { const { d } = status(p); return `<button class="pic ${d !== null && d <= 0 ? 'late' : ''}" data-action="open" data-id="${p.id}" aria-label="${esc(p.name)}" title="${esc(p.name)}">${thumb(p,'ph')}${signsHtml(p)}</button>`; };
   const box = ps => view === 'list' ? `<div class="plist">${ps.map(row).join('')}</div>` : view === 'pics' ? `<div class="pics">${ps.map(pic).join('')}</div>` : `<div class="grid">${ps.map(card).join('')}</div>`;
   const grouped = !state.site && state.sites.length > 1;
   return grouped ? state.sites.map(s => { const ps = shown.filter(p => p.siteId === s.id); return ps.length ? `<div class="sitegroup"><h3>${esc(s.name)}</h3>${box(ps)}</div>` : ''; }).join('') : box(shown);
@@ -354,15 +379,19 @@ function footHtml(){
 
 /* ---------- Detailansicht ---------- */
 // Pflegetipps aus CARE: über die Art, sonst über einen genau passenden Namen
+// Pflegeregel einer Pflanze: Art/Name aus CARE, sonst Familie, sonst Grundregeln (src sagt, woher)
+function careRule(p){
+  const c = (p.species && careFor(p.species)) || CARE.find(x => [...Object.values(x.names), ...x.syn].some(n => norm(n) === norm(p.name)));
+  if (c) return { light: c.light, wat: c.wat, fert: c.fert, src: 'care' };
+  const [light, wat, fert] = (p.family && CARE_FAMILY[p.family]) || CARE_GENERAL;
+  return { light, wat, fert, src: p.family && CARE_FAMILY[p.family] ? 'family' : 'general' };
+}
 function careHtml(p){
-  let c = (p.species && careFor(p.species)) || CARE.find(x => [...Object.values(x.names), ...x.syn].some(n => norm(n) === norm(p.name))), note = '';
-  const rule = ([light, wat, fert]) => ({ light, wat, fert });
-  if (!c && p.family && CARE_FAMILY[p.family]){   // Rückfall 1: allgemeine Tipps nach Familie
-    c = rule(CARE_FAMILY[p.family]); note = tr('care_family', { family: esc(p.family) });
-  }
-  if (!c){ c = rule(CARE_GENERAL); note = tr(p.species ? 'care_general' : 'care_none'); lookupFamily(p); }   // Rückfall 2: Grundregeln
+  const c = careRule(p);
+  let note = c.src === 'family' ? tr('care_family', { family: esc(p.family) }) : c.src === 'general' ? tr(p.species ? 'care_general' : 'care_none') : '';
+  if (c.src === 'general') lookupFamily(p);
   if (note) note = `<p class="hint">${note}</p>`;
-  return `<section class="care"><h2>${tr('h_care')}</h2>${note}<dl class="facts">
+  return `<section class="care"><h2>${tr('h_care')} ${signsHtml(p)}</h2>${note}<dl class="facts">
     <dt>${tr('d_light')}</dt><dd>${tr('light_' + c.light)}</dd>
     <dt>${tr('d_waterhow')}</dt><dd>${tr('wat_' + c.wat)}</dd>
     <dt>${tr('d_fert')}</dt><dd>${tr('fert_' + c.fert)}</dd></dl><p class="hint">${tr('care_season')}</p></section>`;
