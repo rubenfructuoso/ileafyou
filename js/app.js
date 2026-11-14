@@ -301,29 +301,43 @@ function render(){
     const next = all.sort((a,b) => a.d - b.d)[0];
     today = `<div class="calm">${tr('allDone')}${next ? tr('nextUp', { name: esc(next.p.name), verb: verbL(next.t), when: dueText(next.d) }) : ''}</div>`;
   }
-  const sorted = [...vis].sort((a,b) => (due(a,'water') ?? 999) - (due(b,'water') ?? 999));
-  const roomOf = p => (p.location || '').split(',')[0].trim() || tr('noRoom');
   const rooms = [...new Set(vis.map(roomOf))];
   if (roomFilter && !rooms.includes(roomFilter)) roomFilter = null;
   const chips = rooms.length > 1 ? `<div class="chips"><button class="chip ${roomFilter ? '' : 'on'}" data-action="room" data-room="">${tr('all')}</button>${rooms.map(r => `<button class="chip ${roomFilter === r ? 'on' : ''}" data-action="room" data-room="${esc(r)}">${esc(r)}</button>`).join('')}</div>` : '';
   const g0 = game(), vac = g0.vacation && g0.vacation.until >= dkey(new Date()) ? `<div class="vac"><span>${tr('vacBanner', { date: fmtDay(fromKey(g0.vacation.until), { weekday:'short', day:'numeric', month:'short' }) })}</span><button data-action="vac">${tr('change')}</button></div>` : '';
-  const shown = sorted.filter(p => !roomFilter || roomOf(p) === roomFilter);
+  const view = plantView();
+  const tools = vis.length ? `<div class="ptools"><input type="search" id="plantQ" value="${esc(plantQuery)}" placeholder="${esc(tr('search_ph'))}" aria-label="${esc(tr('search_ph'))}" autocomplete="off"><div class="seg">${['grid', 'list'].map(v => `<button type="button" data-action="view" data-view="${v}" class="${view === v ? 'on' : ''}" aria-pressed="${view === v}">${tr('v_' + v)}</button>`).join('')}</div></div>` : '';
+  const cards = `<div id="plantList">${plantListHtml()}</div>`;
+  $('#app').innerHTML = `${lvlHtml()}${sitesBar()}${vac}${outdoorHtml()}<section><h2>${tr('h_today')}</h2><div class="today">${today}</div></section><section><h2>${tr('h_next')}</h2>${weekHtml()}</section><section><h2>${tr('h_plants')}</h2>${tools}${chips}${cards}</section><section><h2>${tr('h_badges')}</h2>${badgesHtml()}</section>${footHtml()}`;
+  const wk = $('.week'); if (wk) wk.scrollLeft = weekScroll ?? wk.querySelector('.now').offsetLeft - wk.firstElementChild.offsetLeft;
+}
+/* ---------- Pflanzenliste: Kacheln oder Liste (pro Gerät gemerkt), Suche beim Tippen ---------- */
+let plantQuery = '';
+function plantView(){ try { return localStorage.getItem('ileafyou.view') === 'list' ? 'list' : 'grid'; } catch(e) { return 'grid'; } }
+function roomOf(p){ return (p.location || '').split(',')[0].trim() || tr('noRoom'); }
+function plantListHtml(){
+  const vis = state.plants.filter(inView), view = plantView(), q = norm(plantQuery);
+  if (!vis.length) return `<div class="calm">${tr('noPlantsHere')}</div>`;
+  const hit = p => !q || [p.name, p.species, p.location, siteName(p.siteId), p.family].some(x => norm(x).includes(q));
+  const shown = [...vis].sort((a,b) => (due(a,'water') ?? 999) - (due(b,'water') ?? 999)).filter(p => (!roomFilter || roomOf(p) === roomFilter) && hit(p));
+  if (!shown.length) return `<div class="calm">${tr('search_none', { q: esc(plantQuery) })}</div>`;
+  const status = p => { const d = due(p, 'water'); return isPaused(p) ? { d: null, t: tr('paused_until', { date: pauseDate(p) }) } : d === null ? { d, t: '' } : { d, t: `${verb('water')} ${dueText(d)}` }; };
   const card = p => {
-    const d = due(p, 'water');
-    let g = isPaused(p) ? `<div class="gl paused">${tr('paused_until', { date: pauseDate(p) })}</div>` : '';
+    const { d, t } = status(p);
+    let g = d === null ? (t ? `<div class="gl paused">${t}</div>` : '') : '';
     if (d !== null){
       const frac = Math.max(0, Math.min(1, d / +p.waterEvery));
-      g = `<div class="gauge ${d <= 0 ? 'dry' : ''}"><i style="width:${d <= 0 ? 100 : Math.max(6, frac*100)}%"></i></div><div class="gl">${verb('water')} ${dueText(d)}</div>`;
+      g = `<div class="gauge ${d <= 0 ? 'dry' : ''}"><i style="width:${d <= 0 ? 100 : Math.max(6, frac*100)}%"></i></div><div class="gl">${t}</div>`;
     }
     return `<button class="card" data-action="open" data-id="${p.id}">${thumb(p,'ph')}<div class="b"><div class="n">${esc(p.name)}</div><div class="sp">${esc(p.species || p.location || '\u00a0')}</div>${g}</div></button>`;
   };
+  const row = p => { const { d, t } = status(p); return `<button class="prow" data-action="open" data-id="${p.id}">${thumb(p,'thumb')}<div class="t"><div class="n">${esc(p.name)}</div><div class="s">${esc(p.species || p.location || '')}</div></div><div class="due ${d !== null && d <= 0 ? 'late' : ''}">${t}</div></button>`; };
+  const box = ps => view === 'list' ? `<div class="plist">${ps.map(row).join('')}</div>` : `<div class="grid">${ps.map(card).join('')}</div>`;
   const grouped = !state.site && state.sites.length > 1;
-  const cards = !vis.length ? `<div class="calm">${tr('noPlantsHere')}</div>`
-    : grouped ? state.sites.map(s => { const ps = shown.filter(p => p.siteId === s.id); return ps.length ? `<div class="sitegroup"><h3>${esc(s.name)}</h3><div class="grid">${ps.map(card).join('')}</div></div>` : ''; }).join('')
-    : `<div class="grid">${shown.map(card).join('')}</div>`;
-  $('#app').innerHTML = `${lvlHtml()}${sitesBar()}${vac}${outdoorHtml()}<section><h2>${tr('h_today')}</h2><div class="today">${today}</div></section><section><h2>${tr('h_next')}</h2>${weekHtml()}</section><section><h2>${tr('h_plants')}</h2>${chips}${cards}</section><section><h2>${tr('h_badges')}</h2>${badgesHtml()}</section>${footHtml()}`;
-  const wk = $('.week'); if (wk) wk.scrollLeft = weekScroll ?? wk.querySelector('.now').offsetLeft - wk.firstElementChild.offsetLeft;
+  return grouped ? state.sites.map(s => { const ps = shown.filter(p => p.siteId === s.id); return ps.length ? `<div class="sitegroup"><h3>${esc(s.name)}</h3>${box(ps)}</div>` : ''; }).join('') : box(shown);
 }
+document.addEventListener('input', e => { if (e.target.id === 'plantQ'){ plantQuery = e.target.value; $('#plantList').innerHTML = plantListHtml(); } });
+
 // Ferienmodus, Daten, Sprache usw. liegen in den Einstellungen (Zahnrad oben rechts)
 function footHtml(){
   return canInstall() ? `<div class="foot"><button data-action="install">${tr('foot_install')}</button></div>` : '';
@@ -797,6 +811,7 @@ document.addEventListener('click', e => {
   else if (action === 'open'){ detailId = id; renderDetail(); $('#detailDlg').showModal(); }
   else if (action === 'log') logAction(id, type);
   else if (action === 'unlog') unlogToday(id, type);
+  else if (action === 'view'){ try { localStorage.setItem('ileafyou.view', b.dataset.view); } catch(e) {} render(); }
   else if (action === 'pause') pauseSheet(id);
   else if (action === 'pauseset'){ const p = getP(id), v = b.dataset.until || $('#pauseIn').value; if (!p || !v){ $('#pauseIn')?.focus(); return; } p.pauseUntil = v; save(); $('#celDlg').close(); refresh(); toast(tr('pause_set', { name: p.name, date: pauseDate(p) })); }
   else if (action === 'unpause'){ const p = getP(id); if (p){ delete p.pauseUntil; save(); refresh(); toast(tr('pause_off', { name: p.name })); } }

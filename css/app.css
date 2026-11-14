@@ -323,3 +323,17 @@ label.check input{width:22px;height:22px;accent-color:var(--moss);flex:none}
 @keyframes blink{0%,93%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
 @keyframes sing{0%,70%,100%{transform:scaleY(1)}78%,88%{transform:scaleY(1.8)}}
 @media (prefers-reduced-motion:reduce){.flw,.flw *{animation:none}}
+/* Pflanzenliste: Suche und Ansicht (Kacheln/Liste) */
+.ptools{display:flex;gap:10px;align-items:center;margin-bottom:12px}
+.ptools input{flex:1;min-width:0}
+.ptools .seg{flex:none}
+.ptools .seg button{padding:10px 12px}
+.plist{background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.prow{display:flex;align-items:center;gap:12px;width:100%;padding:8px 12px;background:none;border-bottom:1px solid var(--line);text-align:left;border-radius:0}
+.prow:last-child{border-bottom:0}
+.prow .thumb{width:40px;height:40px;border-radius:10px;font-size:18px}
+.prow .t{flex:1;min-width:0}
+.prow .n{font-family:"Gluten",system-ui,sans-serif;font-size:1rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prow .s{font-size:.85rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prow .due{flex:none;font-size:.85rem;color:var(--muted);text-align:right;max-width:40%}
+.prow .due.late{color:var(--danger);font-weight:700}

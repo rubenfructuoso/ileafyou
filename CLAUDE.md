@@ -93,6 +93,8 @@ state = {
 
 Die Vorschau „Nächste Tage“ zeigt 28 Tage voraus und 14 zurück (`WEEK_DAYS`, `WEEK_PAST`), sieben sichtbar, startet bei heute. Künftige Tage rechnen Wiederholungen voraus (`dayItems()`), vergangene zeigen Erledigtes aus dem Protokoll und Liegengebliebenes (`pastDay()`, Ring-Punkte).
 
+„Deine Pflanzen“ (`plantListHtml()`): Ansicht „Bilder“ (Kacheln) oder „Liste“ (kleines Bild, Name, Art, nächstes Giessen), pro Gerät in localStorage `ileafyou.view`; Suchfeld `#plantQ` filtert beim Tippen nach Name, Art, Raum, Ort und Familie (ohne Akzente), ersetzt nur `#plantList`, damit der Fokus bleibt.
+
 Orte filtern „Heute dran“, „Nächste Tage“ und die Pflanzenliste. Punkte, Levels, Serie und der Bonus „Tag geschafft“ gelten über alle Orte gemeinsam. Bei „Alle Orte“ ist die Pflanzenliste nach Ort gruppiert. Ein Ort lässt sich nur löschen, wenn er leer ist. Alte Daten ohne `sites` migriert `migrateSites()` auf „Zuhause“.
 
 Log-Typen: `water`, `feed`, `repot`, `note`, `photo` (mit `img`), `check` (Später/Erde feucht, mit `for` und `days`; der Text wird beim Anzeigen übersetzt, nicht gespeichert).
@@ -120,7 +122,7 @@ Diagnose Push: `cron.php` schreibt `cron_last` und pro Abo das letzte Ergebnis (
 
 ## Stand
 
-Fertig: vier Sprachen, Pflanzen erfassen und bearbeiten, Fälligkeiten, „Heute dran“, Wochenvorschau, Protokoll, Foto-Tagebuch, Später-Funktion, mehrere Orte mit Räume-Filter, Ferienmodus, Levels, Serie, Abzeichen, Beispielgarten, Pflegevorschläge (`js/care.js`), Datensicherung (Export/Import), Speicher in IndexedDB, Schriften selbst gehostet (`fonts/`), PWA (installierbar, offline, Button „App installieren“ mit Anleitung fürs iPhone), Erkennungs-Proxy, Konten mit Login, Sync zwischen Geräten, Einstellungen, Pflegetipps, Push-Erinnerungen, Pflanzen draussen mit Frostwarnungen.
+Fertig: vier Sprachen, Pflanzen erfassen und bearbeiten, Fälligkeiten, „Heute dran“, Wochenvorschau, Protokoll, Foto-Tagebuch, Später-Funktion, mehrere Orte mit Räume-Filter, Ferienmodus, Levels, Serie, Abzeichen, Beispielgarten, Pflegevorschläge (`js/care.js`), Datensicherung (Export/Import), Speicher in IndexedDB, Schriften selbst gehostet (`fonts/`), PWA (installierbar, offline, Button „App installieren“ mit Anleitung fürs iPhone), Erkennungs-Proxy, Konten mit Login, Sync zwischen Geräten, Einstellungen, Pflegetipps, Push-Erinnerungen, Pflanzen draussen mit Frostwarnungen, Pflanzenliste mit Suche und Ansicht Bilder/Liste.
 
 Push über Google (Android, Chrome) im Einsatz geprüft; Apple (iPhone) und Mozilla noch ungetestet. Open-Meteo und GBIF sind nur mit simulierten Antworten getestet.
 
