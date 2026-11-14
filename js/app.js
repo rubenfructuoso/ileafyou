@@ -306,14 +306,22 @@ function render(){
   const chips = rooms.length > 1 ? `<div class="chips"><button class="chip ${roomFilter ? '' : 'on'}" data-action="room" data-room="">${tr('all')}</button>${rooms.map(r => `<button class="chip ${roomFilter === r ? 'on' : ''}" data-action="room" data-room="${esc(r)}">${esc(r)}</button>`).join('')}</div>` : '';
   const g0 = game(), vac = g0.vacation && g0.vacation.until >= dkey(new Date()) ? `<div class="vac"><span>${tr('vacBanner', { date: fmtDay(fromKey(g0.vacation.until), { weekday:'short', day:'numeric', month:'short' }) })}</span><button data-action="vac">${tr('change')}</button></div>` : '';
   const view = plantView();
-  const tools = vis.length ? `<div class="ptools"><input type="search" id="plantQ" value="${esc(plantQuery)}" placeholder="${esc(tr('search_ph'))}" aria-label="${esc(tr('search_ph'))}" autocomplete="off"><div class="seg">${['grid', 'list'].map(v => `<button type="button" data-action="view" data-view="${v}" class="${view === v ? 'on' : ''}" aria-pressed="${view === v}">${tr('v_' + v)}</button>`).join('')}</div></div>` : '';
+  const tools = vis.length ? `<div class="ptools"><input type="search" id="plantQ" value="${esc(plantQuery)}" placeholder="${esc(tr('search_ph'))}" aria-label="${esc(tr('search_ph'))}" autocomplete="off"><div class="seg vseg">${VIEWS.map(v => `<button type="button" data-action="view" data-view="${v}" class="${view === v ? 'on' : ''}" aria-pressed="${view === v}" aria-label="${esc(tr('v_' + v))}" title="${esc(tr('v_' + v))}">${viewSvg(v)}</button>`).join('')}</div></div>` : '';
   const cards = `<div id="plantList">${plantListHtml()}</div>`;
   $('#app').innerHTML = `${lvlHtml()}${sitesBar()}${vac}${outdoorHtml()}<section><h2>${tr('h_today')}</h2><div class="today">${today}</div></section><section><h2>${tr('h_next')}</h2>${weekHtml()}</section><section><h2>${tr('h_plants')}</h2>${tools}${chips}${cards}</section><section><h2>${tr('h_badges')}</h2>${badgesHtml()}</section>${footHtml()}`;
   const wk = $('.week'); if (wk) wk.scrollLeft = weekScroll ?? wk.querySelector('.now').offsetLeft - wk.firstElementChild.offsetLeft;
 }
 /* ---------- Pflanzenliste: Kacheln oder Liste (pro Gerät gemerkt), Suche beim Tippen ---------- */
 let plantQuery = '';
-function plantView(){ try { return localStorage.getItem('ileafyou.view') === 'list' ? 'list' : 'grid'; } catch(e) { return 'grid'; } }
+const VIEWS = ['grid', 'list', 'pics'];
+function plantView(){ try { const v = localStorage.getItem('ileafyou.view'); return VIEWS.includes(v) ? v : 'grid'; } catch(e) { return 'grid'; } }
+// Symbole für die Ansicht, im Pixelraster wie die übrigen Icons (8 × 8)
+const VIEW_ICON = {
+  grid: [[0,0,3,3],[5,0,3,3],[0,5,3,3],[5,5,3,3]],
+  list: [[0,0,2,2],[3,0,5,2],[0,3,2,2],[3,3,5,2],[0,6,2,2],[3,6,5,2]],
+  pics: [[0,0,2,2],[3,0,2,2],[6,0,2,2],[0,3,2,2],[3,3,2,2],[6,3,2,2],[0,6,2,2],[3,6,2,2],[6,6,2,2]]
+};
+const viewSvg = v => `<svg viewBox="0 0 8 8" width="18" height="18" shape-rendering="crispEdges" aria-hidden="true">${VIEW_ICON[v].map(([x,y,w,h]) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="currentColor"/>`).join('')}</svg>`;
 function roomOf(p){ return (p.location || '').split(',')[0].trim() || tr('noRoom'); }
 function plantListHtml(){
   const vis = state.plants.filter(inView), view = plantView(), q = norm(plantQuery);
@@ -332,7 +340,8 @@ function plantListHtml(){
     return `<button class="card" data-action="open" data-id="${p.id}">${thumb(p,'ph')}<div class="b"><div class="n">${esc(p.name)}</div><div class="sp">${esc(p.species || p.location || '\u00a0')}</div>${g}</div></button>`;
   };
   const row = p => { const { d, t } = status(p); return `<button class="prow" data-action="open" data-id="${p.id}">${thumb(p,'thumb')}<div class="t"><div class="n">${esc(p.name)}</div><div class="s">${esc(p.species || p.location || '')}</div></div><div class="due ${d !== null && d <= 0 ? 'late' : ''}">${t}</div></button>`; };
-  const box = ps => view === 'list' ? `<div class="plist">${ps.map(row).join('')}</div>` : `<div class="grid">${ps.map(card).join('')}</div>`;
+  const pic = p => { const { d } = status(p); return `<button class="pic ${d !== null && d <= 0 ? 'late' : ''}" data-action="open" data-id="${p.id}" aria-label="${esc(p.name)}" title="${esc(p.name)}">${thumb(p,'ph')}</button>`; };
+  const box = ps => view === 'list' ? `<div class="plist">${ps.map(row).join('')}</div>` : view === 'pics' ? `<div class="pics">${ps.map(pic).join('')}</div>` : `<div class="grid">${ps.map(card).join('')}</div>`;
   const grouped = !state.site && state.sites.length > 1;
   return grouped ? state.sites.map(s => { const ps = shown.filter(p => p.siteId === s.id); return ps.length ? `<div class="sitegroup"><h3>${esc(s.name)}</h3>${box(ps)}</div>` : ''; }).join('') : box(shown);
 }
