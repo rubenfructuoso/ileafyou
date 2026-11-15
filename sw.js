@@ -15,8 +15,8 @@ const SHELL = [
   'img/icon-192.png',
   'img/icon-512.png',
   'img/badge-96.png',
-  'fonts/atkinson-hyperlegible-400.woff2',
-  'fonts/atkinson-hyperlegible-700.woff2',
+  'fonts/jetbrains-mono-latin.woff2',
+  'fonts/jetbrains-mono-latin-ext.woff2',
   'fonts/gluten-variable.woff2'
 ];
 

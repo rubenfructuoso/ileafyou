@@ -1,6 +1,7 @@
 /* Schriften selbst gehostet (SIL OFL, Lizenzen in fonts/), Latin-Teilmenge für DE/EN/ES/FR */
-@font-face{font-family:"Atkinson Hyperlegible";font-style:normal;font-weight:400;font-display:swap;src:url(../fonts/atkinson-hyperlegible-400.woff2) format("woff2")}
-@font-face{font-family:"Atkinson Hyperlegible";font-style:normal;font-weight:700;font-display:swap;src:url(../fonts/atkinson-hyperlegible-700.woff2) format("woff2")}
+/* Laufschrift: JetBrains Mono (variabel 100–800, SIL OFL), latin + latin-ext */
+@font-face{font-family:"JetBrains Mono";font-style:normal;font-weight:100 800;font-display:swap;src:url(../fonts/jetbrains-mono-latin.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"JetBrains Mono";font-style:normal;font-weight:100 800;font-display:swap;src:url(../fonts/jetbrains-mono-latin-ext.woff2) format("woff2");unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
 @font-face{font-family:"Gluten";font-style:normal;font-weight:400 900;font-display:swap;src:url(../fonts/gluten-variable.woff2) format("woff2")}
 :root{
   --bg:#F2F4EC;--surface:#FFFFFF;--ink:#3B2A20;--muted:#4E5A44;--line:#D5DBC8;--moss:#2F5A35;--onmoss:#F2F4EC;--trieb:#9BD25B;--water:#2F7CB0;--feed:#E0A43A;--onfeed:#3B2A20;--danger:#B2453A;--leafbg:#E3E8D8;--leafA:#2F5A35;--leafB:#9BD25B;--pot:#3B2A20;--gear:#E0A43A;
@@ -19,7 +20,7 @@
 }
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *,*::before,*::after{box-sizing:inherit}
-body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.5 "Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.55 "JetBrains Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace}
 main{max-width:720px;margin:0 auto;padding:16px 18px 130px}
 h1,h2,h3{font-family:"Gluten",system-ui,sans-serif;line-height:1.1;margin:0}
 header.top{padding:14px 0 6px}
@@ -401,3 +402,20 @@ label.check input{width:22px;height:22px;accent-color:var(--moss);flex:none}
 .pic:has(.acts) .sg{display:none}
 .pic .chk.lat .pix{width:20px;height:17px}
 .sglegend li i.ck:last-child .pix{width:19px;height:16px}
+
+/* ---------- Pixel-Look: Ecken in Treppenstufen wie die Pixel-Symbole (clip-path), Balken in Blöcken ---------- */
+:root{
+  --u:3px;   /* Pixelgrösse der Ecken bei grossen Flächen */
+  --pxc:polygon(0 calc(2*var(--u)),var(--u) calc(2*var(--u)),var(--u) var(--u),calc(2*var(--u)) var(--u),calc(2*var(--u)) 0,calc(100% - 2*var(--u)) 0,calc(100% - 2*var(--u)) var(--u),calc(100% - var(--u)) var(--u),calc(100% - var(--u)) calc(2*var(--u)),100% calc(2*var(--u)),100% calc(100% - 2*var(--u)),calc(100% - var(--u)) calc(100% - 2*var(--u)),calc(100% - var(--u)) calc(100% - var(--u)),calc(100% - 2*var(--u)) calc(100% - var(--u)),calc(100% - 2*var(--u)) 100%,calc(2*var(--u)) 100%,calc(2*var(--u)) calc(100% - var(--u)),var(--u) calc(100% - var(--u)),var(--u) calc(100% - 2*var(--u)),0 calc(100% - 2*var(--u)));
+}
+*,*::before,*::after{border-radius:0 !important}
+.card,.plist,.lvl,.auth,.dayinfo,.wx,.badge,.wd,.sglegend ul.sg,.empty,.vac,.care,.pausebox,.hero,.photo,.lphoto,.fab,.toast,dialog,.thumb,.pic,.gear,.ik,.btn,.primary,.act,.wxn,.chk,.x,.do,.chip,.setbtn,.seg,.pill,input,textarea,select,.noteadd button,.siterow button,.sg i,.sglegend li i{clip-path:var(--pxc)}
+dialog{--u:4px}
+.chip,.setbtn,.seg,.pill,input,textarea,select,.noteadd button,.siterow button,.thumb,.chk,.x,.do,.act,.wxn,.gear,.ik{--u:2px}
+.sg i,.sglegend li i,.pic .chk{--u:1.5px}
+:focus-visible{outline-offset:-4px}
+/* Giess- und Level-Balken: Blöcke statt runder Balken */
+.gauge,.xpbar{-webkit-mask:repeating-linear-gradient(90deg,#000 0 calc(10% - 3px),transparent calc(10% - 3px) 10%);mask:repeating-linear-gradient(90deg,#000 0 calc(10% - 3px),transparent calc(10% - 3px) 10%)}
+.gauge{height:10px}
+.gauge i,.xpbar i{transition:none}
+.dot,.dots i{border-radius:0}

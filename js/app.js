@@ -258,7 +258,7 @@ const getP = id => state.plants.find(p => p.id === id);
 function lvlHtml(){
   const g = game(), lv = levelOf(g.xp), nxt = LEVELS[lv+1];
   const pct = nxt !== undefined ? Math.max(3, (g.xp - LEVELS[lv]) / (nxt - LEVELS[lv]) * 100) : 100;
-  return `<button class="lvl" data-action="rules"><span class="em">${plantSvg(lv)}</span><span class="col"><span class="lk">${tr('levelN', { n: lv+1 })}</span><span class="ln">${lvName(lv)}</span><span class="xpbar"><i style="width:${pct}%"></i></span><span class="lk">${nxt !== undefined ? tr('xpTo', { xp: g.xp, next: nxt, name: lvName(lv+1) }) : tr('xpMax', { xp: g.xp })}</span></span><span class="streak">${pix('flame')}${g.streak}<small>${g.streak === 1 ? tr('streak1') : tr('streakN')}</small></span></button>`;
+  return `<button class="lvl" data-action="rules"><span class="em">${plantSvg(lv)}</span><span class="col"><span class="lk">${tr('levelN', { n: lv+1 })}</span><span class="ln">${lvName(lv)}</span><span class="xpbar"><i style="width:${Math.round(pct / 10) * 10}%"></i></span><span class="lk">${nxt !== undefined ? tr('xpTo', { xp: g.xp, next: nxt, name: lvName(lv+1) }) : tr('xpMax', { xp: g.xp })}</span></span><span class="streak">${pix('flame')}${g.streak}<small>${g.streak === 1 ? tr('streak1') : tr('streakN')}</small></span></button>`;
 }
 function openCel(html, cls){
   $('#cel').className = 'celebrate ' + (cls || '');
@@ -391,7 +391,7 @@ function plantListHtml(){
     let g = d === null ? (t ? `<div class="gl paused">${t}</div>` : '') : '';
     if (d !== null){
       const frac = Math.max(0, Math.min(1, d / +p.waterEvery));
-      g = `<div class="gauge ${d <= 0 ? 'dry' : ''}"><i style="width:${d <= 0 ? 100 : Math.max(6, frac*100)}%"></i></div><div class="gl">${t}</div>`;
+      g = `<div class="gauge ${d <= 0 ? 'dry' : ''}"><i style="width:${d <= 0 ? 100 : Math.max(10, Math.ceil(frac*10)*10)}%"></i></div><div class="gl">${t}</div>`;
     }
     const a = actsHtml(p);
     return `<div class="card"><button class="open" data-action="open" data-id="${p.id}">${thumb(p,'ph')}<div class="b"><div class="n">${esc(p.name)}</div><div class="sp">${esc(p.species || p.location || '\u00a0')}</div>${signsHtml(p)}${g}</div></button>${a ? `<div class="acts">${a}</div>` : ''}</div>`;
