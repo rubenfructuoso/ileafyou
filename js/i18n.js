@@ -3,7 +3,7 @@ const I18N = {
   de: {
     locale: 'de-CH', q: ['„', '“'], langName: 'Deutsch',
     tagline: 'Pflanzen pflegen, Level sammeln.',
-    today: 'Heute', today_s: 'Heute', tomorrow: 'Morgen', todayL: 'heute', tomorrowL: 'morgen',
+    today: 'Heute', tomorrow: 'Morgen', todayL: 'heute', tomorrowL: 'morgen',
     inDays: 'in {n} Tagen', inDaysCap: 'In {n} Tagen', overdue1: 'seit 1 Tag fällig', overdueN: 'seit {n} Tagen fällig',
     water: 'Giessen', feed: 'Düngen', waterL: 'giessen', feedL: 'düngen',
     type_water: 'Gegossen', type_feed: 'Gedüngt', type_repot: 'Umgetopft', type_note: 'Notiz', type_check: 'Geprüft', type_photo: 'Foto',
@@ -82,7 +82,7 @@ const I18N = {
   en: {
     locale: 'en-GB', q: ['“', '”'], langName: 'English',
     tagline: 'Care for your plants, level up.',
-    today: 'Today', today_s: 'Today', tomorrow: 'Tomorrow', todayL: 'today', tomorrowL: 'tomorrow',
+    today: 'Today', tomorrow: 'Tomorrow', todayL: 'today', tomorrowL: 'tomorrow',
     inDays: 'in {n} days', inDaysCap: 'In {n} days', overdue1: 'overdue by 1 day', overdueN: 'overdue by {n} days',
     water: 'Water', feed: 'Feed', waterL: 'water', feedL: 'feed',
     type_water: 'Watered', type_feed: 'Fed', type_repot: 'Repotted', type_note: 'Note', type_check: 'Checked', type_photo: 'Photo',
@@ -161,7 +161,7 @@ const I18N = {
   es: {
     locale: 'es-ES', q: ['«', '»'], langName: 'Español',
     tagline: 'Cuida tus plantas, sube de nivel.',
-    today: 'Hoy', today_s: 'Hoy', tomorrow: 'Mañana', todayL: 'hoy', tomorrowL: 'mañana',
+    today: 'Hoy', tomorrow: 'Mañana', todayL: 'hoy', tomorrowL: 'mañana',
     inDays: 'en {n} días', inDaysCap: 'En {n} días', overdue1: 'con 1 día de retraso', overdueN: 'con {n} días de retraso',
     water: 'Regar', feed: 'Abonar', waterL: 'regar', feedL: 'abonar',
     type_water: 'Regada', type_feed: 'Abonada', type_repot: 'Trasplantada', type_note: 'Nota', type_check: 'Revisada', type_photo: 'Foto',
@@ -240,7 +240,7 @@ const I18N = {
   fr: {
     locale: 'fr-CH', q: ['«\u00a0', '\u00a0»'], langName: 'Français',
     tagline: 'Soigne tes plantes, monte de niveau.',
-    today: 'Aujourd’hui', today_s: 'Auj.', tomorrow: 'Demain', todayL: 'aujourd’hui', tomorrowL: 'demain',
+    today: 'Aujourd’hui', tomorrow: 'Demain', todayL: 'aujourd’hui', tomorrowL: 'demain',
     inDays: 'dans {n} jours', inDaysCap: 'Dans {n} jours', overdue1: 'en retard d’1 jour', overdueN: 'en retard de {n} jours',
     water: 'Arroser', feed: 'Fertiliser', waterL: 'arroser', feedL: 'fertiliser',
     type_water: 'Arrosée', type_feed: 'Fertilisée', type_repot: 'Rempotée', type_note: 'Note', type_check: 'Vérifiée', type_photo: 'Photo',

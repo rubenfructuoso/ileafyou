@@ -537,7 +537,7 @@ function weekHtml(){
     return dotCap([...ok(done), ...missed.map(() => '<i class="miss"></i>')]);
   };
   const week = `<div class="week">${Array.from({ length: WEEK_PAST + WEEK_DAYS }, (_, k) => k - WEEK_PAST).map(i => { const dt = dayDate(i);
-    return `<div class="wd ${i === 0 ? 'now' : ''} ${i < 0 ? 'past' : ''}"><b>${i === 0 ? tr('today_s') : fmtDay(dt, { weekday:'short' })}</b><span class="num">${dt.getDate()}</span><span class="dots">${dots(i)}</span></div>`; }).join('')}</div>`;
+    return `<div class="wd ${i === 0 ? 'now' : ''} ${i < 0 ? 'past' : ''}" ${i === 0 ? `aria-current="date" title="${esc(tr('today'))}"` : ''}><b>${fmtDay(dt, { weekday:'short' })}</b><span class="num">${dt.getDate()}</span><span class="dots">${dots(i)}</span></div>`; }).join('')}</div>`;
   return week + `<div class="hint">${tr('weekHint')}</div>`;   // Details zu einem Tag gibt es nicht mehr: Fälliges steht in «Deine Pflanzen»
 }
 

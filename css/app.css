@@ -445,3 +445,8 @@ h3,.sitegroup h3{font-size:12px}
 .lvl .ln{font-size:16px}
 .wd .num{font-size:16px;margin:4px 0}
 dialog h2,.sheethead h2{font-size:16px;line-height:1.5}
+/* Heute: Feld flächig in Moos (dunkelgrün, im Dunkelmodus hellgrün), ohne Wort «Heute» */
+.wd.now{background:var(--moss) !important;border-color:var(--moss) !important;color:var(--onmoss)}
+.wd.now b,.wd.now .num{color:var(--onmoss)}
+.wd.now .dots i{background-color:var(--onmoss) !important;outline:1px solid var(--onmoss)}
+.wd.now .dots em{color:var(--onmoss)}
