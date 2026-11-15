@@ -2,9 +2,9 @@
 /* Laufschrift: JetBrains Mono (variabel 100–800, SIL OFL), latin + latin-ext */
 @font-face{font-family:"JetBrains Mono";font-style:normal;font-weight:100 800;font-display:swap;src:url(../fonts/jetbrains-mono-latin.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 @font-face{font-family:"JetBrains Mono";font-style:normal;font-weight:100 800;font-display:swap;src:url(../fonts/jetbrains-mono-latin-ext.woff2) format("woff2");unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
-/* Titel, Logo, Pflanzennamen: Pixelify Sans (variabel 400–700, SIL OFL), latin + latin-ext */
-@font-face{font-family:"Pixelify Sans";font-style:normal;font-weight:400 700;font-display:swap;src:url(../fonts/pixelify-sans-latin.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
-@font-face{font-family:"Pixelify Sans";font-style:normal;font-weight:400 700;font-display:swap;src:url(../fonts/pixelify-sans-latin-ext.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+/* Titel, Logo, Pflanzennamen: Press Start 2P (eine Stärke, SIL OFL), latin + latin-ext. Sehr breit: Grössen in 8-px-Schritten, siehe Block «Titel-Schrift» am Ende */
+@font-face{font-family:"Press Start 2P";font-style:normal;font-weight:400;font-display:swap;src:url(../fonts/press-start-2p-latin.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Press Start 2P";font-style:normal;font-weight:400;font-display:swap;src:url(../fonts/press-start-2p-latin-ext.woff2) format("woff2");unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
 :root{
   --bg:#F2F4EC;--surface:#FFFFFF;--ink:#3B2A20;--muted:#4E5A44;--line:#D5DBC8;--moss:#2F5A35;--onmoss:#F2F4EC;--trieb:#9BD25B;--water:#2F7CB0;--feed:#E0A43A;--onfeed:#3B2A20;--danger:#B2453A;--leafbg:#E3E8D8;--leafA:#2F5A35;--leafB:#9BD25B;--pot:#3B2A20;--gear:#E0A43A;
   color-scheme:light;box-sizing:border-box;
@@ -24,12 +24,12 @@ html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *,*::before,*::after{box-sizing:inherit}
 body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.55 "JetBrains Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace}
 main{max-width:720px;margin:0 auto;padding:16px 18px 130px}
-h1,h2,h3{font-family:"Pixelify Sans",system-ui,sans-serif;line-height:1.1;margin:0}
+h1,h2,h3{font-family:"Press Start 2P",ui-monospace,monospace;line-height:1.1;margin:0}
 header.top{padding:14px 0 6px}
 h1{margin:0}
 .logo{display:flex;align-items:center;gap:20px;color:var(--ink)}
 .logo svg.mark{width:54px;height:54px;flex:none}
-.wordmark{font-family:"Pixelify Sans",system-ui,sans-serif;font-weight:700;font-size:2.4rem;line-height:1;letter-spacing:0}
+.wordmark{font-family:"Press Start 2P",ui-monospace,monospace;font-weight:700;font-size:2.4rem;line-height:1;letter-spacing:0}
 .date{color:var(--muted);margin-top:2px}
 section{margin-top:28px}
 h2{font-size:1.45rem;font-weight:700;margin-bottom:12px}
@@ -52,7 +52,7 @@ img{max-width:100%}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden;text-align:left;padding:0;display:flex;flex-direction:column}
 .card .ph{aspect-ratio:1;width:100%;object-fit:cover;background:var(--leafbg);display:grid;place-items:center;font-size:44px}
 .card .b{padding:10px 12px 12px}
-.card .n{font-family:"Pixelify Sans",system-ui,sans-serif;font-size:1.05rem}
+.card .n{font-family:"Press Start 2P",ui-monospace,monospace;font-size:1.05rem}
 .sp{font-size:.85rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .gauge{height:8px;border-radius:99px;background:var(--line);margin-top:10px;overflow:hidden}
 .gauge i{display:block;height:100%;background:var(--water);border-radius:99px;transition:width .4s}
@@ -106,7 +106,7 @@ textarea{min-height:76px;resize:vertical}
 .wd{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:8px 2px;text-align:center;min-height:82px;display:block}
 .wd.now{border:2px solid var(--moss)}
 .wd b{display:block;font-size:.78rem;color:var(--muted);font-weight:400}
-.wd .num{display:block;font-family:"Pixelify Sans",system-ui,sans-serif;font-weight:700;font-size:1.15rem}
+.wd .num{display:block;font-family:"Press Start 2P",ui-monospace,monospace;font-weight:700;font-size:1.15rem}
 .dots{display:flex;flex-wrap:wrap;justify-content:center;gap:3px;margin-top:6px;padding:0 4px}
 .dots i{width:8px;height:8px;border-radius:50%;background:var(--water)}
 .dots i.f{background:var(--feed)}
@@ -149,7 +149,7 @@ select{font:inherit;width:100%;padding:11px 12px;border-radius:12px;border:1px s
 .lvl .em svg{width:60px;height:60px;display:block}
 .lvl .col{flex:1;min-width:0}
 .lvl .col>span{display:block}
-.lvl .ln{font-family:"Pixelify Sans",system-ui,sans-serif;font-weight:700;font-size:1.35rem;line-height:1.15}
+.lvl .ln{font-family:"Press Start 2P",ui-monospace,monospace;font-weight:700;font-size:1.35rem;line-height:1.15}
 .lvl .lk{font-size:.85rem;color:var(--muted)}
 .xpbar{height:10px;border-radius:99px;background:var(--line);overflow:hidden;margin:8px 0 4px}
 .xpbar i{display:block;height:100%;background:var(--moss);border-radius:99px;transition:width .6s}
@@ -278,7 +278,7 @@ label.check input{width:22px;height:22px;accent-color:var(--moss);flex:none}
 .wxnights{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:8px;text-align:center}
 .wxn{background:var(--bg);border-radius:10px;padding:6px 0}
 .wxn small{display:block;font-size:.75rem;color:var(--muted)}
-.wxn b{font-family:"Pixelify Sans",system-ui,sans-serif;font-size:1.05rem}
+.wxn b{font-family:"Press Start 2P",ui-monospace,monospace;font-size:1.05rem}
 .wxn.cold{background:var(--water);color:#fff}
 .wxn.cold small{color:#fff}
 .wx .hint{margin:8px 0 0}
@@ -336,7 +336,7 @@ label.check input{width:22px;height:22px;accent-color:var(--moss);flex:none}
 .prow:last-child{border-bottom:0}
 .prow .thumb{width:40px;height:40px;border-radius:10px;font-size:18px}
 .prow .t{flex:1;min-width:0}
-.prow .n{font-family:"Pixelify Sans",system-ui,sans-serif;font-size:1rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prow .n{font-family:"Press Start 2P",ui-monospace,monospace;font-size:1rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .prow .s{font-size:.85rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .prow .due{flex:none;font-size:.85rem;color:var(--muted);text-align:right;max-width:40%}
 .prow .due.late{color:var(--danger);font-weight:700}
@@ -436,3 +436,12 @@ dialog{--u:4px}
 /* erledigt: hellgrün (Trieb) wie die Pflanzen, gleiche Form (Tropfen giessen, Raute düngen) */
 .dots i.ok{background-image:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%205%205%22%20shape-rendering=%22crispEdges%22%3E%3Crect%20x=%222%22%20y=%220%22%20width=%221%22%20height=%221%22%20fill=%22%239BD25B%22/%3E%3Crect%20x=%221%22%20y=%221%22%20width=%221%22%20height=%221%22%20fill=%22%239BD25B%22/%3E%3Crect%20x=%222%22%20y=%221%22%20width=%221%22%20height=%221%22%20fill=%22%239BD25B%22/%3E%3Crect%20x=%223%22%20y=%221%22%20width=%221%22%20height=%221%22%20fill=%22%239BD25B%22/%3E%3Crect%20x=%220%22%20y=%222%22%20width=%221%22%20height=%221%22%20fill=%22%239BD25B%22/%3E%3Crect%20x=%221%22%20y=%222%22%20width=%221%22%20height=%221%22%20fill=%22%239BD25B%22/%3E%3Crect%20x=%222%22%20y=%222%22%20width=%221%22%20height=%221%22%20fill=%22%239BD25B%22/%3E%3Crect%20x=%223%22%20y=%222%22%20width=%221%22%20height=%221%22%20fill=%22%239BD25B%22/%3E%3Crect%20x=%224%22%20y=%222%22%20width=%221%22%20height=%221%22%20fill=%22%239BD25B%22/%3E%3Crect%20x=%220%22%20y=%223%22%20width=%221%22%20height=%221%22%20fill=%22%239BD25B%22/%3E%3Crect%20x=%221%22%20y=%223%22%20width=%221%22%20height=%221%22%20fill=%22%239BD25B%22/%3E%3Crect%20x=%222%22%20y=%223%22%20width=%221%22%20height=%221%22%20fill=%22%239BD25B%22/%3E%3Crect%20x=%223%22%20y=%223%22%20width=%221%22%20height=%221%22%20fill=%22%239BD25B%22/%3E%3Crect%20x=%224%22%20y=%223%22%20width=%221%22%20height=%221%22%20fill=%22%239BD25B%22/%3E%3Crect%20x=%221%22%20y=%224%22%20width=%221%22%20height=%221%22%20fill=%22%239BD25B%22/%3E%3Crect%20x=%222%22%20y=%224%22%20width=%221%22%20height=%221%22%20fill=%22%239BD25B%22/%3E%3Crect%20x=%223%22%20y=%224%22%20width=%221%22%20height=%221%22%20fill=%22%239BD25B%22/%3E%3C/svg%3E") !important}
 .dots i.ok.f{background-image:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%205%205%22%20shape-rendering=%22crispEdges%22%3E%3Crect%20x=%222%22%20y=%220%22%20width=%221%22%20height=%221%22%20fill=%22%239BD25B%22/%3E%3Crect%20x=%221%22%20y=%221%22%20width=%221%22%20height=%221%22%20fill=%22%239BD25B%22/%3E%3Crect%20x=%222%22%20y=%221%22%20width=%221%22%20height=%221%22%20fill=%22%239BD25B%22/%3E%3Crect%20x=%223%22%20y=%221%22%20width=%221%22%20height=%221%22%20fill=%22%239BD25B%22/%3E%3Crect%20x=%220%22%20y=%222%22%20width=%221%22%20height=%221%22%20fill=%22%239BD25B%22/%3E%3Crect%20x=%221%22%20y=%222%22%20width=%221%22%20height=%221%22%20fill=%22%239BD25B%22/%3E%3Crect%20x=%222%22%20y=%222%22%20width=%221%22%20height=%221%22%20fill=%22%232F5A35%22/%3E%3Crect%20x=%223%22%20y=%222%22%20width=%221%22%20height=%221%22%20fill=%22%239BD25B%22/%3E%3Crect%20x=%224%22%20y=%222%22%20width=%221%22%20height=%221%22%20fill=%22%239BD25B%22/%3E%3Crect%20x=%221%22%20y=%223%22%20width=%221%22%20height=%221%22%20fill=%22%239BD25B%22/%3E%3Crect%20x=%222%22%20y=%223%22%20width=%221%22%20height=%221%22%20fill=%22%239BD25B%22/%3E%3Crect%20x=%223%22%20y=%223%22%20width=%221%22%20height=%221%22%20fill=%22%239BD25B%22/%3E%3Crect%20x=%222%22%20y=%224%22%20width=%221%22%20height=%221%22%20fill=%22%239BD25B%22/%3E%3C/svg%3E") !important}
+/* Titel-Schrift Press Start 2P: nur eine Stärke (kein Fett), Grössen in 8-px-Schritten, damit die Pixel scharf bleiben */
+h1,h2,h3,.wordmark,.card .n,.wd .num,.lvl .ln,.wxn b,.prow .n{font-weight:400 !important;letter-spacing:0;line-height:1.35}
+.wordmark{font-size:20px}
+h2{font-size:16px}
+h3,.sitegroup h3{font-size:12px}
+.card .n,.prow .n,.lvl .ln,.wxn b{font-size:12px}
+.lvl .ln{font-size:16px}
+.wd .num{font-size:16px;margin:4px 0}
+dialog h2,.sheethead h2{font-size:16px;line-height:1.5}
