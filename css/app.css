@@ -448,5 +448,6 @@ dialog h2,.sheethead h2{font-size:16px;line-height:1.5}
 /* Heute: Feld flächig in Moos (dunkelgrün, im Dunkelmodus hellgrün), ohne Wort «Heute» */
 .wd.now{background:var(--moss) !important;border-color:var(--moss) !important;color:var(--onmoss)}
 .wd.now b,.wd.now .num{color:var(--onmoss)}
-.wd.now .dots i{background-color:var(--onmoss) !important;outline:1px solid var(--onmoss)}
+/* Punkte immer freigestellt: kein Kästchen, nur eine 1-px-Kontur entlang der Pixelform, damit sie auf der grünen Fläche sichtbar bleiben */
+.wd.now .dots i{background-color:transparent !important;outline:0;filter:drop-shadow(1px 0 0 var(--onmoss)) drop-shadow(-1px 0 0 var(--onmoss)) drop-shadow(0 1px 0 var(--onmoss)) drop-shadow(0 -1px 0 var(--onmoss))}
 .wd.now .dots em{color:var(--onmoss)}
