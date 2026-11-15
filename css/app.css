@@ -391,7 +391,7 @@ label.check input{width:22px;height:22px;accent-color:var(--moss);flex:none}
 .chk.feed{border-color:var(--feed)}
 .chk.water.on{background:var(--water)}
 .chk.feed.on{background:var(--feed)}
-.chk.lat .pix{width:28px;height:24px}
+.chk.lat .pix{width:26px;height:22px}
 .pic .chk{width:30px;height:30px;border-radius:9px}
 .pic .chk .pix{width:16px;height:16px}
 .sglegend li i.ck{width:28px;height:28px;border-radius:8px}

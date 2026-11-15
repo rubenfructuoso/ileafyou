@@ -316,10 +316,18 @@ const LIGHT_LV = { shade: 1, partial: 1, bright: 2, sun: 3 }, WATER_LV = { dry: 
 for (const [k, n] of Object.entries(LIGHT_LV)) SIGN[k] = meter(SUN5, 'Y', n);
 for (const [k, n] of Object.entries(WATER_LV)) SIGN[k] = meter(DROP5, 'W', n);
 // Erledigen direkt in der Pflanzenliste: Haken (blau giessen, gelb düngen), angetippt = heute erledigt (nochmals = rückgängig),
-// Kalender mit Bogenpfeil = später erinnern (snoozeSheet). Pixel 9 × 9 bzw. 12 × 11 wie die übrigen Symbole.
+// Kalender mit «+1» = Erinnerung um einen Tag verschieben, jedes weitere Antippen einen Tag mehr (snoozeOne()). Pixel 9 × 9 bzw. 12 × 11 wie die übrigen Symbole.
 const CHECK = [".........", "........X", ".......XX", "X.....XX.", "XX...XX..", ".XX.XX...", "..XXX....", "...X.....", "........."];
 const checkPix = c => CHECK.map(r => r.replace(/X/g, c));
-const LATER = ["....MMMMMM....", "..MM......MM..", ".M..........M.", ".M.........MMM", ".M..........M.", "EEEEEEEE......", "ERRRRRRE......", "EKKKKKKE......", "EKEKKEKE......", "EKKKKKKE......", "EKEKKEKE......", "EEEEEEEE......"];
+const LATER = ["............M.", "........M..MM.", ".......MMM..M.", "........M...M.", "EEEEEEEE...MMM", "ERRRRRRE......", "EKKKKKKE......", "EKEKKEKE......", "EKKKKKKE......", "EKEKKEKE......", "EKKKKKKE......", "EEEEEEEE......"];   // Kalender mit «+1»
+const snoozedToday = (p, t) => p.log.filter(l => l.type === 'check' && l.for === t && dkey(l.date) === dkey(new Date())).sort((a, b) => b.date.localeCompare(a.date))[0] || null;
+function snoozeOne(id, t){
+  const p = getP(id); if (!p) return;
+  const s = snoozedToday(p, t);
+  if (!s){ logAction(id, 'check', '', { for: t, days: 1 }); return; }
+  s.days = (s.days || 1) + 1; save(); refresh();
+  toast(tr('check_' + t, { when: whenText(s.days) }));
+}
 function actsHtml(p){
   if (isPaused(p)) return '';
   let h = '', later = null;
@@ -328,7 +336,9 @@ function actsHtml(p){
     if (done && done.xp !== undefined) h += `<button class="chk ${t} on" data-action="unlog" data-type="${t}" data-id="${p.id}" aria-pressed="true" title="${esc(tr('act_undo_' + t))}" aria-label="${esc(tr('act_undo_' + t))}">${pixGrid(checkPix('H'))}</button>`;
     else if (d !== null && d <= 0){ h += `<button class="chk ${t}" data-action="log" data-type="${t}" data-id="${p.id}" aria-pressed="false" title="${esc(typeLabel(t))}" aria-label="${esc(typeLabel(t) + ': ' + p.name)}">${pixGrid(checkPix(t === 'feed' ? 'd' : 'W'))}</button>`; later = later || t; }
   }
-  if (later) h += `<button class="chk lat" data-action="later" data-type="${later}" data-id="${p.id}" title="${esc(tr('act_later'))}" aria-label="${esc(tr('act_later') + ': ' + p.name)}">${pixGrid(LATER)}</button>`;
+  // heute schon verschoben: Knopf bleibt, damit man weiter Tage dazugeben kann
+  later = later || ['water', 'feed'].find(t => snoozedToday(p, t));
+  if (later) h += `<button class="chk lat" data-action="snz1" data-type="${later}" data-id="${p.id}" title="${esc(tr('act_later'))}" aria-label="${esc(tr('act_later') + ': ' + p.name)}">${pixGrid(LATER)}</button>`;
   return h;
 }
 // Legende zu den Signets, aufklappbar unter der Suche; offen bleibt sie auch nach dem Neuzeichnen
@@ -366,7 +376,8 @@ function plantListHtml(){
   const vis = state.plants.filter(inView), view = plantView(), q = norm(plantQuery);
   if (!vis.length) return `<div class="calm">${tr('noPlantsHere')}</div>`;
   const hit = p => !q || [p.name, p.species, p.location, siteName(p.siteId), p.family].some(x => norm(x).includes(q));
-  const soon = p => Math.min(due(p,'water') ?? 999, due(p,'feed') ?? 999);   // Fälliges (giessen oder düngen) zuerst
+  // Fälliges (giessen oder düngen) zuerst; heute Verschobenes bleibt oben, damit man weiter «+1» tippen kann
+  const soon = p => snoozedToday(p, 'water') || snoozedToday(p, 'feed') ? 0 : Math.min(due(p,'water') ?? 999, due(p,'feed') ?? 999);
   const shown = [...vis].sort((a,b) => soon(a) - soon(b)).filter(p => (!roomFilter || roomOf(p) === roomFilter) && hit(p));
   if (!shown.length) return `<div class="calm">${tr('search_none', { q: esc(plantQuery) })}</div>`;
   const status = p => {
@@ -881,6 +892,7 @@ document.addEventListener('click', e => {
   else if (action === 'rules') celebrate('rules');
   else if (action === 'day'){ const i = +b.dataset.i; selDay = selDay === i ? null : i; render(); }
   else if (action === 'later') snoozeSheet(id, type);
+  else if (action === 'snz1') snoozeOne(id, type);
   else if (action === 'snz'){ $('#celDlg').close(); logAction(id, 'check', '', { for: type, days: +b.dataset.n }); }
   else if (action === 'site'){ state.site = b.dataset.sid || null; roomFilter = null; save(); render(); }
   else if (action === 'sites') siteSheet();
