@@ -93,11 +93,13 @@ state = {
 
 Die Vorschau „Nächste Tage“ zeigt 28 Tage voraus und 14 zurück (`WEEK_DAYS`, `WEEK_PAST`), sieben sichtbar, startet bei heute. Künftige Tage rechnen Wiederholungen voraus (`dayItems()`), vergangene zeigen Erledigtes aus dem Protokoll und Liegengebliebenes (`pastDay()`, Ring-Punkte).
 
+Einen eigenen Bereich „Heute dran“ gibt es nicht mehr: Fälliges steht oben in „Deine Pflanzen“ (sortiert nach Giessen oder Düngen), mit Pixel-Knöpfen `actsHtml()`: Haken blau (giessen) bzw. gelb (düngen) = erledigt, gefüllt = heute erledigt (nochmals tippen = rückgängig, `unlogToday()`), Kalender mit Bogenpfeil (`LATER`) = später erinnern (`snoozeSheet()`). Ist nichts fällig, steht „Alles versorgt. Als Nächstes …“ über der Liste. In „Nur Bilder“ ersetzen die Knöpfe die Signets.
+
 „Deine Pflanzen“ (`plantListHtml()`): Ansicht „Kacheln“, „Liste“ (kleines Bild, Name, Art, nächstes Giessen) oder „Nur Bilder“ (dichtes Raster ohne Text, roter Rand = Giessen fällig), umschaltbar über Pixel-Symbole (`VIEW_ICON`), pro Gerät in localStorage `ileafyou.view`; Suchfeld `#plantQ` filtert beim Tippen nach Name, Art, Raum, Ort und Familie (ohne Akzente), ersetzt nur `#plantList`, damit der Fokus bleibt.
 
 Signets (`signsHtml()`, Pixel-Raster 9 × 9 in `SIGN`) in allen drei Ansichten und bei den Pflegetipps: drinnen/draussen (`placeOf()`: `in` Haus = Zimmerpflanze, `inout` Haus mit Sonne = im Sommer draussen bzw. Winterquartier, `out` Baum = bleibt draussen; aus `p.winter` bei Pflanzen draussen, sonst `coldFor()`), Licht und Wasser als Skala in drei Stufen (`meter()`: drei 5 × 5-Pixel-Sonnen bzw. -Tropfen, nicht erreichte grau; `LIGHT_LV` shade/partial 1, bright 2, sun 3; `WATER_LV` dry 1, moderate/orchid 2, moist 3) aus `careRule()`. Bedeutung als `title`/`aria-label` (`sg_*`, `sl_*`, `sw_*`) und als aufklappbare Legende „Was bedeuten die Zeichen?“ unter der Suche (`legendHtml()`, `lg_*`).
 
-Orte filtern „Heute dran“, „Nächste Tage“ und die Pflanzenliste. Punkte, Levels, Serie und der Bonus „Tag geschafft“ gelten über alle Orte gemeinsam. Bei „Alle Orte“ ist die Pflanzenliste nach Ort gruppiert. Ein Ort lässt sich nur löschen, wenn er leer ist. Alte Daten ohne `sites` migriert `migrateSites()` auf „Zuhause“.
+Orte filtern „Nächste Tage“ und die Pflanzenliste. Punkte, Levels, Serie und der Bonus „Tag geschafft“ gelten über alle Orte gemeinsam. Bei „Alle Orte“ ist die Pflanzenliste nach Ort gruppiert. Ein Ort lässt sich nur löschen, wenn er leer ist. Alte Daten ohne `sites` migriert `migrateSites()` auf „Zuhause“.
 
 Log-Typen: `water`, `feed`, `repot`, `note`, `photo` (mit `img`), `check` (Später/Erde feucht, mit `for` und `days`; der Text wird beim Anzeigen übersetzt, nicht gespeichert).
 
@@ -124,7 +126,7 @@ Diagnose Push: `cron.php` schreibt `cron_last` und pro Abo das letzte Ergebnis (
 
 ## Stand
 
-Fertig: vier Sprachen, Pflanzen erfassen und bearbeiten, Fälligkeiten, „Heute dran“, Wochenvorschau, Protokoll, Foto-Tagebuch, Später-Funktion, mehrere Orte mit Räume-Filter, Ferienmodus, Levels, Serie, Abzeichen, Beispielgarten, Pflegevorschläge (`js/care.js`), Datensicherung (Export/Import), Speicher in IndexedDB, Schriften selbst gehostet (`fonts/`), PWA (installierbar, offline, Button „App installieren“ mit Anleitung fürs iPhone), Erkennungs-Proxy, Konten mit Login, Sync zwischen Geräten, Einstellungen, Pflegetipps, Push-Erinnerungen, Pflanzen draussen mit Frostwarnungen, Pflanzenliste mit Suche und Ansichten Kacheln/Liste/Nur Bilder.
+Fertig: vier Sprachen, Pflanzen erfassen und bearbeiten, Fälligkeiten, Fälliges in der Pflanzenliste, Wochenvorschau, Protokoll, Foto-Tagebuch, Später-Funktion, mehrere Orte mit Räume-Filter, Ferienmodus, Levels, Serie, Abzeichen, Beispielgarten, Pflegevorschläge (`js/care.js`), Datensicherung (Export/Import), Speicher in IndexedDB, Schriften selbst gehostet (`fonts/`), PWA (installierbar, offline, Button „App installieren“ mit Anleitung fürs iPhone), Erkennungs-Proxy, Konten mit Login, Sync zwischen Geräten, Einstellungen, Pflegetipps, Push-Erinnerungen, Pflanzen draussen mit Frostwarnungen, Pflanzenliste mit Suche und Ansichten Kacheln/Liste/Nur Bilder.
 
 Push über Google (Android, Chrome) im Einsatz geprüft; Apple (iPhone) und Mozilla noch ungetestet. Open-Meteo und GBIF sind nur mit simulierten Antworten getestet.
 

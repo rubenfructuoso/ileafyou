@@ -286,21 +286,10 @@ function render(){
     return;
   }
   const vis = plants.filter(inView);
+  // «Heute dran» gibt es nicht mehr als eigenen Bereich: fällige Pflanzen stehen oben in «Deine Pflanzen», mit Haken und «Später»
   const all = vis.flatMap(p => ['water','feed'].map(t => ({ p, t, d: due(p, t) }))).filter(x => x.d !== null);
-  const tasks = all.filter(x => x.d <= 0).sort((a,b) => a.d - b.d);
-  let today;
-  if (tasks.length){
-    today = tasks.map(({p,t,d}) => `
-      <div class="task">
-        ${thumb(p,'thumb')}
-        <button class="t" data-action="open" data-id="${p.id}"><div class="n">${esc(p.name)}</div><div class="s ${d < 0 ? 'late' : ''}">${verb(t)} ${dueText(d)}${siteTag(p)}</div></button>
-        <button class="later" data-action="later" data-type="${t}" data-id="${p.id}">${tr('later')}</button>
-        <button class="do ${t === 'feed' ? 'feed' : ''}" data-action="log" data-type="${t}" data-id="${p.id}">${typeLabel(t)}</button>
-      </div>`).join('');
-  } else {
-    const next = all.sort((a,b) => a.d - b.d)[0];
-    today = `<div class="calm">${tr('allDone')}${next ? tr('nextUp', { name: esc(next.p.name), verb: verbL(next.t), when: dueText(next.d) }) : ''}</div>`;
-  }
+  const next = all.sort((a,b) => a.d - b.d)[0];
+  const calm = next && next.d <= 0 ? '' : `<p class="calm">${tr('allDone')}${next ? tr('nextUp', { name: esc(next.p.name), verb: verbL(next.t), when: dueText(next.d) }) : ''}</p>`;
   const rooms = [...new Set(vis.map(roomOf))];
   if (roomFilter && !rooms.includes(roomFilter)) roomFilter = null;
   const chips = rooms.length > 1 ? `<div class="chips"><button class="chip ${roomFilter ? '' : 'on'}" data-action="room" data-room="">${tr('all')}</button>${rooms.map(r => `<button class="chip ${roomFilter === r ? 'on' : ''}" data-action="room" data-room="${esc(r)}">${esc(r)}</button>`).join('')}</div>` : '';
@@ -308,7 +297,7 @@ function render(){
   const view = plantView();
   const tools = vis.length ? `<div class="ptools"><input type="search" id="plantQ" value="${esc(plantQuery)}" placeholder="${esc(tr('search_ph'))}" aria-label="${esc(tr('search_ph'))}" autocomplete="off"><div class="seg vseg">${VIEWS.map(v => `<button type="button" data-action="view" data-view="${v}" class="${view === v ? 'on' : ''}" aria-pressed="${view === v}" aria-label="${esc(tr('v_' + v))}" title="${esc(tr('v_' + v))}">${viewSvg(v)}</button>`).join('')}</div></div>` : '';
   const cards = `<div id="plantList">${plantListHtml()}</div>`;
-  $('#app').innerHTML = `${lvlHtml()}${sitesBar()}${vac}${typeof pushNudgeHtml === 'function' ? pushNudgeHtml() : ''}${outdoorHtml()}<section><h2>${tr('h_today')}</h2><div class="today">${today}</div></section><section><h2>${tr('h_next')}</h2>${weekHtml()}</section><section><h2>${tr('h_plants')}</h2>${tools}${vis.length ? legendHtml() : ''}${chips}${cards}</section><section><h2>${tr('h_badges')}</h2>${badgesHtml()}</section>${footHtml()}`;
+  $('#app').innerHTML = `${lvlHtml()}${sitesBar()}${vac}${typeof pushNudgeHtml === 'function' ? pushNudgeHtml() : ''}${outdoorHtml()}<section><h2>${tr('h_next')}</h2>${weekHtml()}</section><section><h2>${tr('h_plants')}</h2>${calm}${tools}${vis.length ? legendHtml() : ''}${chips}${cards}</section><section><h2>${tr('h_badges')}</h2>${badgesHtml()}</section>${footHtml()}`;
   const wk = $('.week'); if (wk) wk.scrollLeft = weekScroll ?? wk.querySelector('.now').offsetLeft - wk.firstElementChild.offsetLeft;
 }
 /* ---------- Pflanzenliste: Kacheln oder Liste (pro Gerät gemerkt), Suche beim Tippen ---------- */
@@ -326,6 +315,22 @@ const meter = (shape, col, n) => shape.map(r => [0, 1, 2].map(i => r.replace(/[A
 const LIGHT_LV = { shade: 1, partial: 1, bright: 2, sun: 3 }, WATER_LV = { dry: 1, moderate: 2, orchid: 2, moist: 3 };
 for (const [k, n] of Object.entries(LIGHT_LV)) SIGN[k] = meter(SUN5, 'Y', n);
 for (const [k, n] of Object.entries(WATER_LV)) SIGN[k] = meter(DROP5, 'W', n);
+// Erledigen direkt in der Pflanzenliste: Haken (blau giessen, gelb düngen), angetippt = heute erledigt (nochmals = rückgängig),
+// Kalender mit Bogenpfeil = später erinnern (snoozeSheet). Pixel 9 × 9 bzw. 12 × 11 wie die übrigen Symbole.
+const CHECK = [".........", "........X", ".......XX", "X.....XX.", "XX...XX..", ".XX.XX...", "..XXX....", "...X.....", "........."];
+const checkPix = c => CHECK.map(r => r.replace(/X/g, c));
+const LATER = ["....MMMMMM....", "..MM......MM..", ".M..........M.", ".M.........MMM", ".M..........M.", "EEEEEEEE......", "ERRRRRRE......", "EKKKKKKE......", "EKEKKEKE......", "EKKKKKKE......", "EKEKKEKE......", "EEEEEEEE......"];
+function actsHtml(p){
+  if (isPaused(p)) return '';
+  let h = '', later = null;
+  for (const t of ['water', 'feed']){
+    const done = loggedToday(p, t), d = due(p, t);
+    if (done && done.xp !== undefined) h += `<button class="chk ${t} on" data-action="unlog" data-type="${t}" data-id="${p.id}" aria-pressed="true" title="${esc(tr('act_undo_' + t))}" aria-label="${esc(tr('act_undo_' + t))}">${pixGrid(checkPix('H'))}</button>`;
+    else if (d !== null && d <= 0){ h += `<button class="chk ${t}" data-action="log" data-type="${t}" data-id="${p.id}" aria-pressed="false" title="${esc(typeLabel(t))}" aria-label="${esc(typeLabel(t) + ': ' + p.name)}">${pixGrid(checkPix(t === 'feed' ? 'd' : 'W'))}</button>`; later = later || t; }
+  }
+  if (later) h += `<button class="chk lat" data-action="later" data-type="${later}" data-id="${p.id}" title="${esc(tr('act_later'))}" aria-label="${esc(tr('act_later') + ': ' + p.name)}">${pixGrid(LATER)}</button>`;
+  return h;
+}
 // Legende zu den Signets, aufklappbar unter der Suche; offen bleibt sie auch nach dem Neuzeichnen
 let legendOpen = false;
 function legendHtml(){
@@ -333,7 +338,8 @@ function legendHtml(){
   return `<details class="sglegend" ${legendOpen ? 'open' : ''}><summary>${tr('lg_title')}</summary><ul class="sg">
     ${row('in', tr('sg_in'))}${row('inout', tr('sg_inout'))}${row('out', tr('sg_out'))}
     ${row('shade', tr('lg_light1'), 1)}${row('bright', tr('sl_bright'), 1)}${row('sun', tr('sl_sun'), 1)}
-    ${row('dry', tr('sw_dry'), 1)}${row('moderate', tr('lg_water2'), 1)}${row('moist', tr('sw_moist'), 1)}</ul></details>`;
+    ${row('dry', tr('sw_dry'), 1)}${row('moderate', tr('lg_water2'), 1)}${row('moist', tr('sw_moist'), 1)}
+    <li><i class="ck water">${pixGrid(checkPix('W'))}</i><span>${tr('lg_chk_water')}</span></li><li><i class="ck feed">${pixGrid(checkPix('d'))}</i><span>${tr('lg_chk_feed')}</span></li><li><i class="ck">${pixGrid(LATER)}</i><span>${tr('act_later')}</span></li></ul></details>`;
 }
 document.addEventListener('toggle', e => { if (e.target.classList && e.target.classList.contains('sglegend')) legendOpen = e.target.open; }, true);
 // drinnen (Zimmerpflanze), im Sommer draussen (Winterquartier) oder bleibt draussen (winterhart, mit Schutz, einjährig)
@@ -360,9 +366,15 @@ function plantListHtml(){
   const vis = state.plants.filter(inView), view = plantView(), q = norm(plantQuery);
   if (!vis.length) return `<div class="calm">${tr('noPlantsHere')}</div>`;
   const hit = p => !q || [p.name, p.species, p.location, siteName(p.siteId), p.family].some(x => norm(x).includes(q));
-  const shown = [...vis].sort((a,b) => (due(a,'water') ?? 999) - (due(b,'water') ?? 999)).filter(p => (!roomFilter || roomOf(p) === roomFilter) && hit(p));
+  const soon = p => Math.min(due(p,'water') ?? 999, due(p,'feed') ?? 999);   // Fälliges (giessen oder düngen) zuerst
+  const shown = [...vis].sort((a,b) => soon(a) - soon(b)).filter(p => (!roomFilter || roomOf(p) === roomFilter) && hit(p));
   if (!shown.length) return `<div class="calm">${tr('search_none', { q: esc(plantQuery) })}</div>`;
-  const status = p => { const d = due(p, 'water'); return isPaused(p) ? { d: null, t: tr('paused_until', { date: pauseDate(p) }) } : d === null ? { d, t: '' } : { d, t: `${verb('water')} ${dueText(d)}` }; };
+  const status = p => {
+    const d = due(p, 'water'), df = due(p, 'feed'), feedNow = df !== null && df <= 0 ? `${verb('feed')} ${dueText(df)}` : '';
+    if (isPaused(p)) return { d: null, t: tr('paused_until', { date: pauseDate(p) }) };
+    if (d === null) return { d: feedNow ? df : null, t: feedNow };
+    return { d: Math.min(d, df ?? d), t: `${verb('water')} ${dueText(d)}${feedNow ? ' · ' + feedNow : ''}` };
+  };
   const card = p => {
     const { d, t } = status(p);
     let g = d === null ? (t ? `<div class="gl paused">${t}</div>` : '') : '';
@@ -370,10 +382,14 @@ function plantListHtml(){
       const frac = Math.max(0, Math.min(1, d / +p.waterEvery));
       g = `<div class="gauge ${d <= 0 ? 'dry' : ''}"><i style="width:${d <= 0 ? 100 : Math.max(6, frac*100)}%"></i></div><div class="gl">${t}</div>`;
     }
-    return `<button class="card" data-action="open" data-id="${p.id}">${thumb(p,'ph')}<div class="b"><div class="n">${esc(p.name)}</div><div class="sp">${esc(p.species || p.location || '\u00a0')}</div>${signsHtml(p)}${g}</div></button>`;
+    const a = actsHtml(p);
+    return `<div class="card"><button class="open" data-action="open" data-id="${p.id}">${thumb(p,'ph')}<div class="b"><div class="n">${esc(p.name)}</div><div class="sp">${esc(p.species || p.location || '\u00a0')}</div>${signsHtml(p)}${g}</div></button>${a ? `<div class="acts">${a}</div>` : ''}</div>`;
   };
-  const row = p => { const { d, t } = status(p); return `<button class="prow" data-action="open" data-id="${p.id}">${thumb(p,'thumb')}<div class="t"><div class="n">${esc(p.name)}</div><div class="s">${signsHtml(p)}<span>${esc(p.species || p.location || '')}</span></div></div><div class="due ${d !== null && d <= 0 ? 'late' : ''}">${t}</div></button>`; };
-  const pic = p => { const { d } = status(p); return `<button class="pic ${d !== null && d <= 0 ? 'late' : ''}" data-action="open" data-id="${p.id}" aria-label="${esc(p.name)}" title="${esc(p.name)}">${thumb(p,'ph')}${signsHtml(p)}</button>`; };
+  const row = p => {
+    const { d, t } = status(p), a = actsHtml(p), late = d !== null && d <= 0 ? 'late' : '';
+    return `<div class="prow"><button class="open" data-action="open" data-id="${p.id}">${thumb(p,'thumb')}<div class="t"><div class="n">${esc(p.name)}</div><div class="s">${signsHtml(p)}<span>${esc(p.species || p.location || '')}</span></div>${a && t ? `<div class="due ${late}">${t}</div>` : ''}</div>${!a ? `<div class="due ${late}">${t}</div>` : ''}</button>${a ? `<div class="acts">${a}</div>` : ''}</div>`;
+  };
+  const pic = p => { const { d } = status(p), a = actsHtml(p); return `<div class="pic ${d !== null && d <= 0 ? 'late' : ''}"><button class="open" data-action="open" data-id="${p.id}" aria-label="${esc(p.name)}" title="${esc(p.name)}">${thumb(p,'ph')}${signsHtml(p)}</button>${a ? `<div class="acts">${a}</div>` : ''}</div>`; };
   const box = ps => view === 'list' ? `<div class="plist">${ps.map(row).join('')}</div>` : view === 'pics' ? `<div class="pics">${ps.map(pic).join('')}</div>` : `<div class="grid">${ps.map(card).join('')}</div>`;
   const grouped = !state.site && state.sites.length > 1;
   return grouped ? state.sites.map(s => { const ps = shown.filter(p => p.siteId === s.id); return ps.length ? `<div class="sitegroup"><h3>${esc(s.name)}</h3>${box(ps)}</div>` : ''; }).join('') : box(shown);

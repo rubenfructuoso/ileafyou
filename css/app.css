@@ -376,3 +376,28 @@ label.check input{width:22px;height:22px;accent-color:var(--moss);flex:none}
 .nudge .later{color:var(--muted);font-weight:400}
 @media (max-width:420px){ .nudge{flex-wrap:wrap} .nudge .nbtn{margin-left:auto} }
 .nudge select{width:auto;display:inline-block;padding:2px 6px;margin:0 2px;font:inherit;font-weight:700;border-radius:8px}
+/* Erledigen in der Pflanzenliste: Haken und «Später» */
+.card > .open{display:flex;flex-direction:column;width:100%;padding:0;background:none;text-align:left;flex:1}
+.card .acts{display:flex;gap:8px;padding:0 12px 12px}
+.prow{padding:0;gap:0}
+.prow > .open{display:flex;align-items:center;gap:12px;flex:1;min-width:0;padding:8px 12px;background:none;text-align:left}
+.prow .acts{display:flex;gap:6px;padding-right:10px;flex:none}
+.prow .t .due{text-align:left;max-width:none;font-size:.8rem}
+.pic > .open{display:block;width:100%;height:100%;padding:0;background:none;position:relative}
+.pic .acts{position:absolute;top:3px;right:3px;display:flex;flex-direction:column;gap:3px}
+.chk{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:#E3E8D8;border:2px solid transparent;flex:none;padding:0}
+.chk .pix{width:22px;height:22px}
+.chk.water{border-color:var(--water)}
+.chk.feed{border-color:var(--feed)}
+.chk.water.on{background:var(--water)}
+.chk.feed.on{background:var(--feed)}
+.chk.lat .pix{width:28px;height:24px}
+.pic .chk{width:30px;height:30px;border-radius:9px}
+.pic .chk .pix{width:16px;height:16px}
+.sglegend li i.ck{width:28px;height:28px;border-radius:8px}
+.sglegend li i.ck .pix{width:16px;height:16px}
+.sglegend li i.ck.water{border:2px solid var(--water)}
+.sglegend li i.ck.feed{border:2px solid var(--feed)}
+.pic:has(.acts) .sg{display:none}
+.pic .chk.lat .pix{width:20px;height:17px}
+.sglegend li i.ck:last-child .pix{width:19px;height:16px}
