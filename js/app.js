@@ -525,7 +525,6 @@ function dayItems(i){
 }
 const dayDate = i => { const d = new Date(); d.setDate(d.getDate() + i); return d; };
 // Wochenvorschau: Tipp auf einen Tag zeigt die Aufgaben direkt darunter, nochmals tippen schliesst
-let selDay = null;
 const WEEK_DAYS = 28, WEEK_PAST = 14;   // vier Wochen voraus, zwei zurück; sieben sichtbar, waagrecht wischen
 function weekHtml(){
   // höchstens 6 Punkte pro Tag, sonst 5 und «+n», damit die Felder gleich hoch bleiben
@@ -538,25 +537,8 @@ function weekHtml(){
     return dotCap([...ok(done), ...missed.map(() => '<i class="miss"></i>')]);
   };
   const week = `<div class="week">${Array.from({ length: WEEK_PAST + WEEK_DAYS }, (_, k) => k - WEEK_PAST).map(i => { const dt = dayDate(i);
-    return `<button class="wd ${i === 0 ? 'now' : ''} ${i < 0 ? 'past' : ''} ${i === selDay ? 'sel' : ''}" data-action="day" data-i="${i}" aria-expanded="${i === selDay}"><b>${i === 0 ? tr('today_s') : fmtDay(dt, { weekday:'short' })}</b><span class="num">${dt.getDate()}</span><span class="dots">${dots(i)}</span></button>`; }).join('')}</div>`;
-  return week + (selDay === null ? `<div class="hint">${tr('weekHint')}</div>` : dayHtml(selDay));
-}
-function dayHtml(i){
-  if (i < 0) return pastHtml(i);
-  const items = dayItems(i), dt = dayDate(i);
-  const h = i === 0 ? tr('today') : i === 1 ? tr('tomorrow') : fmtDay(dt, { weekday:'long', day:'numeric', month:'long' });
-  const list = items.length ? items.map(({p,t,d}) => { const late = i === 0 && d < 0; return `<button class="task daytask" data-action="open" data-id="${p.id}">${thumb(p,'thumb')}<div class="t"><div class="n">${esc(p.name)}</div><div class="s ${late ? 'late' : ''}">${verb(t)}${late ? ', ' + dueText(d) : ''}${siteTag(p)}</div></div></button>`; }).join('') : `<div class="calm">${tr('nothing')}</div>`;
-  return `<div class="dayinfo"><h3>${h}</h3>${list}</div>`;
-}
-
-function pastHtml(i){
-  const { done, missed } = pastDay(i), dt = dayDate(i);
-  const h = i === -1 ? tr('yesterday') : fmtDay(dt, { weekday:'long', day:'numeric', month:'long' });
-  const time = d => new Date(d).toLocaleTimeString(loc(), { hour: '2-digit', minute: '2-digit' });
-  const row = (p, s, cls) => `<button class="task daytask" data-action="open" data-id="${p.id}">${thumb(p,'thumb')}<div class="t"><div class="n">${esc(p.name)}</div><div class="s ${cls}">${s}${siteTag(p)}</div></div></button>`;
-  const doneH = done.length ? `<h4 class="dayh">${tr('h_done')}</h4>${done.map(({ p, l }) => row(p, `${typeLabel(l.type)}, ${time(l.date)}`, 'ok')).join('')}` : '';
-  const missH = missed.length ? `<h4 class="dayh">${tr('h_missed')}</h4>${missed.map(({ p, t, d }) => row(p, `${verb(t)}${d < 0 ? ', ' + tr('overdueAt', { n: -d }) : ''}`, 'late')).join('')}` : '';
-  return `<div class="dayinfo"><h3>${h}</h3>${doneH}${missH || (doneH ? '' : `<div class="calm">${tr('nothingPast')}</div>`)}</div>`;
+    return `<div class="wd ${i === 0 ? 'now' : ''} ${i < 0 ? 'past' : ''}"><b>${i === 0 ? tr('today_s') : fmtDay(dt, { weekday:'short' })}</b><span class="num">${dt.getDate()}</span><span class="dots">${dots(i)}</span></div>`; }).join('')}</div>`;
+  return week + `<div class="hint">${tr('weekHint')}</div>`;   // Details zu einem Tag gibt es nicht mehr: Fälliges steht in «Deine Pflanzen»
 }
 
 /* ---------- Erinnerungen einer Pflanze pausieren (pauseUntil = letzter Tag der Pause) ---------- */
@@ -894,7 +876,6 @@ document.addEventListener('click', e => {
   else if (action === 'unpause'){ const p = getP(id); if (p){ delete p.pauseUntil; save(); refresh(); toast(tr('pause_off', { name: p.name })); } }
   else if (action === 'note'){ const v = $('#noteIn').value.trim(); if (!v){ $('#noteIn').focus(); return; } logAction(id, 'note', v); }
   else if (action === 'rules') celebrate('rules');
-  else if (action === 'day'){ const i = +b.dataset.i; selDay = selDay === i ? null : i; render(); }
   else if (action === 'later') snoozeSheet(id, type);
   else if (action === 'snz1') snoozeOne(id, type);
   else if (action === 'snz'){ $('#celDlg').close(); logAction(id, 'check', '', { for: type, days: +b.dataset.n }); }

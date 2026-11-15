@@ -93,7 +93,7 @@ state = {
 }
 ```
 
-Die Vorschau „Nächste Tage“ zeigt 28 Tage voraus und 14 zurück (`WEEK_DAYS`, `WEEK_PAST`), sieben sichtbar, startet bei heute. Künftige Tage rechnen Wiederholungen voraus (`dayItems()`), vergangene zeigen Erledigtes aus dem Protokoll und Liegengebliebenes (`pastDay()`, Ring-Punkte).
+Die Vorschau „Nächste Tage“ zeigt 28 Tage voraus und 14 zurück (`WEEK_DAYS`, `WEEK_PAST`), sieben sichtbar, startet bei heute. Künftige Tage rechnen Wiederholungen voraus (`dayItems()`), vergangene zeigen Erledigtes aus dem Protokoll und Liegengebliebenes (`pastDay()`). Die Tage sind nicht antippbar (keine Detail-Liste mehr), Fälliges steht in „Deine Pflanzen“.
 
 Einen eigenen Bereich „Heute dran“ gibt es nicht mehr: Fälliges steht oben in „Deine Pflanzen“ (sortiert nach Giessen oder Düngen), mit Pixel-Knöpfen `actsHtml()`: Haken blau (giessen) bzw. gelb (düngen) = erledigt, gefüllt = heute erledigt (nochmals tippen = rückgängig, `unlogToday()`), Kalender mit „+1“ (`LATER`) = um einen Tag verschieben, jedes weitere Antippen am selben Tag +1 (`snoozeOne()`: erhöht `days` des heutigen `check`-Eintrags; der Knopf bleibt sichtbar, solange heute verschoben wurde). Ist nichts fällig, steht „Alles versorgt. Als Nächstes …“ über der Liste. In „Nur Bilder“ ersetzen die Knöpfe die Signets.
 
