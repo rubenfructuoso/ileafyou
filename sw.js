@@ -17,7 +17,8 @@ const SHELL = [
   'img/badge-96.png',
   'fonts/jetbrains-mono-latin.woff2',
   'fonts/jetbrains-mono-latin-ext.woff2',
-  'fonts/gluten-variable.woff2'
+  'fonts/pixelify-sans-latin.woff2',
+  'fonts/pixelify-sans-latin-ext.woff2'
 ];
 
 self.addEventListener('install', e => {

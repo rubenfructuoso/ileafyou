@@ -46,7 +46,7 @@ Die App bleibt grundsätzlich **kostenlos**. Eine KI-Erkennung als Abo ist eine 
 ## Corporate Design
 
 **Schriften** (beide SIL Open Font License):
-- *Gluten* für Logo, Titel, Pflanzennamen, Level-Namen
+- *Pixelify Sans* (Pixel-Schrift, variabel 400–700, `fonts/pixelify-sans-latin*.woff2`) für Logo, Titel, Pflanzennamen, Level-Namen. Rubéns Wunsch war CC Pixel Arcade; die gibt es nur über ein Adobe-Webprojekt, deshalb die freie Pixelify Sans
 - *JetBrains Mono* (Monospace, variabel 100–800, `fonts/jetbrains-mono-latin*.woff2`) für Text und Bedienung, 15 px
 
 **Farben** (Tokens in `css/app.css` unter `:root`, Dunkelmodus inklusive):
@@ -60,11 +60,11 @@ Die App bleibt grundsätzlich **kostenlos**. Eine KI-Erkennung als Abo ist eine 
 | Giesswasser | `#2F7CB0` | alles rund ums Giessen |
 | Dünger | `#E0A43A` | alles rund ums Düngen, Herz im Logo |
 
-**Spiel-Icons:** Abzeichen, Serie (Flamme) und „Tag geschafft“ (Medaille) sind 16×16-Pixel-Sprites im 16-Bit-Konsolenstil, definiert als Zeichenraster in `PIX` mit Palette `PIXPAL` in `app.js`, gerendert als SVG mit `crispEdges`. Eigene Motive, keine Figuren oder Gegenstände aus bestehenden Spielen. Neue Sprites im gleichen Raster und mit der gleichen Palette anlegen. Logo, Wachstumsstufen, Pflanzen-Symbole (`KINDS`, wählbar im Formular, wenn kein Foto da ist) und Spiel-Icons teilen Raster und Palette. Die App enthält keine Emojis mehr. Gluten bleibt für Titel, JetBrains Mono für Text.
+**Spiel-Icons:** Abzeichen, Serie (Flamme) und „Tag geschafft“ (Medaille) sind 16×16-Pixel-Sprites im 16-Bit-Konsolenstil, definiert als Zeichenraster in `PIX` mit Palette `PIXPAL` in `app.js`, gerendert als SVG mit `crispEdges`. Eigene Motive, keine Figuren oder Gegenstände aus bestehenden Spielen. Neue Sprites im gleichen Raster und mit der gleichen Palette anlegen. Logo, Wachstumsstufen, Pflanzen-Symbole (`KINDS`, wählbar im Formular, wenn kein Foto da ist) und Spiel-Icons teilen Raster und Palette. Die App enthält keine Emojis mehr. Pixelify Sans für Titel, JetBrains Mono für Text. Kleine Punkte im gleichen Raster: Wochenvorschau als Pixel-Tropfen (giessen), -Raute (düngen), -X (liegen geblieben), höchstens 6 pro Tag (sonst 5 und „+n“, `dotCap()`); Protokoll-Punkte als Pixel-Raute.
 
 **Pixel-Look der Flächen:** keine runden Ecken (`border-radius:0` global), Ecken in Treppenstufen per `clip-path: var(--pxc)` (Stufengrösse `--u`: 3 px gross, 2 px Knöpfe/Felder, 1,5 px Signets). Giess- und Level-Balken in 10 Blöcken (`mask` mit `repeating-linear-gradient`, Breite in 10-%-Schritten). Neue Flächen in die Liste der `clip-path`-Selektoren am Ende von `app.css` aufnehmen.
 
-**Logo:** Pixel-Topfpflanze (16×16) mit Herz am Topf („love“), daneben die Wortmarke „i leaf you“ klein in Gluten (glatt, nicht gepixelt). Das Logo ist `PLANTS[7]`, gerendert über `logoSvg()`; es bleibt so.
+**Logo:** Pixel-Topfpflanze (16×16) mit Herz am Topf („love“), daneben die Wortmarke „i leaf you“ in Pixelify Sans. Das Logo ist `PLANTS[7]`, gerendert über `logoSvg()`; es bleibt so.
 
 **Spielpflanze:** eigene 8 Wachstumsstufen in `GROW` (16 × 32 Pixel, gleicher Topf mit Herz), eine pro Level, gerendert über `plantSvg(stage)`; sie wächst in die Höhe. Auf der höchsten Stufe kommen als Überraschung drei Blumen mit Gesichtern dazu (`GROW_FLOWERS`, eigene SVG-Gruppen; e = Auge, m = Mund): sie wippen, blinzeln und „singen“ per CSS-Animation (`.flw`, `sway`, `blink`, `sing`; aus bei `prefers-reduced-motion`). In der Level-Übersicht bleibt die letzte Stufe eine Silhouette (`.secret`), bis sie erreicht ist.
 
