@@ -531,9 +531,11 @@ function weekHtml(){
   // höchstens 6 Punkte pro Tag, sonst 5 und «+n», damit die Felder gleich hoch bleiben
   const dotCap = a => a.length > 6 ? a.slice(0, 5).join('') + `<em>+${a.length - 5}</em>` : a.join('');
   const dots = i => {
-    if (i >= 0) return dotCap(dayItems(i).map(x => `<i class="${x.t === 'feed' ? 'f' : ''}"></i>`));
+    const ok = d => d.filter(x => ['water', 'feed'].includes(x.l.type)).map(x => `<i class="ok${x.l.type === 'feed' ? ' f' : ''}"></i>`);   // erledigt = hellgrün
+    if (i > 0) return dotCap(dayItems(i).map(x => `<i class="${x.t === 'feed' ? 'f' : ''}"></i>`));
+    if (i === 0) return dotCap([...ok(pastDay(0).done), ...dayItems(0).map(x => `<i class="${x.t === 'feed' ? 'f' : ''}"></i>`)]);
     const { done, missed } = pastDay(i);   // gefüllt = erledigt, Ring = liegen geblieben
-    return dotCap([...done.filter(x => ['water', 'feed'].includes(x.l.type)).map(x => `<i class="${x.l.type === 'feed' ? 'f' : ''}"></i>`), ...missed.map(() => '<i class="miss"></i>')]);
+    return dotCap([...ok(done), ...missed.map(() => '<i class="miss"></i>')]);
   };
   const week = `<div class="week">${Array.from({ length: WEEK_PAST + WEEK_DAYS }, (_, k) => k - WEEK_PAST).map(i => { const dt = dayDate(i);
     return `<button class="wd ${i === 0 ? 'now' : ''} ${i < 0 ? 'past' : ''} ${i === selDay ? 'sel' : ''}" data-action="day" data-i="${i}" aria-expanded="${i === selDay}"><b>${i === 0 ? tr('today_s') : fmtDay(dt, { weekday:'short' })}</b><span class="num">${dt.getDate()}</span><span class="dots">${dots(i)}</span></button>`; }).join('')}</div>`;
