@@ -47,7 +47,8 @@ async function unpack(s){
   for (const p of s.plants){ if (isRef(p.photo)) refs.add(p.photo.slice(10)); for (const l of p.log || []) if (isRef(l.img)) refs.add(l.img.slice(10)); }
   for (const h of refs) if (!known.has(h)){ const r = await api('sync.php?a=photo&h=' + h).catch(e => { if (e.status === 404) return null; throw e; }); if (r){ known.set(h, r.data); hashOf.set(r.data, h); } }
   const res = v => isRef(v) ? known.get(v.slice(10)) || null : v;
-  for (const p of s.plants){ p.photo = res(p.photo); for (const l of p.log || []) if (l.img !== undefined){ l.img = res(l.img); if (!l.img) delete l.img; } }
+  const localPhoto = new Map(state.plants.map(p => [p.id, p.photo]));
+  for (const p of s.plants){ const ref = isRef(p.photo); p.photo = res(p.photo); if (!p.photo && ref) p.photo = localPhoto.get(p.id) || null; for (const l of p.log || []) if (l.img !== undefined){ l.img = res(l.img); if (!l.img) delete l.img; } }
   return s;
 }
 
@@ -60,8 +61,12 @@ function merge(loc, rem){
   for (const p of loc.plants || []){
     const r = plants.get(p.id);
     if (!r){ plants.set(p.id, p); continue; }
-    const log = new Map([...(r.log || []), ...(p.log || [])].map(l => [l.id, l]));
-    plants.set(p.id, { ...r, ...p, log: [...log.values()].sort((a, b) => a.date.localeCompare(b.date)) });
+    // neuere Fassung gewinnt (mod), bei Gleichstand das Gerät; Protokolle vereint, gleicher Eintrag ebenfalls nach mod
+    const newer = (a, b) => (a.mod || 0) > (b.mod || 0) ? a : b;   // b = lokal, gewinnt bei Gleichstand
+    const log = new Map();
+    for (const l of [...(r.log || []), ...(p.log || [])]){ const o = log.get(l.id); log.set(l.id, o ? newer(o, l) : l); }
+    const base = newer(r, p);
+    plants.set(p.id, { ...base, log: [...log.values()].sort((a, b) => a.date.localeCompare(b.date)) });
   }
   out.plants = [...plants.values()].filter(p => !gone.has(p.id));
   out.deleted = deleted;
@@ -99,6 +104,7 @@ async function pull(){
   lastSent = JSON.stringify(r.state);
   const remote = await unpack(r.state);
   state = sync.dirty ? merge(state, remote) : remote;
+  if (typeof stampReset === 'function') stampReset();
   sync.rev = r.rev; normalize(); saveLocal(); saveSync();
   if (started){ applyStatic(); refresh(); }
   return true;
@@ -113,7 +119,7 @@ async function push(tries = 0){
     sync.rev = r.rev; sync.force = false; sync.dirty = changeN !== n; lastSent = js; saveSync();
   } catch(e){
     if (e.status !== 409 || tries > 2) throw e;
-    state = merge(state, await unpack(e.data.state)); sync.rev = e.data.rev; normalize(); saveLocal();
+    state = merge(state, await unpack(e.data.state)); sync.rev = e.data.rev; normalize(); stampReset(); saveLocal();
     if (started) refresh();
     return push(tries + 1);
   }
@@ -365,7 +371,7 @@ function startApp(){
   window.addEventListener('online', () => { if (account.email) syncNow().catch(() => {}); });
 }
 async function boot(){
-  await load(); await loadSync(); applyStatic();
+  await load(); stampReset(); await loadSync(); applyStatic();
   if (BUILD === 'pwa'){
     try {
       const s = await withTimeout(api('auth.php?a=status'), 6000);

@@ -223,7 +223,20 @@ function migrateSites(){
   if (state.site && !state.sites.some(s => s.id === state.site)) state.site = null;
 }
 // Speichert auf dem Gerät und meldet die Änderung an den Sync (js/account.js)
-function save(){ saveLocal(); if (typeof onSave === 'function') onSave(); }
+function save(){ stamp(); saveLocal(); if (typeof onSave === 'function') onSave(); }
+/* Änderungszeit pro Pflanze und Protokoll-Eintrag (mod, ms), damit der Sync bei Konflikten die neuere Fassung nimmt
+   statt immer die des Geräts. stampReset() merkt sich den Stand nach Laden/Sync, stamp() markiert beim Speichern, was sich geändert hat. */
+const seen = new Map();
+const fp = o => JSON.stringify(o, (k, v) => k === 'mod' || k === 'log' ? undefined : typeof v === 'string' && v.length > 200 ? v.length + ':' + v.slice(-40) : v);
+function stampReset(){ seen.clear(); for (const p of state.plants){ seen.set(p.id, fp(p)); for (const l of p.log || []) seen.set(p.id + '/' + l.id, fp(l)); } }
+function stamp(){
+  const now = Date.now();
+  for (const p of state.plants){
+    const k = fp(p), was = seen.get(p.id);
+    if (was !== k){ p.mod = now; seen.set(p.id, k); }
+    for (const l of p.log || []){ const lk = fp(l), key = p.id + '/' + l.id, lw = seen.get(key); if (lw !== undefined && lw !== lk) l.mod = now; seen.set(key, lk); }
+  }
+}
 function saveLocal(){
   const s = JSON.stringify(state);
   if (!useLS) return void idbPut(s).catch(() => toast(tr('saveFail')));

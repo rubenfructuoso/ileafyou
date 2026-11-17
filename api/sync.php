@@ -44,11 +44,8 @@ try {
             $next = $rev + 1;
             if ($cur === false) q('INSERT INTO {p}states (user_id, data, rev, updated) VALUES (?, ?, ?, ?)', [$uid, $json, $next, time()]);
             else q('UPDATE {p}states SET data = ?, rev = ?, updated = ? WHERE user_id = ?', [$json, $next, time(), $uid]);
-            // Fotos, auf die nichts mehr verweist, aufräumen
-            preg_match_all('/ily-photo:([0-9a-f]{64})/', $json, $m);
-            $keep = array_unique($m[1]);
-            $st = q('SELECT hash FROM {p}photos WHERE user_id = ?', [$uid]);
-            foreach ($st->fetchAll(PDO::FETCH_COLUMN) as $h) if (!in_array($h, $keep, true)) q('DELETE FROM {p}photos WHERE user_id = ? AND hash = ?', [$uid, $h]);
+            // Fotos werden hier bewusst NICHT mehr gelöscht: Ein Gerät mit veraltetem Stand hat sonst Fotos entfernt,
+            // die ein anderes Gerät noch braucht (Datenverlust 17.11.2026). Fotos bleiben, bis das Konto gelöscht wird.
             db()->commit();
             out(['rev' => $next]);
 
