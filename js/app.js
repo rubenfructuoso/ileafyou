@@ -295,7 +295,7 @@ function render(){
   $('#date').textContent = fmtDay(new Date(), { weekday:'long', day:'numeric', month:'long' });
   const plants = state.plants;
   if (!plants.length){
-    $('#app').innerHTML = `<section class="empty"><h2>${tr('empty_h')}</h2><p>${tr('empty_p')}</p><button class="btn" data-action="new">${tr('empty_btn')}</button><div style="margin-top:10px"><button class="linkbtn" data-action="demo">${tr('empty_demo')}</button></div></section>${footHtml()}`;
+    $('#app').innerHTML = `<section class="empty"><h2>${tr('empty_h')}</h2><p>${tr('empty_p')}</p><button class="btn" data-action="new">${tr('empty_btn')}</button></section>${footHtml()}`;
     return;
   }
   const vis = plants.filter(inView);
@@ -310,7 +310,7 @@ function render(){
   const view = plantView();
   const tools = vis.length ? `<div class="ptools"><input type="search" id="plantQ" value="${esc(plantQuery)}" placeholder="${esc(tr('search_ph'))}" aria-label="${esc(tr('search_ph'))}" autocomplete="off"><div class="seg vseg">${VIEWS.map(v => `<button type="button" data-action="view" data-view="${v}" class="${view === v ? 'on' : ''}" aria-pressed="${view === v}" aria-label="${esc(tr('v_' + v))}" title="${esc(tr('v_' + v))}">${viewSvg(v)}</button>`).join('')}</div></div>` : '';
   const cards = `<div id="plantList">${plantListHtml()}</div>`;
-  $('#app').innerHTML = `${lvlHtml()}${sitesBar()}${vac}${typeof pushNudgeHtml === 'function' ? pushNudgeHtml() : ''}${outdoorHtml()}<section><h2>${tr('h_next')}</h2>${weekHtml()}</section><section><h2>${tr('h_plants')}</h2>${calm}${tools}${vis.length ? legendHtml() : ''}${chips}${cards}</section><section><h2>${tr('h_badges')}</h2>${badgesHtml()}</section>${footHtml()}`;
+  $('#app').innerHTML = `${lvlHtml()}${sitesBar()}${vac}${demoHtml()}${typeof pushNudgeHtml === 'function' ? pushNudgeHtml() : ''}${outdoorHtml()}<section><h2>${tr('h_next')}</h2>${weekHtml()}</section><section><h2>${tr('h_plants')}</h2>${calm}${tools}${vis.length ? legendHtml() : ''}${chips}${cards}</section><section><h2>${tr('h_badges')}</h2>${badgesHtml()}</section>${footHtml()}`;
   const wk = $('.week'); if (wk) wk.scrollLeft = weekScroll ?? wk.querySelector('.now').offsetLeft - wk.firstElementChild.offsetLeft;
 }
 /* ---------- Pflanzenliste: Kacheln oder Liste (pro Gerät gemerkt), Suche beim Tippen ---------- */
@@ -591,37 +591,22 @@ $('#cel').addEventListener('change', e => {
 });
 
 /* ---------- Beispielgarten ---------- */
-function loadDemo(){
-  const D = L().demo, now = new Date();
-  const ago = (d, h = 9) => { const x = new Date(now); x.setDate(x.getDate() - d); x.setHours(h, 15, 0, 0); return x.toISOString(); };
-  // [Art, Symbol, giessen alle, zuletzt vor, düngen alle, zuletzt vor, Ort]
-  const spec = [
-    ['Monstera deliciosa', 'monstera', 7, 8, 30, 12, 'home'],
-    ['Ocimum basilicum', 'herb', 2, 2, 14, 15, 'home'],
-    ['Citrus limon', 'lemon', 4, 3, 14, 13, 'home'],
-    ['Phalaenopsis', 'orchid', 10, 6, 21, 7, 'home'],
-    ['Epipremnum aureum', 'pothos', 6, 4, 0, 0, 'office'],
-    ['Aloe barbadensis', 'aloe', 14, 5, 60, 20, 'studio'],
-    ['Echinocactus grusonii', 'cactus', 21, 10, 0, 0, 'studio']
-  ];
-  const plants = spec.map(([species, icon, w, wl, f, fl, siteId], i) => {
-    const log = [];
-    for (let d = wl; d <= 45; d += w) log.push({ id: uid(), type: 'water', date: ago(d, 8 + d % 5), note: '', xp: 10 });
-    if (f) for (let d = fl; d <= 45; d += f) log.push({ id: uid(), type: 'feed', date: ago(d, 18), note: '', xp: 10 });
-    return { id: uid(), name: D.plants[i], species, location: D.places[i], icon, siteId, waterEvery: w, feedEvery: f, notes: '', photo: null, created: ago(50), log };
-  });
-  plants[0].notes = D.notes[0];
-  plants[0].log.push({ id: uid(), type: 'repot', date: ago(30, 16), note: '', xp: 5 }, { id: uid(), type: 'note', date: ago(3, 20), note: D.notes[1], xp: 2 });
-  plants[3].log.push({ id: uid(), type: 'note', date: ago(9, 19), note: D.notes[2], xp: 2 });
-  plants[1].log.push({ id: uid(), type: 'note', date: ago(1, 12), note: D.notes[3], xp: 2 });
-  const y = new Date(); y.setDate(y.getDate() - 1);
-  state = {
-    lang: state.lang, plants, site: null,
-    sites: [{ id: 'home', name: D.sites[0] }, { id: 'office', name: D.sites[1] }, { id: 'studio', name: D.sites[2] }],
-    game: { xp: 265, level: levelOf(265), streak: 4, best: 9, lastCheck: dkey(y), dayDone: null, badges: [] }
-  };
-  roomFilter = null;
-  checkBadges(true); save(); replaced(); render(); window.scrollTo(0, 0); toast(tr('demo_loaded'));
+/* Beispielgarten gibt es nicht mehr (Entscheid Rubén). Früher geladene Beispielpflanzen erkennt isDemo() am Fingerabdruck
+   (Name aus I18N.*.demo.plants, Art aus DEMO_SPECIES, erfasst um :15:00.000) und bietet einmal an, sie zu entfernen. */
+const DEMO_SPECIES = ['Monstera deliciosa', 'Ocimum basilicum', 'Citrus limon', 'Phalaenopsis', 'Epipremnum aureum', 'Aloe barbadensis', 'Echinocactus grusonii'];
+const DEMO_NAMES = new Set(Object.values(I18N).flatMap(x => (x.demo && x.demo.plants) || []));
+const isDemo = p => DEMO_SPECIES.includes(p.species) && DEMO_NAMES.has(p.name) && /:15:00\.000Z$/.test(p.created || '');
+function demoHtml(){
+  const ds = state.plants.filter(isDemo);
+  let keep = false; try { keep = localStorage.getItem('ileafyou.demoKeep') === '1'; } catch(e) {}
+  if (!ds.length || keep) return '';
+  return `<div class="vac nudge"><span>${tr('demo_found', { n: ds.length, names: esc(ds.map(p => p.name).join(', ')) })}</span><span class="nbtn"><button data-action="demodel">${tr('demo_del')}</button><button data-action="demokeep" class="later">${tr('demo_keep')}</button></span></div>`;
+}
+function demoDelete(){
+  const ds = state.plants.filter(isDemo), ids = new Set(ds.map(p => p.id));
+  state.plants = state.plants.filter(p => !ids.has(p.id));
+  (state.deleted ||= []).push(...ds.map(p => ({ id: p.id, at: Date.now() })));
+  save(); render(); toast(tr('demo_removed', { n: ds.length }));
 }
 
 /* ---------- Pflege eintragen ---------- */
@@ -901,7 +886,8 @@ document.addEventListener('click', e => {
   else if (action === 'vacon'){ const v = $('#vacIn').value; if (!v){ $('#vacIn').focus(); return; } game().vacation = { until: v }; save(); $('#celDlg').close(); render(); toast(tr('vac_on', { date: fmtDay(fromKey(v), { day:'numeric', month:'long' }) })); }
   else if (action === 'vacoff'){ delete game().vacation; save(); $('#celDlg').close(); render(); toast(tr('vac_off')); }
   else if (action === 'cover'){ const p = getP(id), l = p && p.log.find(x => x.id === b.dataset.lid); if (l){ p.photo = l.img; save(); refresh(); toast(tr('cover_done')); } }
-  else if (action === 'demo'){ if (!state.plants.length) loadDemo(); else ask(tr('demo_ask'), tr('load'), loadDemo); }
+  else if (action === 'demodel') demoDelete();
+  else if (action === 'demokeep'){ try { localStorage.setItem('ileafyou.demoKeep', '1'); } catch(e) {} render(); }
   else if (action === 'reset') ask(tr('reset_ask'), tr('del'), () => { state = { lang: state.lang, plants: [] }; migrateSites(); game(); save(); replaced(); render(); toast(tr('reset_done')); });
   else if (action === 'install') install();
   else if (action === 'settings') openSettings();

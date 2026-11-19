@@ -298,7 +298,7 @@ function renderSettings(){
   if (account.email) h += pushHtml();
   h += `<h3 class="seth">${tr('set_theme')}</h3><div class="seg">${[['', 'th_auto'], ['light', 'th_light'], ['dark', 'th_dark']].map(([v, k]) => `<button type="button" data-theme-set="${v}" class="${th === v ? 'on' : ''}" aria-pressed="${th === v}">${tr(k)}</button>`).join('')}</div><p class="hint">${tr('th_hint')}</p>`;
   h += `<h3 class="seth">${tr('lang')}</h3>${langSelect()}`;
-  h += `<h3 class="seth">${tr('set_garden')}</h3><div class="setrow">${btn('sites', 'set_sites')}${btn('vac', 'foot_vac')}${btn('demo', 'foot_demo')}</div>`;
+  h += `<h3 class="seth">${tr('set_garden')}</h3><div class="setrow">${btn('sites', 'set_sites')}${btn('vac', 'foot_vac')}</div>`;
   h += `<h3 class="seth">${tr('set_data')}</h3><div class="setrow">${btn('export', 'foot_export')}${btn('import', 'foot_import')}${btn('reset', 'foot_reset', 'danger')}</div>`;
   if (account.email){
     h += `<div class="setrow">${btn('accdel', 'acc_del', 'danger')}</div><div id="delBox"></div>`;
