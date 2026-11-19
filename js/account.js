@@ -224,7 +224,7 @@ document.addEventListener('change', async e => {
 let authMode = 'login', resetToken = new URLSearchParams(location.search).get('reset');
 if (resetToken){ authMode = 'reset'; history.replaceState(null, '', location.pathname); }
 function showAuth(msg){
-  document.body.classList.add('authing');
+  document.body.classList.add('authing'); document.body.classList.remove('booting');
   instHint();
   [...document.querySelectorAll('dialog[open]')].forEach(d => d.close());
   const f = (id, type, key, ac) => `<label for="${id}">${tr(key)}</label><input id="${id}" type="${type}" autocomplete="${ac}" ${type === 'email' ? 'inputmode="email" autocapitalize="off"' : ''} required>`;
@@ -402,7 +402,7 @@ document.addEventListener('submit', async e => {
 
 /* ---------- Start ---------- */
 function startApp(){
-  document.body.classList.remove('authing');
+  document.body.classList.remove('authing', 'booting');
   applyStatic(); dailyCheck(); render(); checkLevel() || checkBadges(); loadWeather();
   if (started) return;
   started = true;
