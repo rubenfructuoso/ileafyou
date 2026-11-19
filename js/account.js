@@ -244,9 +244,14 @@ function showAuth(msg){
   $('#app').innerHTML = authMode === 'reset' ? form : landingHtml(form);
 }
 /* ---------- Landingpage (statt reiner Anmeldemaske) ---------- */
-const LAND_ICONS = [() => pixGrid(PIX.w25), () => pixGrid(PIX.medal), () => pixGrid(KINDS.monstera), () => pixGrid(SIGN.out), () => pixGrid(PIX.ph3), () => logoSvg()];
+// Alle Funktionen kurz vorgestellt; Texte land_<k>_h / land_<k> in i18n.js. Neue Funktionen hier ergänzen.
+const LAND_FEATS = [
+  ['remind', () => pixGrid(PIX.w25)], ['photoid', () => pixGrid(PIX.ph3)], ['game', () => pixGrid(PIX.medal)],
+  ['tips', () => pixGrid(KINDS.monstera)], ['week', () => pixGrid(LATER.slice(4).map(r => r.slice(0, 8)))], ['sites', () => pixGrid(SIGN.in)],
+  ['out', () => pixGrid(SIGN.out)], ['diary', () => pixGrid(PIX.n5)], ['everywhere', () => logoSvg()]
+];
 function landingHtml(form){
-  const feats = LAND_ICONS.map((ic, i) => `<li><span class="li">${ic()}</span><div><h3>${tr('land_f' + (i + 1) + '_h')}</h3><p>${tr('land_f' + (i + 1))}</p></div></li>`).join('');
+  const feats = LAND_FEATS.map(([k, ic]) => `<li><span class="li">${ic()}</span><div><h3>${tr('land_' + k + '_h')}</h3><p>${tr('land_' + k)}</p></div></li>`).join('');
   return `<section class="land">
     <div class="lhero"><div class="heroplant">${plantSvg(7)}</div><h2>${tr('land_h')}</h2><p>${tr('land_p')}</p>
       <div class="herobtns"><button class="primary" data-auth="register" data-jump="1">${tr('land_cta')}</button><button class="ghostbtn" data-auth="login" data-jump="1">${tr('auth_login')}</button></div>
