@@ -11,6 +11,7 @@ const SHELL = [
   'js/account.js',
   'js/outdoor.js',
   'manifest.json',
+  'legal.html',
   'img/icon.svg',
   'img/icon-192.png',
   'img/icon-512.png',

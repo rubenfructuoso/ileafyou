@@ -479,3 +479,8 @@ dialog h2,.sheethead h2{font-size:16px;line-height:1.5}
 .landfoot .linkbtn{display:inline;padding:0;margin:0;font-size:inherit}
 .landfoot .donate{margin-top:14px}
 a.setbtn{display:inline-block;text-decoration:none}
+.landfoot .donate{margin:22px auto 6px;max-width:340px}
+.landfoot .donate p{margin:0 0 10px}
+a.donbtn{display:block;text-align:center;text-decoration:none;margin-top:0;color:var(--onmoss) !important}
+.legal-links{margin-top:14px}
+.legal-links a{color:var(--muted)}

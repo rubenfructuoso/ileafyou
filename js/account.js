@@ -260,9 +260,12 @@ function landingHtml(form){
     ${form}
     <footer class="landfoot"><p>${tr('land_by')}</p>
       <p><button type="button" class="linkbtn" data-mail>${tr('land_mail')}</button> · <a href="https://ruben.fructuoso.info" target="_blank" rel="noopener">ruben.fructuoso.info</a></p>
-      <p class="donate"><span>${tr('don_p')}</span> <a class="linkbtn" href="${DONATE_URL}" target="_blank" rel="noopener">${tr('don_btn')}</a></p></footer>
+      <div class="donate"><p>${tr('don_p')}</p><a class="primary donbtn" href="${DONATE_URL}" target="_blank" rel="noopener">${tr('don_btn')}</a></div>
+      <p class="legal-links">${legalLinks()}</p></footer>
   </section>`;
 }
+// Impressum und Datenschutz: eigenständige Seite legal.html (vier Sprachen als Abschnitte, feste Adresse z. B. für den Play Store)
+const legalLinks = () => `<a href="legal.html#${lang()}-impressum">${tr('legal_imp')}</a> · <a href="legal.html#${lang()}-${lang() === 'de' ? 'datenschutz' : 'privacy'}">${tr('legal_priv')}</a>`;
 // Spenden über PayPal.me (öffentliche Adresse, kein Spamschutz nötig)
 const DONATE_URL = 'https://paypal.me/fructuosowipf';
 // Kontakt-Adresse nie als Text im HTML/JS (Spamschutz): rückwärts als Zeichencodes, erst beim Antippen zusammengesetzt
@@ -338,6 +341,7 @@ function renderSettings(){
     h += `<div class="setrow">${btn('accdel', 'acc_del', 'danger')}</div><div id="delBox"></div>`;
     h += `<h3 class="seth">${tr('set_server')}</h3>${serverHtml()}`;
   }
+  h += `<p class="hint legal-links">${legalLinks()}</p>`;
   $('#settings').innerHTML = h;
 }
 function serverHtml(){
