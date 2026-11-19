@@ -239,7 +239,7 @@ function showAuth(msg){
       `<button type="button" class="linkbtn" data-auth="login">${tr('auth_back')}</button>`]
   }[authMode];
   const form = `<section class="auth" id="authBox"><h2>${H[0]}</h2><p>${H[1]}</p><form id="authForm" novalidate>${H[2]}<div class="authmsg" role="alert">${msg ? esc(msg) : ''}</div><button class="primary" type="submit">${H[3]}</button></form><div class="authlinks">${H[4]}</div>
-    <label class="langsel authlang"><span>${tr('lang')}</span>${langSelect()}</label></section>`;
+    <label class="langsel authlang"><span>${tr('lang')}</span>${langSelect()}</label><div class="auththeme"><span>${tr('set_theme')}</span>${themeSeg()}</div></section>`;
   // Passwort zurücksetzen: nur das Formular. Sonst Landingpage mit kurzer Vorstellung, Formular und Kontakt.
   $('#app').innerHTML = authMode === 'reset' ? form : landingHtml(form);
 }
@@ -276,6 +276,11 @@ document.addEventListener('click', e => {
   const link = document.createElement('a'); link.href = 'mailto:' + a; link.textContent = a;
   m.replaceWith(link); link.click();
 });
+// Darstellung Automatisch/Hell/Dunkel: in den Einstellungen und auf der Landingpage (pro Gerät, localStorage ileafyou.theme)
+function themeSeg(){
+  const th = getTheme();
+  return `<div class="seg themeseg">${[['', 'th_auto'], ['light', 'th_light'], ['dark', 'th_dark']].map(([v, k]) => `<button type="button" data-theme-set="${v}" class="${th === v ? 'on' : ''}" aria-pressed="${th === v}">${tr(k)}</button>`).join('')}</div>`;
+}
 function langSelect(){ return `<select id="langSel">${LANGS.map(l => `<option value="${l}" ${l === lang() ? 'selected' : ''}>${I18N[l].langName}</option>`).join('')}</select>`; }
 document.addEventListener('click', e => { const b = e.target.closest('[data-auth]'); if (b){ const jump = b.dataset.jump || b.closest('#authBox'); authMode = b.dataset.auth; showAuth(); if (jump){ const box = $('#authBox'); box && box.scrollIntoView({ behavior: 'smooth', block: 'start' }); setTimeout(() => $('#aEmail') && $('#aEmail').focus({ preventScroll: true }), 400); } } });
 document.addEventListener('submit', async e => {
@@ -332,7 +337,7 @@ function renderSettings(){
       <div class="setrow">${btn('pwform', 'pw_change')}${btn('logout', 'logout')}</div><div id="pwBox"></div>`;
   }
   if (account.email) h += pushHtml();
-  h += `<h3 class="seth">${tr('set_theme')}</h3><div class="seg">${[['', 'th_auto'], ['light', 'th_light'], ['dark', 'th_dark']].map(([v, k]) => `<button type="button" data-theme-set="${v}" class="${th === v ? 'on' : ''}" aria-pressed="${th === v}">${tr(k)}</button>`).join('')}</div><p class="hint">${tr('th_hint')}</p>`;
+  h += `<h3 class="seth">${tr('set_theme')}</h3>${themeSeg()}<p class="hint">${tr('th_hint')}</p>`;
   h += `<h3 class="seth">${tr('lang')}</h3>${langSelect()}`;
   h += `<h3 class="seth">${tr('set_garden')}</h3><div class="setrow">${btn('sites', 'set_sites')}${btn('vac', 'foot_vac')}</div>`;
   h += `<h3 class="seth">${tr('don_h')}</h3><p class="setp">${tr('don_p')}</p><div class="setrow"><a class="setbtn" href="${DONATE_URL}" target="_blank" rel="noopener">${tr('don_btn')}</a></div>`;
@@ -357,7 +362,7 @@ function serverHtml(){
 }
 document.addEventListener('click', async e => {
   const t = e.target.closest('[data-theme-set]');
-  if (t){ setTheme(t.dataset.themeSet); renderSettings(); return; }
+  if (t){ setTheme(t.dataset.themeSet); document.querySelectorAll('[data-theme-set]').forEach(x => { const on = x.dataset.themeSet === getTheme(); x.classList.toggle('on', on); x.setAttribute('aria-pressed', on); }); if ($('#setDlg').open) renderSettings(); return; }
   const b = e.target.closest('#settings [data-action]'); if (!b) return;
   const a = b.dataset.action;
   if (a === 'logout') logout();
