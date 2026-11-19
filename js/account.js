@@ -260,17 +260,11 @@ function landingHtml(form){
     ${form}
     <footer class="landfoot"><p>${tr('land_by')}</p>
       <p><button type="button" class="linkbtn" data-mail>${tr('land_mail')}</button> · <a href="https://ruben.fructuoso.info" target="_blank" rel="noopener">ruben.fructuoso.info</a></p>
-      <p class="donate"><span>${tr('don_p')}</span> <button type="button" class="linkbtn" data-donate>${tr('don_btn')}</button></p></footer>
+      <p class="donate"><span>${tr('don_p')}</span> <a class="linkbtn" href="${DONATE_URL}" target="_blank" rel="noopener">${tr('don_btn')}</a></p></footer>
   </section>`;
 }
-// Spenden über PayPal: Empfänger-Adresse ebenfalls nur als Zeichencodes (rückwärts), Link erst beim Antippen
-const PAYC = [109, 111, 99, 46, 108, 105, 97, 109, 103, 64, 111, 115, 111, 117, 116, 99, 117, 114, 102, 46, 110, 101, 98, 117, 114];
-document.addEventListener('click', e => {
-  if (!e.target.closest('[data-donate]')) return;
-  const to = String.fromCharCode(...PAYC.slice().reverse());
-  const url = 'https://www.paypal.com/cgi-bin/webscr?' + new URLSearchParams({ cmd: '_donations', business: to, item_name: 'i leaf you', currency_code: 'CHF' });
-  window.open(url, '_blank', 'noopener');
-});
+// Spenden über PayPal.me (öffentliche Adresse, kein Spamschutz nötig)
+const DONATE_URL = 'https://paypal.me/fructuosowipf';
 // Kontakt-Adresse nie als Text im HTML/JS (Spamschutz): rückwärts als Zeichencodes, erst beim Antippen zusammengesetzt
 const MAILC = [111, 102, 110, 105, 46, 111, 115, 111, 117, 116, 99, 117, 114, 102, 64, 110, 101, 98, 117, 114];
 document.addEventListener('click', e => {
@@ -338,7 +332,7 @@ function renderSettings(){
   h += `<h3 class="seth">${tr('set_theme')}</h3><div class="seg">${[['', 'th_auto'], ['light', 'th_light'], ['dark', 'th_dark']].map(([v, k]) => `<button type="button" data-theme-set="${v}" class="${th === v ? 'on' : ''}" aria-pressed="${th === v}">${tr(k)}</button>`).join('')}</div><p class="hint">${tr('th_hint')}</p>`;
   h += `<h3 class="seth">${tr('lang')}</h3>${langSelect()}`;
   h += `<h3 class="seth">${tr('set_garden')}</h3><div class="setrow">${btn('sites', 'set_sites')}${btn('vac', 'foot_vac')}</div>`;
-  h += `<h3 class="seth">${tr('don_h')}</h3><p class="setp">${tr('don_p')}</p><div class="setrow"><button type="button" class="setbtn" data-donate>${tr('don_btn')}</button></div>`;
+  h += `<h3 class="seth">${tr('don_h')}</h3><p class="setp">${tr('don_p')}</p><div class="setrow"><a class="setbtn" href="${DONATE_URL}" target="_blank" rel="noopener">${tr('don_btn')}</a></div>`;
   h += `<h3 class="seth">${tr('set_data')}</h3><div class="setrow">${btn('export', 'foot_export')}${btn('import', 'foot_import')}${btn('reset', 'foot_reset', 'danger')}</div>`;
   if (account.email){
     h += `<div class="setrow">${btn('accdel', 'acc_del', 'danger')}</div><div id="delBox"></div>`;
