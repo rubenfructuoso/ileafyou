@@ -238,11 +238,35 @@ function showAuth(msg){
     reset: [tr('auth_reset_h'), tr('auth_pw_hint'), f('aPw', 'password', 'pw_new', 'new-password'), tr('auth_reset_btn'),
       `<button type="button" class="linkbtn" data-auth="login">${tr('auth_back')}</button>`]
   }[authMode];
-  $('#app').innerHTML = `<section class="auth"><h2>${H[0]}</h2><p>${H[1]}</p><form id="authForm" novalidate>${H[2]}<div class="authmsg" role="alert">${msg ? esc(msg) : ''}</div><button class="primary" type="submit">${H[3]}</button></form><div class="authlinks">${H[4]}</div>
+  const form = `<section class="auth" id="authBox"><h2>${H[0]}</h2><p>${H[1]}</p><form id="authForm" novalidate>${H[2]}<div class="authmsg" role="alert">${msg ? esc(msg) : ''}</div><button class="primary" type="submit">${H[3]}</button></form><div class="authlinks">${H[4]}</div>
     <label class="langsel authlang"><span>${tr('lang')}</span>${langSelect()}</label></section>`;
+  // Passwort zurücksetzen: nur das Formular. Sonst Landingpage mit kurzer Vorstellung, Formular und Kontakt.
+  $('#app').innerHTML = authMode === 'reset' ? form : landingHtml(form);
 }
+/* ---------- Landingpage (statt reiner Anmeldemaske) ---------- */
+const LAND_ICONS = [() => pixGrid(PIX.w25), () => pixGrid(PIX.medal), () => pixGrid(KINDS.monstera), () => pixGrid(SIGN.out), () => pixGrid(PIX.ph3), () => logoSvg()];
+function landingHtml(form){
+  const feats = LAND_ICONS.map((ic, i) => `<li><span class="li">${ic()}</span><div><h3>${tr('land_f' + (i + 1) + '_h')}</h3><p>${tr('land_f' + (i + 1))}</p></div></li>`).join('');
+  return `<section class="land">
+    <div class="lhero"><div class="heroplant">${plantSvg(7)}</div><h2>${tr('land_h')}</h2><p>${tr('land_p')}</p>
+      <div class="herobtns"><button class="primary" data-auth="register" data-jump="1">${tr('land_cta')}</button><button class="ghostbtn" data-auth="login" data-jump="1">${tr('auth_login')}</button></div>
+      <p class="hint">${tr('land_free')}</p></div>
+    <ul class="feats">${feats}</ul>
+    ${form}
+    <footer class="landfoot"><p>${tr('land_by')}</p>
+      <p><button type="button" class="linkbtn" data-mail>${tr('land_mail')}</button> · <a href="https://ruben.fructuoso.info" target="_blank" rel="noopener">ruben.fructuoso.info</a></p></footer>
+  </section>`;
+}
+// Kontakt-Adresse nie als Text im HTML/JS (Spamschutz): rückwärts als Zeichencodes, erst beim Antippen zusammengesetzt
+const MAILC = [111, 102, 110, 105, 46, 111, 115, 111, 117, 116, 99, 117, 114, 102, 64, 110, 101, 98, 117, 114];
+document.addEventListener('click', e => {
+  const m = e.target.closest('[data-mail]'); if (!m) return;
+  const a = String.fromCharCode(...MAILC.slice().reverse());
+  const link = document.createElement('a'); link.href = 'mailto:' + a; link.textContent = a;
+  m.replaceWith(link); link.click();
+});
 function langSelect(){ return `<select id="langSel">${LANGS.map(l => `<option value="${l}" ${l === lang() ? 'selected' : ''}>${I18N[l].langName}</option>`).join('')}</select>`; }
-document.addEventListener('click', e => { const b = e.target.closest('[data-auth]'); if (b){ authMode = b.dataset.auth; showAuth(); } });
+document.addEventListener('click', e => { const b = e.target.closest('[data-auth]'); if (b){ const jump = b.dataset.jump || b.closest('#authBox'); authMode = b.dataset.auth; showAuth(); if (jump){ const box = $('#authBox'); box && box.scrollIntoView({ behavior: 'smooth', block: 'start' }); setTimeout(() => $('#aEmail') && $('#aEmail').focus({ preventScroll: true }), 400); } } });
 document.addEventListener('submit', async e => {
   if (e.target.id !== 'authForm') return;
   e.preventDefault();
