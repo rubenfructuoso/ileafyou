@@ -144,7 +144,7 @@ function pushNudgeHtml(){
   const ns = nudgeState(); if (ns.n >= 3 || Date.now() < ns.until) return '';
   let text, act;
   if (pushOK()){ if (pushSub || Notification.permission === 'denied') return ''; text = tr('nudge_push', { time: `<select id="nudgeHour" aria-label="${esc(tr('push_time'))}">${Array.from({ length: 17 }, (_, i) => i + 6).map(x => `<option value="${x}" ${x === pushHour() ? 'selected' : ''}>${hourText(x)}</option>`).join('')}</select>` }); act = `<button data-action="nudgeon">${tr('nudge_on')}</button>`; }
-  else if (isIOS() && !isStandalone()){ text = tr('nudge_ios'); act = `<button data-action="install">${tr('foot_install')}</button>`; }
+  else if (isIOS() && !isStandalone()){ if (instHintOn()) return ''; text = tr('nudge_ios'); act = `<button data-action="install">${tr('foot_install')}</button>`; }
   else return '';
   return `<div class="vac nudge"><span>${text}</span><span class="nbtn">${act}<button data-action="nudgelater" class="later">${tr('nudge_later')}</button></span></div>`;
 }
@@ -225,6 +225,7 @@ let authMode = 'login', resetToken = new URLSearchParams(location.search).get('r
 if (resetToken){ authMode = 'reset'; history.replaceState(null, '', location.pathname); }
 function showAuth(msg){
   document.body.classList.add('authing');
+  instHint();
   [...document.querySelectorAll('dialog[open]')].forEach(d => d.close());
   const f = (id, type, key, ac) => `<label for="${id}">${tr(key)}</label><input id="${id}" type="${type}" autocomplete="${ac}" ${type === 'email' ? 'inputmode="email" autocapitalize="off"' : ''} required>`;
   const H = {

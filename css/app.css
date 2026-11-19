@@ -451,3 +451,8 @@ dialog h2,.sheethead h2{font-size:16px;line-height:1.5}
 /* Punkte immer freigestellt: kein Kästchen, nur eine 1-px-Kontur entlang der Pixelform, damit sie auf der grünen Fläche sichtbar bleiben */
 .wd.now .dots i{background-color:transparent !important;outline:0;filter:drop-shadow(1px 0 0 var(--onmoss)) drop-shadow(-1px 0 0 var(--onmoss)) drop-shadow(0 1px 0 var(--onmoss)) drop-shadow(0 -1px 0 var(--onmoss))}
 .wd.now .dots em{color:var(--onmoss)}
+.insthint{margin:6px 0 4px;align-items:center}
+.insthint > .pix{width:30px;height:30px;flex:none}
+.insthint > span:first-of-type{flex:1}
+.insthint .later{font-size:1.3rem;line-height:1;padding:4px 6px}
+@media (max-width:420px){ .insthint{flex-wrap:nowrap} .insthint .nbtn{margin-left:0} }

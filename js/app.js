@@ -291,6 +291,7 @@ function celebrate(kind, extra){
 
 /* ---------- Hauptansicht ---------- */
 function render(){
+  instHint();
   const weekScroll = document.querySelector('.week')?.scrollLeft;   // Wischposition der Vorschau behalten (beim ersten Mal: heute)
   $('#date').textContent = fmtDay(new Date(), { weekday:'long', day:'numeric', month:'long' });
   const plants = state.plants;
@@ -890,6 +891,7 @@ document.addEventListener('click', e => {
   else if (action === 'demokeep'){ try { localStorage.setItem('ileafyou.demoKeep', '1'); } catch(e) {} render(); }
   else if (action === 'reset') ask(tr('reset_ask'), tr('del'), () => { state = { lang: state.lang, plants: [] }; migrateSites(); game(); save(); replaced(); render(); toast(tr('reset_done')); });
   else if (action === 'install') install();
+  else if (action === 'insthide'){ try { localStorage.setItem('ileafyou.instHint', 'off'); } catch(e) {} instHint(); }
   else if (action === 'settings') openSettings();
   else if (action === 'export') exportData();
   else if (action === 'import') $('#importIn').click();
@@ -920,5 +922,18 @@ async function install(){
   }
   openCel(`<div class="big">${logoSvg()}</div><h2>${tr('inst_h')}</h2><p>${isIOS() ? tr('inst_ios') : tr('inst_other')}</p><button class="primary" data-action="close">${tr('btn_continue')}</button>`);
 }
-window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; render(); });
-window.addEventListener('appinstalled', () => { installEvt = null; render(); });
+// Während der Anmeldung nicht render() (würde das Anmeldeformular ersetzen), nur den Hinweis oben auffrischen
+const afterInstallChange = () => document.body.classList.contains('authing') ? instHint() : render();
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; afterInstallChange(); });
+window.addEventListener('appinstalled', () => { installEvt = null; afterInstallChange(); });
+/* Hinweis «als App aufs Handy» oben (auch auf der Anmeldeseite): nur auf Handys, nicht in der installierten App,
+   Android nur wenn Chrome die Installation anbietet; × blendet ihn auf dem Gerät aus (localStorage ileafyou.instHint) */
+function instHintOn(){
+  if (BUILD !== 'pwa' || isStandalone()) return false;
+  try { if (localStorage.getItem('ileafyou.instHint') === 'off') return false; } catch(e) {}
+  return isIOS() || (/android/i.test(navigator.userAgent) && !!installEvt);
+}
+function instHint(){
+  const el = $('#instHint'); if (!el) return;
+  el.innerHTML = instHintOn() ? `<div class="vac nudge insthint">${logoSvg()}<span>${tr(isIOS() ? 'inst_bar_ios' : 'inst_bar')}</span><span class="nbtn">${isIOS() ? '' : `<button data-action="install">${tr('inst_bar_btn')}</button>`}<button data-action="insthide" class="later" aria-label="${esc(tr('close'))}">×</button></span></div>` : '';
+}
