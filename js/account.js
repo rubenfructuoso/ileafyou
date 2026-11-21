@@ -131,8 +131,7 @@ async function attach(email){
   if (fresh){ sync = { rev: 0, dirty: state.plants.length > 0, force: false, email }; saveSync(); }
   account.email = email;
   await syncNow();
-  pushRefresh();
-  pushCurrent().catch(() => {}).finally(() => { pushKnown = true; if (started) render(); });
+  pushRefresh().finally(() => pushCurrent().catch(() => {}).finally(() => { pushKnown = true; if (started) render(); }));
 }
 
 /* ---------- Dezenter Hinweis auf der Startseite, solange Erinnerungen auf diesem Gerät aus sind ---------- */
@@ -141,9 +140,10 @@ let pushKnown = false;
 function nudgeState(){ try { return JSON.parse(localStorage.getItem('ileafyou.pushNudge')) || { until: 0, n: 0 }; } catch(e) { return { until: 0, n: 0 }; } }
 function pushNudgeHtml(){
   if (!account.email || !pushKnown) return '';
-  const ns = nudgeState(); if (ns.n >= 3 || Date.now() < ns.until) return '';
+  const again = pushWanted() && !pushSub;   // war auf diesem Gerät schon an: immer wieder anbieten
+  const ns = nudgeState(); if (!again && (ns.n >= 3 || Date.now() < ns.until)) return '';
   let text, act;
-  if (pushOK()){ if (pushSub || Notification.permission === 'denied') return ''; text = tr('nudge_push', { time: `<select id="nudgeHour" aria-label="${esc(tr('push_time'))}">${Array.from({ length: 17 }, (_, i) => i + 6).map(x => `<option value="${x}" ${x === pushHour() ? 'selected' : ''}>${hourText(x)}</option>`).join('')}</select>` }); act = `<button data-action="nudgeon">${tr('nudge_on')}</button>`; }
+  if (pushOK()){ if (pushSub || Notification.permission === 'denied') return ''; text = tr(again ? 'nudge_again' : 'nudge_push', { time: `<select id="nudgeHour" aria-label="${esc(tr('push_time'))}">${Array.from({ length: 17 }, (_, i) => i + 6).map(x => `<option value="${x}" ${x === pushHour() ? 'selected' : ''}>${hourText(x)}</option>`).join('')}</select>` }); act = `<button data-action="nudgeon">${tr('nudge_on')}</button>`; }
   else if (isIOS() && !isStandalone()){ if (instHintOn()) return ''; text = tr('nudge_ios'); act = `<button data-action="install">${tr('foot_install')}</button>`; }
   else return '';
   return `<div class="vac nudge"><span>${text}</span><span class="nbtn">${act}<button data-action="nudgelater" class="later">${tr('nudge_later')}</button></span></div>`;
@@ -175,7 +175,17 @@ async function pushCurrent(){
 }
 const pushSave = sub => api('push.php?a=subscribe', { sub: sub.toJSON(), tz: Intl.DateTimeFormat().resolvedOptions().timeZone, hour: pushHour() });
 // Beim Start: bestehendes Abo dem Server erneut melden (Zeitzone, Konto nach Neuanmeldung)
-async function pushRefresh(){ try { if (Notification.permission === 'granted' && await pushCurrent()) await pushSave(pushSub); } catch(e) {} }
+// Merker pro Gerät: Erinnerungen waren hier eingeschaltet (localStorage ileafyou.pushOn). Geht das Abo verloren
+// (App neu installiert, neues Icon, Browserdaten), schaltet pushRefresh() still wieder ein, wenn die Erlaubnis noch da ist;
+// sonst zeigt die Startseite den Hinweis «wieder einschalten», auch wenn er früher weggeklickt wurde.
+const pushWanted = (v) => { try { if (v === undefined) return localStorage.getItem('ileafyou.pushOn') === '1'; v ? localStorage.setItem('ileafyou.pushOn', '1') : localStorage.removeItem('ileafyou.pushOn'); } catch(e) { return false; } };
+async function pushRefresh(){
+  try {
+    if (!pushOK() || Notification.permission !== 'granted') return;
+    if (await pushCurrent()) await pushSave(pushSub);
+    else if (pushWanted()) await pushOn();   // Erlaubnis besteht noch: ohne Rückfrage neu abonnieren
+  } catch(e) {}
+}
 async function pushOn(){
   const perm = await Notification.requestPermission();
   if (perm !== 'granted') throw new Error('push_denied');
@@ -187,9 +197,10 @@ async function pushOn(){
     if (e.status !== 400) throw e;
     await sub.unsubscribe(); sub = await reg.pushManager.subscribe(opts); await pushSave(sub);
   }
-  pushSub = sub;
+  pushSub = sub; pushWanted(true);
 }
 async function pushOff(){
+  pushWanted(false);
   const sub = pushSub || await pushCurrent(); if (!sub) return;
   await api('push.php?a=unsubscribe', { endpoint: sub.endpoint }).catch(() => {});
   await sub.unsubscribe().catch(() => {}); pushSub = null;
