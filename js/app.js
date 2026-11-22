@@ -271,7 +271,7 @@ const getP = id => state.plants.find(p => p.id === id);
 function lvlHtml(){
   const g = game(), lv = levelOf(g.xp), nxt = LEVELS[lv+1];
   const pct = nxt !== undefined ? Math.max(3, (g.xp - LEVELS[lv]) / (nxt - LEVELS[lv]) * 100) : 100;
-  return `<button class="lvl" data-action="rules"><span class="em">${plantSvg(lv)}</span><span class="col"><span class="lk">${tr('levelN', { n: lv+1 })}</span><span class="ln">${lvName(lv)}</span><span class="xpbar"><i style="width:${Math.round(pct / 10) * 10}%"></i></span><span class="lk">${nxt !== undefined ? tr('xpTo', { xp: g.xp, next: nxt, name: lvName(lv+1) }) : tr('xpMax', { xp: g.xp })}</span></span><span class="streak">${pix('flame')}${g.streak}<small>${g.streak === 1 ? tr('streak1') : tr('streakN')}</small></span></button>`;
+  return `<button class="lvl" data-action="rules"><span class="em">${plantSvg(lv)}</span><span class="col"><span class="lhead"><span class="lk">${tr('levelN', { n: lv+1 })}</span><span class="streak">${pix('flame')}<b>${g.streak}</b><small>${g.streak === 1 ? tr('streak1') : tr('streakN')}</small></span></span><span class="ln">${lvName(lv)}</span><span class="xpbar"><i style="width:${Math.round(pct / 10) * 10}%"></i></span><span class="lk">${nxt !== undefined ? tr('xpTo', { xp: g.xp, next: nxt, name: lvName(lv+1) }) : tr('xpMax', { xp: g.xp })}</span></span></button>`;
 }
 function openCel(html, cls){
   $('#cel').className = 'celebrate ' + (cls || '');

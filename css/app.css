@@ -150,11 +150,13 @@ select{font:inherit;width:100%;padding:11px 12px;border-radius:12px;border:1px s
 .lvl .col{flex:1;min-width:0}
 .lvl .col>span{display:block}
 .lvl .ln{font-family:"Press Start 2P",ui-monospace,monospace;font-weight:700;font-size:1.35rem;line-height:1.15}
-.lvl .lk{font-size:.85rem;color:var(--muted)}
+.lvl .lk{font-size:.85rem;color:var(--muted);hyphens:none}
 .xpbar{height:10px;border-radius:99px;background:var(--line);overflow:hidden;margin:8px 0 4px}
 .xpbar i{display:block;height:100%;background:var(--moss);border-radius:99px;transition:width .6s}
-.streak{flex:none;text-align:center;font-weight:700;font-size:1.15rem}
-.streak small{display:block;font-weight:400;font-size:.75rem;color:var(--muted)}
+.lvl .col>.lhead{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:2px 10px}
+.lvl .lhead .lk,.streak{white-space:nowrap}
+.streak{flex:none;display:flex;align-items:center;gap:5px;font-weight:700;font-size:1rem}
+.streak small{font-weight:400;font-size:.75rem;color:var(--muted)}
 .celebrate{text-align:center;padding:30px 22px calc(28px + env(safe-area-inset-bottom,0px))}
 .celebrate .big svg{width:130px;height:130px;display:block}
 .rlist{display:inline-flex;flex-direction:column;gap:4px;text-align:left;margin-top:6px}
@@ -176,8 +178,7 @@ select{font:inherit;width:100%;padding:11px 12px;border-radius:12px;border:1px s
 .pix{display:block;image-rendering:pixelated}
 .badge .be .pix{width:48px;height:48px;margin:0 auto}
 .badge.locked .be{filter:grayscale(1);opacity:.35}
-.streak{display:flex;flex-direction:column;align-items:center}
-.streak .pix{width:24px;height:24px;margin-bottom:2px}
+.streak .pix{width:20px;height:20px}
 .celebrate .big .pix{width:128px;height:128px}
 .logo svg.mark{image-rendering:pixelated}
 :root{--wmShadow:#9BD25B}
@@ -442,7 +443,7 @@ h1,h2,h3,.wordmark,.card .n,.wd .num,.lvl .ln,.wxn b,.prow .n{font-weight:400 !i
 h2{font-size:16px}
 h3,.sitegroup h3{font-size:12px}
 .card .n,.prow .n,.lvl .ln,.wxn b{font-size:12px}
-.lvl .ln{font-size:16px;overflow-wrap:anywhere;hyphens:manual}
+.lvl .ln{font-size:16px;hyphens:manual}
 .wd .num{font-size:16px;margin:4px 0}
 dialog h2,.sheethead h2{font-size:16px;line-height:1.5}
 /* Heute: Feld flächig in Moos (dunkelgrün, im Dunkelmodus hellgrün), ohne Wort «Heute» */
