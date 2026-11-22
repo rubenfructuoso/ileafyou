@@ -7,7 +7,7 @@ const I18N = {
     inDays: 'in {n} Tagen', inDaysCap: 'In {n} Tagen', overdue1: 'seit 1 Tag fällig', overdueN: 'seit {n} Tagen fällig',
     water: 'Giessen', feed: 'Düngen', waterL: 'giessen', feedL: 'düngen',
     type_water: 'Gegossen', type_feed: 'Gedüngt', type_repot: 'Umgetopft', type_note: 'Notiz', type_check: 'Geprüft', type_photo: 'Foto',
-    lv: ['Samenkorn', 'Keimling', 'Setzling', 'Jungpflanze', 'Grüner Daumen', 'Pflanzenflüsterer', 'Urwaldhüter', 'Botanik-Legende'],
+    lv: ['Samenkorn', 'Keimling', 'Setzling', 'Jungpflanze', 'Grüner Daumen', 'Pflanzen\u00ADflüsterer', 'Urwald\u00ADhüter', 'Botanik-Legende'],
     levelN: 'Level {n}', xpTo: '{xp} von {next} Punkten bis {name}', xpMax: '{xp} Punkte, höchstes Level',
     streak1: 'Tag am Stück', streakN: 'Tage am Stück',
     cel_up: 'Neues Level: {name}', cel_upTxt: 'Deine Pflanzen danken es dir. Nächstes Ziel: {name} bei {xp} Punkten.', cel_max: 'Höchstes Level erreicht. Deine Pflanze blüht und freut sich mit dir. Schau genau hin.',
