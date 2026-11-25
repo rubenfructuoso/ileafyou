@@ -675,8 +675,10 @@ function openForm(id){
   $('#fWinterFeed').innerHTML = ['rest', 'half', 'normal'].map(v => `<option value="${v}">${tr('wf_' + v)}</option>`).join('');
   $('#fWinterFeed').value = p?.winterFeed || 'rest';
   if ($('#detailDlg').open) $('#detailDlg').close();
-  $('#formDlg').showModal();
+  $('#formDlg').showModal(); toTop('#formDlg');
 }
+// Dialoge starten immer oben, nicht dort, wo zuletzt gescrollt wurde
+function toTop(sel){ const d = $(sel); d.scrollTop = 0; d.querySelectorAll('.sheet').forEach(e => e.scrollTop = 0); }
 function renderIconPick(){
   $('#iconPick').innerHTML = KIND_KEYS.map(k => `<button type="button" class="ik ${k === pendingIcon ? 'on' : ''}" data-icon="${k}" aria-pressed="${k === pendingIcon}" aria-label="${esc(L().kinds[k])}" title="${esc(L().kinds[k])}">${pixGrid(KINDS[k])}</button>`).join('');
 }
@@ -866,7 +868,7 @@ document.addEventListener('click', e => {
   const { action, id, type } = b.dataset;
   if (action === 'new') openForm();
   else if (action === 'edit') openForm(id);
-  else if (action === 'open'){ detailId = id; renderDetail(); $('#detailDlg').showModal(); }
+  else if (action === 'open'){ detailId = id; renderDetail(); $('#detailDlg').showModal(); toTop('#detailDlg'); }
   else if (action === 'log') logAction(id, type);
   else if (action === 'unlog') unlogToday(id, type);
   else if (action === 'view'){ try { localStorage.setItem('ileafyou.view', b.dataset.view); } catch(e) {} render(); }
